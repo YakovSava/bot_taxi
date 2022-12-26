@@ -7,13 +7,11 @@ class Order(ABCRule[Message]):
 			return False
 		payload = eval(f'dict({message.payload})')
 		try:
-			trash = payload['driver'], payload['order']
+			payload['driver'], payload['order']
 		except:
 			return False
 		else:
 			return True
-
-
 
 class Delivery(ABCRule[Message]):
 	async def check(self, message:Message) -> bool:
@@ -21,13 +19,11 @@ class Delivery(ABCRule[Message]):
 			return False
 		payload = eval(f'dict({message.payload})')
 		try:
-			trash = payload['driver'], payload['delivery']
+			payload['driver'], payload['delivery']
 		except:
 			return False
 		else:
 			return True
-
-
 
 class DriverCancel(ABCRule[Message]):
 	async def check(self, message:Message) -> bool:
@@ -35,13 +31,11 @@ class DriverCancel(ABCRule[Message]):
 			return False
 		payload = eval(f'dict({message.payload})')
 		try:
-			trash = payload['driver'], payload['cancel']
+			payload['driver'], payload['cancel']
 		except:
 			return False
 		else:
 			return True
-
-
 
 class DriverSuccess(ABCRule[Message]):
 	async def check(self, message:Message) -> bool:
@@ -49,13 +43,11 @@ class DriverSuccess(ABCRule[Message]):
 			return False
 		payload = eval(f'dict({message.payload})')
 		try:
-			trash = payload['driver'], payload['success']
+			payload['driver'], payload['success']
 		except:
 			return False
 		else:
 			return True
-
-
 
 class QiwiPayRule(ABCRule[Message]):
 	async def check(self, message:Message) -> bool:
@@ -63,7 +55,31 @@ class QiwiPayRule(ABCRule[Message]):
 			return False
 		payload = eval(f'dict({message.payload})')
 		try:
-			trash = payload['driver'], payload['qiwi']
+			payload['driver'], payload['qiwi']
+		except:
+			return False
+		else:
+			return True
+
+class WillArriveMinutes(ABCRule[Message]):
+	async def check(self, message:Message) -> bool:
+		if message.payload is None:
+			return False
+		payload = eval(f'dict({message.payload})')
+		try:
+			payload['driver'], payload['minutes']
+		except:
+			return False
+		else:
+			return True
+
+class Arrived(ABCRule[Message]):
+	async def check(self, message:Message) -> bool:
+		if message.payload is None:
+			return False
+		payload = eval(f'dict({message.payload})')
+		try:
+			payload['driver'], payload['arrived']
 		except:
 			return False
 		else:

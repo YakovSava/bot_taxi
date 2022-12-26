@@ -1,7 +1,6 @@
-from vkbottle import Keyboard, KeyboardButtonColor, Text, EMPTY_KEYBOARD, VKPay
+from vkbottle import Keyboard, KeyboardButtonColor, Text, VKPay, Location
 
 class keyboards:
-	EMPTY = EMPTY_KEYBOARD
 	class inline:
 		delivery_driver = lambda x: (Keyboard(one_time = False, inline = True)
 			.add(Text('Принять доставку &#128526;', payload = {'driver': 0, 'delivery': 1, 'other': x}), color = KeyboardButtonColor.POSITIVE)
@@ -56,12 +55,30 @@ class keyboards:
 		.row()
 		.add(Text('Отменить вызов', payload = {'user': 0, 'cancel': 0}), color = KeyboardButtonColor.NEGATIVE)
 	).get_json()
-	driver_order_complete = lambda link: (Keyboard(one_time = False) 
+	driver_order_complete = lambda link: (Keyboard(one_time = False)
+		.add(Text('Буду через 3 минуты!', payload = {'driver': 0, 'minutes': 3, 'other': link}), color = KeyboardButtonColor.PRIMARY)
+		.row()
+		.add(Text('Буду через 5 минут!', payload = {'driver': 0, 'minutes': 5, 'other': link}), color = KeyboardButtonColor.PRIMARY)
+		.row()
+		.add(Text('Буду через 8 минут!', payload = {'driver': 0, 'minutes': 8, 'other': link}), color = KeyboardButtonColor.PRIMARY)
+		.row()
 		.add(Text('Заказ выполнен &#128526;', payload = {'driver': 0, 'success': 0, 'other': link}), color = KeyboardButtonColor.POSITIVE)
 		.row()
 		.add(Text('Отказаться от заказа', payload = {'driver': 0, 'cancel': 0, 'other': link}), color = KeyboardButtonColor.NEGATIVE)
 	).get_json()
 	vk_pay_keyboard = lambda group_id, amount: (Keyboard(one_time = True)
 		.add(VKPay(hash = f'action=pay-to-group&amount={amount}&group_id={group_id}'))
-	)
+		.row()
+		.add(Text('Назад', payload = {'driver': 0, 'profie': 0}), color = KeyboardButtonColor.PRIMARY)
+	).get_json()
 	starter = Keyboard(one_time = True).add(Text('Начать'), color = KeyboardButtonColor.PRIMARY).get_json()
+	location = Keyboard(one_time = True).add(Location(), color = KeyboardButtonColor.PRIMARY).get_json()
+	driver_order_complete_will_arrive = lambda link: (Keyboard(one_time = False)
+		.add(Text('Выходите', payload = {'driver': 0, 'arrived': 0}))
+	)
+
+	def construct(keyboard_texts:list, keyboard_action:list, payload:list, **kwargs): # Это конструктор клавиатур для людей которые не ссильно разбираются в vkbottle, но которые будт поддерживать этот проект в будущем
+		keyboard_object = Keyboard(**kwargs)
+		for text, action, payload in zip(keyboard_texts, keyboard_action, payload):
+			keyboard_object.add(eval(f'{action}("{text}", payload = {payload})')).row()
+		return keyboard_object.get_json()
