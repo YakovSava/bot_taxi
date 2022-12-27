@@ -67,7 +67,7 @@ class WillArriveMinutes(ABCRule[Message]):
 			return False
 		payload = eval(f'dict({message.payload})')
 		try:
-			payload['driver'], payload['minutes']
+			payload['driver'], payload['minute']
 		except:
 			return False
 		else:

@@ -124,7 +124,7 @@ class Database:
 			))
 			self.db.commit()
 			self.cursor.execute('INSERT INTO driver2 VALUES (?,?,?,?)', (
-				json['vk'], strftime('%c', gmtime()), 0, 0
+				json['vk'], strftime('%c', gmtime()), 0, json['balance']
 			))
 			self.db.commit()
 

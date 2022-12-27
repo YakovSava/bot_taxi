@@ -21,19 +21,19 @@ if platform in ['win32', 'cygwin', 'msys']:
 	except:
 		pass
 
-try:
-	from loguru import logger
-except ImportError:
-	pass
-else:
-	logger.disable("vkbottle")
+# try:
+# 	from loguru import logger
+# except ImportError:
+# 	pass
+# else:
+# 	logger.disable("vkbottle")
 
-try:
-	import logging
-except ImportError:
-	pass
-else:
-	logging.getLogger("vkbottle").setLevel(logging.INFO)
+# try:
+# 	import logging
+# except ImportError:
+# 	pass
+# else:
+# 	logging.getLogger("vkbottle").setLevel(logging.INFO)
 
 vk = Bot(token = vk_token) # Инициализируем класс бота
 vk.on.vbml_ignore_case = True # Объявляем об игноре регистра
@@ -101,6 +101,7 @@ async def reg_passanger_3(message:Message):
 # Регистрация водителя
 @vk.on.private_message(payload = {'driver': 1})
 async def reg_driver_1(message:Message):
+	storage.set(f'{message.from_id}_balance', 0)
 	await vk.state_dispenser.set(message.from_id, DriverRegState.location)
 	return 'Регистрация!\nОтправьте вашу геолокацию или напишите город буквами'
 
@@ -146,6 +147,8 @@ async def reg_driver_4(message:Message):
 """
 @vk.on.private_message(state = DriverRegState.state_number)
 async def reg_driver_5(message:Message):
+	balance = storage.get(f'{message.from_id}_balance')
+	storage.delete(f'{message.from_id}_balance')
 	await vk.state_dispenser.delete(message.from_id)
 	phone, auto, color, location = storage.get(f'phone_{message.from_id}'), storage.get(f'auto_{message.from_id}'), storage.get(f'color_{message.from_id}'), storage.get(f'location_{message.from_id}')
 	storage.delete(f'phone_{message.from_id}'); storage.delete(f'auto_{message.from_id}'); storage.delete(f'color_{message.from_id}'); storage.delete(f'location_{message.from_id}')
@@ -161,10 +164,10 @@ async def reg_driver_5(message:Message):
 		'phone': phone,
 		'auto': auto,
 		'color': color,
-		'state_number': message.text
+		'state_number': message.text,
+		'balance': balance
 	})
-	parameters = await binder.get_parameters()
-	await message.answer(f'Вы успешно зарегестрированы! Учтите что взять одну поездку стоит {parameters["count"]} руб.', keyboard = keyboards.driver_registartion_success)
+	await message.answer('Готово!\nТеперь когда появится новый заказ, тебе придёт уведомление, поэтому не пропусти!', keyboard = keyboards.driver_registartion_success)
 
 # Отобразитьь профиль водителя
 @vk.on.private_message(payload = {'driver': 0, 'profie': 0})
@@ -176,6 +179,7 @@ async def driver_profile(message:Message):
 # Редактирование (пперерегистрация водителя)
 @vk.on.private_message(payload = {'driver': 0, 'edit': 0})
 async def driver_edit_profile(message:Message):
+	await db.driver.delete(message.from_id)
 	await vk.state_dispenser.set(message.from_id, DriverRegState.location)
 	return 'Редактирование! Введите ваш город!'
 
@@ -195,6 +199,9 @@ async def user_profile(message:Message):
 # Редактирование профиля пассажира
 @vk.on.private_message(payload = {'user': 0, 'edit': 0})
 async def passanger_edit_profile(message:Message):
+	driver_profile = await db.driver.get(message.from_id)
+	storage.set(f'{message.from_id}_balance', driver_profile[1]['balance'])
+	await db.driver.delete(message.from_id)
 	await vk.state_dispenser.set(message.from_id, PassangerRegState)
 	return 'Введите ваш номер телефона'
 
@@ -215,7 +222,7 @@ async def passanger_get_taxi_def(message:Message):
 	await vk.state_dispenser.set(message.from_id, TaxiState.four_quest)
 	await message.answer('1 - Напиши откуда и куда планируешь ехать.\n2 - Сколько человек поедет, будут ли дети\n3 - Напиши подъезд\n4 - Добавь комментарий к вызову.\nПример:\n"От ул. Фадеева 5, 7 подъезд.\nДо ул. Мира 3.\nПоедет 2 взрослых и 1 ребёнок"')
 
-@vk.on.private_message(state = TaxiState.location)
+@vk.on.private_message(state = TaxiState.four_quest)
 async def taxi_geo(message:Message):
 	storage.set(f'{message.from_id}_taxi_get_question', message.text.lower().split('\n'))# Преобразуем 4 строки в список
 	await vk.state_dispenser.set(message.from_id, TaxiState.location)
@@ -278,8 +285,8 @@ async def get_delivery(message:Message):
 @vk.on.private_message(state = DeliveryState.three_quest)
 async def delivery_loc(message:Message):
 	storage.set(f'{message.from_id}_deliver_get', message.text.lower().split('\n'))
-	await vk.state_dispenser.set(message.from_id, TaxiState.location)
-	return 'Теперь пришлите вашу локацию'
+	await vk.state_dispenser.set(message.from_id, DeliveryState.location)
+	await message.answer('Теперь пришлите вашу локацию', keyboard = keyboards.location)
 
 @vk.on.private_message(state = DeliveryState.location)
 async def delivery_tax(message:Message):
@@ -369,6 +376,28 @@ async def driver_success_order(message:Message):
 	await db.driver.set_balance(message.from_id, -parameters['count'])
 	await db.driver.set_qunatity(message.from_id)
 	await db.passanger.set_qunatity(eval(f'dict({message.payload})')['other']['from_id'])
+
+@vk.on.private_message(WillArriveMinutes())
+async def will_arived_with_minutes_with_minute(message:Message):
+	payload = eval(f'dict({message.payload})')
+	await message.answer(f'Вы прибудете через {payload["minute"]} минут!', keyboard = keyboards.driver_order_complete_will_arrive(payload['other']))
+	await vk.api.messages.send(
+		user_id = payload['other']['from_id'],
+		peer_id = payload['other']['from_id'],
+		random_id = 0,
+		message = f'Водитель прибудет через {payload["minute"]} минут!'
+	)
+
+@vk.on.private_message(Arrived())
+async def will_arrived(message:Message):
+	payload = eval(f'dict({message.payload})')
+	await message.answer(f'Сообщение выслано пассажиру')
+	await vk.api.messages.send(
+		user_id = payload['other']['from_id'],
+		peer_id = payload['other']['from_id'],
+		random_id = 0,
+		message = f'Водитель прибыл!'
+	)
 
 @vk.on.private_message(DriverCancel())
 async def driver_cancel_order(message:Message):
@@ -476,28 +505,6 @@ async def admin_com(message:Message, commands:str):
 			await csv.get_csv([passangers, drivers])
 		else:
 			await message.answer('Неизвестная команда!')
-
-@vk.on.private_message(WillArriveMinutes())
-async def will_arived_with_minutes_with_minute(message:Message):
-	payload = eval(f'dict({message.payload})')
-	await message.answer(f'Вы прибудете через {payload["minute"]} минут!', keyboard = keyboards.driver_order_complete_will_arrive)
-	await vk.api.messages.send(
-		user_id = payload['other']['from_id'],
-		peer_id = payload['other']['from_id'],
-		random_id = 0,
-		message = f'Водитель прибудет через {payload["minute"]} минут!'
-	)
-
-@vk.on.private_message(Arrived())
-async def will_arrived(message:Message):
-	payload = eval(f'dict({message.payload})')
-	await message.answer(f'Сообщение выслано пассажиру')
-	await vk.api.messages.send(
-		user_id = payload['other']['from_id'],
-		peer_id = payload['other']['from_id'],
-		random_id = 0,
-		message = f'Водитель прибыл!'
-	)
 
 @vk.on.private_message()
 async def no_command(message:Message):
