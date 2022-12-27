@@ -174,7 +174,7 @@ async def reg_driver_5(message:Message):
 async def driver_profile(message:Message):
 	info = await db.driver.get(message.from_id)
 	if info != [None, None]:
-		await message.answer(f'Вот ваша анкета!\nВаше имя: {info[0]["name"]}\nВаш город: {info[0]["city"]}\nМашина: {info[0]["auto"]}\nЦвет: {info[0]["color"]}\nГосномер: {info[0]["state_number"]}\nВаша первая активность: {info[0]["first_activity"]}\nКол-во поездок: {info[1]["quantity"]}\nБаланс: {info[1]["balance"]}', keyboard = keyboards.driver_profile)
+		await message.answer(f'Анкета водителя!\nВаше имя: {info[0]["name"]}\nВаш город: {info[0]["city"]}\nМашина: {info[0]["auto"]}\nЦвет: {info[0]["color"]}\nГосномер: {info[0]["state_number"]}\nВаша первая активность: {info[0]["first_activity"]}\nКол-во поездок: {info[1]["quantity"]}\nБаланс: {info[1]["balance"]}', keyboard = keyboards.driver_profile)
 
 # Редактирование (пперерегистрация водителя)
 @vk.on.private_message(payload = {'driver': 0, 'edit': 0})
@@ -194,7 +194,7 @@ async def driver_profile_delete(message:Message):
 async def user_profile(message:Message):
 	name = await db.passanger.get(message.from_id)
 	if name is not None:
-		await message.answer(f'Ваш профиль!\n\nИмя: {name["name"]}\nТелефон: {name["phone"]}\nКол-во поездок: {name["quantity"]}\n', keyboard = keyboards.user_profile)
+		await message.answer(f'Анкета пассажира!\n\nИмя: {name["name"]}\nТелефон: {name["phone"]}\nКол-во поездок: {name["quantity"]}\n', keyboard = keyboards.user_profile)
 
 # Редактирование профиля пассажира
 @vk.on.private_message(payload = {'user': 0, 'edit': 0})
