@@ -179,6 +179,7 @@ async def driver_profile(message:Message):
 # Редактирование (пперерегистрация водителя)
 @vk.on.private_message(payload = {'driver': 0, 'edit': 0})
 async def driver_edit_profile(message:Message):
+	storage.set(f'{message.from_id}_balance', 0)
 	await db.driver.delete(message.from_id)
 	await vk.state_dispenser.set(message.from_id, DriverRegState.location)
 	return 'Редактирование! Введите ваш город!'
@@ -464,11 +465,12 @@ async def qiwi_get_pay(message:Message):
 async def qiwi_get_pay_before_pay(message:Message):
 	payload = eval(f'dict({message.payload})')
 	bill = await qiwi.check(payload['other']['bill_id'])
+	print(bill.status)
 	if bill.status != 'PAID':
-		await message.aswer('Вы не оплатили!')
+		await message.answer('Вы не оплатили!')
 	else:
-		await message.answer(f'Вы успешно оплатили счёт в размере {payload["amount"]}!', keyboard = keyboards.driver_registartion_success)
-		await db.driver.set_balance(message.from_id, payload["amount"])
+		await message.answer(f'Вы успешно оплатили счёт в размере {payload["other"]["amount"]}!', keyboard = keyboards.driver_registartion_success)
+		await db.driver.set_balance(message.from_id, payload["other"]["amount"])
 
 
 
