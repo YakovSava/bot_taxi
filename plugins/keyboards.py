@@ -13,6 +13,13 @@ class keyboards:
 			.add(Text('Проверить оплату', payload = {'driver': 0, 'qiwi': 0, 'other': x}), color = KeyboardButtonColor.PRIMARY)
 		).get_json()
 		location = Keyboard(one_time = False, inline = True).add(Location(), color = KeyboardButtonColor.PRIMARY).get_json()
+		payments = (Keyboard(one_time = False, inline = True)
+			.add(Text('Пополнить при помощи VK PAY', payload = {'driver': 0, 'money': 'vk pay'}), color = KeyboardButtonColor.POSITIVE)
+			.row()
+			.add(Text('Пополнить при помощи QIWI', payload = {'driver': 0, 'money': 'qiwi'}), color = KeyboardButtonColor.POSITIVE)
+			.row()
+			.add(Text('Принимать заявки', payload = {'driver': 0, 'post_reg': 0}), color = KeyboardButtonColor.POSITIVE)
+		).get_json()
 
 	driver_registartion_success = (Keyboard(one_time = True, inline = False)
 			.add(Text('Моя анкета &#128526;', payload = {'driver': 0, 'profie': 0}), color = KeyboardButtonColor.POSITIVE)
@@ -72,7 +79,7 @@ class keyboards:
 		.add(Text('Отказаться от заказа', payload = {'driver': 0, 'cancel': 0, 'other': link}), color = KeyboardButtonColor.NEGATIVE)
 	).get_json()
 	vk_pay_keyboard = lambda group_id, amount: (Keyboard(one_time = True)
-		.add(VKPay(hash = f'action=pay-to-group&amount={amount}&group_id={group_id}'))
+		.add(VKPay(payload = {'driver': 0, 'amount': amount}, hash = f'action=pay-to-group&amount={amount}&group_id={group_id}'))
 		.row()
 		.add(Text('Назад', payload = {'driver': 0, 'profie': 0}), color = KeyboardButtonColor.PRIMARY)
 	).get_json()
@@ -85,7 +92,6 @@ class keyboards:
 		.row()
 		.add(Text('Отказаться от заказа', payload = {'driver': 0, 'cancel': 0, 'other': link}), color = KeyboardButtonColor.NEGATIVE)
 	).get_json()
-
 
 	def construct(keyboard_texts:list, keyboard_action:list, payload:list, **kwargs): # Это конструктор клавиатур для людей которые не ссильно разбираются в vkbottle, но которые будт поддерживать этот проект в будущем
 		keyboard_object = Keyboard(**kwargs)

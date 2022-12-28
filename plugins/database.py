@@ -65,7 +65,7 @@ class Database:
 
 		async def set_qunatity(self, vk:str):
 			self.cursor.execute(f'SELECT quantity FROM passanger WHERE VK = "{vk}"')
-			last = int(self.cursor.fetchone()['balance'])
+			last = int(self.cursor.fetchone()['quantity'])
 			self.cursor.execute(f'UPDATE passanger SET quantity = {last + 1} WHERE VK = "{vk}"')
 			self.db.commit()
 

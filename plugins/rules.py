@@ -84,3 +84,13 @@ class Arrived(ABCRule[Message]):
 			return False
 		else:
 			return True
+
+class VkPayRule(ABCRule[Message]):
+	async def check(self, message:Message):
+		try:
+			payload = dict(message.payload)
+			payload['driver'], payload['amount']
+		except:
+			return False
+		else:
+			return True
