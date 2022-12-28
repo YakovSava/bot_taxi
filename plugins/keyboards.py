@@ -1,6 +1,7 @@
-from vkbottle import Keyboard, KeyboardButtonColor, Text, VKPay, Location
+from vkbottle import Keyboard, KeyboardButtonColor, Text, VKPay, Location, EMPTY_KEYBOARD
 
 class keyboards:
+	empty = EMPTY_KEYBOARD
 	class inline:
 		delivery_driver = lambda x: (Keyboard(one_time = False, inline = True)
 			.add(Text('Принять доставку &#128526;', payload = {'driver': 0, 'delivery': 1, 'other': x}), color = KeyboardButtonColor.POSITIVE)
@@ -11,6 +12,7 @@ class keyboards:
 		qiwi_check_pay = lambda x: (Keyboard(one_time = False, inline = True)
 			.add(Text('Проверить оплату', payload = {'driver': 0, 'qiwi': 0, 'other': x}), color = KeyboardButtonColor.PRIMARY)
 		).get_json()
+		location = Keyboard(one_time = False, inline = True).add(Location(), color = KeyboardButtonColor.PRIMARY).get_json()
 
 	driver_registartion_success = (Keyboard(one_time = True, inline = False)
 			.add(Text('Моя анкета &#128526;', payload = {'driver': 0, 'profie': 0}), color = KeyboardButtonColor.POSITIVE)
@@ -47,9 +49,11 @@ class keyboards:
 		.add(Text('Удалить анкету', payload = {'driver': 0, 'delete': 0}), color = KeyboardButtonColor.NEGATIVE)
 		.row()
 		.add(Text('Редактировать анкету', payload = {'driver': 0, 'edit': 0}), color = KeyboardButtonColor.PRIMARY)
+		.row()
+		.add(Text('Принимать заявки', payload = {'driver': 0, 'post_reg': 0}), color = KeyboardButtonColor.POSITIVE)
 	).get_json()
 	user_cancel = (Keyboard(one_time = False)
-		.add(Text('Назад', payload = {'cancel': 1}), color = KeyboardButtonColor.NEGATIVE)
+		.add(Text('Назад', payload = {'user': 0, 'back': 0}), color = KeyboardButtonColor.NEGATIVE)
 	).get_json()
 	user_cancel_order = (Keyboard(one_time = False)
 		.add(Text('Вызвать повторно', payload = {'user': 0, 'return': 0}), color = KeyboardButtonColor.POSITIVE)
@@ -81,6 +85,7 @@ class keyboards:
 		.row()
 		.add(Text('Отказаться от заказа', payload = {'driver': 0, 'cancel': 0, 'other': link}), color = KeyboardButtonColor.NEGATIVE)
 	).get_json()
+
 
 	def construct(keyboard_texts:list, keyboard_action:list, payload:list, **kwargs): # Это конструктор клавиатур для людей которые не ссильно разбираются в vkbottle, но которые будт поддерживать этот проект в будущем
 		keyboard_object = Keyboard(**kwargs)
