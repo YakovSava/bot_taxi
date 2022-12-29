@@ -104,7 +104,7 @@ async def user_profile(message:Message):
 async def passanger_edit_profile(message:Message):
 	await db.passanger.delete(message.from_id)
 	await vk.state_dispenser.set(message.from_id, PassangerRegState.phone)
-	await message.answer('Введите ваш номер телефона', keyboard = keyboards.inline.location)
+	await message.answer('Введите ваш номер телефона', keyboard = keyboards.empty)
 
 # Волшебная кнопка "назад"
 @vk.on.private_message(payload = {'user': 0, 'back': 0})
@@ -424,7 +424,7 @@ async def admin_com(message:Message, commands:str):
 @vk.on.private_message(payload = {'passanger': 1})
 async def reg_passanger_1(message:Message):
 	await vk.state_dispenser.set(message.from_id, PassangerRegState.phone)
-	await message.answer('Введите ваш телефон для связи с водителем', keyboard = keyboards.empty)
+	await message.answer('Введите ваш телефон для связи с водителем')
 
 # Регсирация пользователя (шаг 2)
 @vk.on.private_message(state = PassangerRegState.phone)
