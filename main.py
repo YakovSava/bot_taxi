@@ -166,12 +166,14 @@ async def taxi_tax(message:Message):
 				user_id = from_id,
 				peer_id = from_id,
 				random_id = 0,
-				message = f'Водитель принял ваш заказ!\n\nТелефон водителя: {driver_info[0]["phone"]}\nМашина: {driver_info[0]["auto"]}\nЦвет: {driver_info[0]["color"]}\nГосномер: {driver_info[0]["state_number"]}\nВ конце поездки нажми "Успешно доехал"',
+				message = f'&#9989; Водитель принял ваш заказ! &#9989;\n\nТелефон водителя: {driver_info[0]["phone"]}\nМашина: {driver_info[0]["auto"]}\nЦвет: {driver_info[0]["color"]}\nГосномер: {driver_info[0]["state_number"]}\nВ конце поездки нажми "Успешно доехал"',
 				keyboard = keyboards.passanger_get_taxi
 			)
 			await forms.stop_form(from_id) # Останавливаем форму
 			forms.all_forms[from_id]['driver_id'] = driver_id # Пишем в форме что водитель принял заявку
-			await message.answer(f'Ваш запрос на такси был принят\nТелефон оправителя заявки: {passanger["phone"]}\nВот координаты пассажира:', lat = payload['other']['location'][0], long = payload['other']['location'][1], keyboard = keyboards.driver_order_complete({'from_id': from_id}))
+			await message.answer(f'Заявка на доставку принята!\nТелефон оправителя заявки: {passanger["phone"]}\nПланирует ехать до: {payload["other"]["text"][1]}', keyboard = keyboards.driver_order_complete({'from_id': from_id}))
+			await message.answer('Вот координаты отправителя заявки:', lat = payload['other']['location'][0], long = payload['other']['location'][1],)
+			await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
 		else:
 			await message.answer(f'На вашем балансе недостаточно средств\nСтоимость одной заявки: {parameters["count"]} руб.\nНа вашем балансе: {driver_info[1]["balance"]} руб.', keyboard = keyboards.inline.payments)
 	else:
@@ -227,7 +229,7 @@ async def driver_delivery(message:Message):
 				user_id = from_id,
 				peer_id = from_id,
 				random_id = 0,
-				message = f'Водитель принял ваш заказ!\n\nТелефон водителя: {driver_info[0]["phone"]}\nМашина: {driver_info[0]["auto"]}\nЦвет: {driver_info[0]["color"]}\nГосномер: {driver_info[0]["state_number"]}\n\nОжидайте доставки!',
+				message = f'&#9989; Водитель принял ваш заказ! &#9989;\n\nТелефон водителя: {driver_info[0]["phone"]}\nМашина: {driver_info[0]["auto"]}\nЦвет: {driver_info[0]["color"]}\nГосномер: {driver_info[0]["state_number"]}\n\nОжидайте доставки!',
 				keyboard = keyboards.passanger_get_taxi
 			)
 			await forms.stop_form(message.from_id)
@@ -302,7 +304,7 @@ async def will_arrived(message:Message):
 		user_id = payload['other']['from_id'],
 		peer_id = payload['other']['from_id'],
 		random_id = 0,
-		message = f'Водитель прибылб выходите!',
+		message = f'Водитель прибыл, выходите!',
 		keyboard = keyboards.passanger_get_taxi_and_driver_will_arrived
 	)
 
@@ -314,7 +316,7 @@ async def passanger_exit(message:Message):
 		user_id = driver_id,
 		peer_id = driver_id,
 		random_id = 0,
-		message = 'Водитель вышел и ожидает вас!'
+		message = 'Пассажир вышел и ожидает вас!'
 	)
 
 @vk.on.private_message(DriverCancel())
