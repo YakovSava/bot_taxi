@@ -424,7 +424,7 @@ async def admin_com(message:Message, commands:str):
 @vk.on.private_message(payload = {'passanger': 1})
 async def reg_passanger_1(message:Message):
 	await vk.state_dispenser.set(message.from_id, PassangerRegState.phone)
-	return 'Введите ваш телефон для связи с водителем'
+	await message.answer('Введите ваш телефон для связи с водителем', keyboard = keyboards.empty)
 
 # Регсирация пользователя (шаг 2)
 @vk.on.private_message(state = PassangerRegState.phone)
