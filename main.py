@@ -125,7 +125,7 @@ async def passanger_get_taxi_def(message:Message):
 
 @vk.on.private_message(state = TaxiState.four_quest)
 async def taxi_geo(message:Message):
-	storage.set(f'{message.from_id}_taxi_get_question', message.text.lower().split('\n'))# Преобразуем 4 строки в список
+	storage.set(f'{message.from_id}_taxi_get_question', message.text)
 	await vk.state_dispenser.set(message.from_id, TaxiState.location)
 	await message.answer('Теперь пришлите вашу геолокацию', keyboard = keyboards.inline.location)
 
@@ -136,7 +136,6 @@ async def taxi_call(message:Message):
 		info = await db.passanger.get(message.from_id) # Получаем данные пассажира
 		text = storage.get(f'{message.from_id}_taxi_get_question')
 		storage.delete(f'{message.from_id}_taxi_get_question')
-		text.extend(['Не указано' for _ in range(5)])
 		await forms.new_form(message.from_id) # Создаёи новую форму
 		driver_ids = [driver_id async for driver_id, driver_city in db.driver.get_all() if info['city'] == driver_city] # Получаем всех водителей из этого города
 		for driver_id in driver_ids: # Шлём всем им оповещение
@@ -145,7 +144,7 @@ async def taxi_call(message:Message):
 					user_id = driver_id,
 					from_id = driver_id,
 					random_id = 0,
-					message = f'&#128293;&#128293;&#128293; Новый заказ! &#128293;&#128293;&#128293;\n\n{text[0]}\n{text[1]}\nПодъезд {text[2]}\nКомментарий: {text[3]}\n\nУспей забрать пока никто не нажал',
+					message = f'&#128293;&#128293;&#128293; Новый заказ! &#128293;&#128293;&#128293;\n\n{text}\n\nУспей забрать пока никто не нажал',
 					keyboard = keyboards.inline.driver_new_order({'from_id': message.from_id, 'driver_id': driver_id, 'location': [message.geo.coordinates.latitude, message.geo.coordinates.longitude], 'text': text}) # P.s. смотрите файл /plugins/keyboards.py
 				)
 			except VKAPIError[901]:
@@ -174,7 +173,7 @@ async def taxi_tax(message:Message):
 			)
 			await forms.stop_form(from_id) # Останавливаем форму
 			forms.all_forms[from_id]['driver_id'] = driver_id # Пишем в форме что водитель принял заявку
-			await message.answer(f'Заявка на доставку принята!\nТелефон оправителя заявки: {passanger["phone"]}\nПланирует ехать до: {payload["other"]["text"][1]}\nВот координаты отправителя заявки:', keyboard = keyboards.driver_order_complete({'from_id': from_id}), lat = payload['other']['location'][0], long = payload['other']['location'][1])
+			await message.answer(f'Заявка принята!\nТелефон оправителя заявки: {passanger["phone"]}\n{payload["other"]["text"]}\nВот координаты отправителя заявки:', keyboard = keyboards.driver_order_complete({'from_id': from_id}), lat = payload['other']['location'][0], long = payload['other']['location'][1])
 			await asyncio.sleep(1)
 			await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
 		else:
@@ -191,7 +190,7 @@ async def get_delivery(message:Message):
 # Заполняем данные (как при заказе такси, тут схема тоно такая же)
 @vk.on.private_message(state = DeliveryState.three_quest)
 async def delivery_loc(message:Message):
-	storage.set(f'{message.from_id}_deliver_get', message.text.lower().split('\n'))
+	storage.set(f'{message.from_id}_deliver_get', message.text)
 	await vk.state_dispenser.set(message.from_id, DeliveryState.location)
 	await message.answer('Теперь пришлите вашу локацию', keyboard = keyboards.inline.location)
 
@@ -203,7 +202,6 @@ async def delivery_tax(message:Message):
 		await forms.new_form(message.from_id)
 		text = storage.get(f'{message.from_id}_deliver_get')
 		storage.delete(f'{message.from_id}_deliver_get')
-		text.extend(['Не указано' for _ in range(5)]) # На случай если реально не указано
 		driver_ids = [driver_id async for driver_id, driver_city in db.driver.get_all() if info['city'] == driver_city]
 		for driver_id in driver_ids:
 			try:
@@ -211,7 +209,7 @@ async def delivery_tax(message:Message):
 					user_id = driver_id,
 					from_id = driver_id,
 					random_id = 0,
-					message = f'&#128640;&#128640;&#128640; Новая доставка! &#128640;&#128640;&#128640;\n\nНужно {text[0]}\nДоставить в {text[1]}\nСтоимость {text[2]}\n\nУспей забрать пока никто не нажал',
+					message = f'&#128640;&#128640;&#128640; Новая доставка! &#128640;&#128640;&#128640;\n\n{text}\n\nУспей забрать пока никто не нажал',
 					keyboard = keyboards.inline.delivery_driver({'from_id': message.from_id, 'driver_id': driver_id, 'location': [message.geo.coordinates.latitude, message.geo.coordinates.longitude], 'text': text})
 				)
 			except VKAPIError[901]:
@@ -240,7 +238,7 @@ async def driver_delivery(message:Message):
 			)
 			await forms.stop_form(message.from_id)
 			forms.all_forms[from_id]['driver_id'] = driver_id
-			await message.answer(f'Заявка на доставку принята!\nТелефон оправителя заявки: {passanger["phone"]}\nПланирует ехать до: {payload["other"]["text"][1]}\nВот координаты отправителя заявки:', keyboard = keyboards.driver_order_complete({'from_id': from_id}), lat = payload['other']['location'][0], long = payload['other']['location'][1])
+			await message.answer(f'Заявка на доставку принята!\nТелефон оправителя заявки: {passanger["phone"]}\n{payload["other"]["text"]}\nВот координаты отправителя заявки:', keyboard = keyboards.driver_order_complete({'from_id': from_id}), lat = payload['other']['location'][0], long = payload['other']['location'][1])
 			await asyncio.sleep(1)
 			await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
 		else:
