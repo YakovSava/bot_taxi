@@ -171,8 +171,8 @@ async def taxi_tax(message:Message):
 			)
 			await forms.stop_form(from_id) # Останавливаем форму
 			forms.all_forms[from_id]['driver_id'] = driver_id # Пишем в форме что водитель принял заявку
-			await message.answer(f'Заявка на доставку принята!\nТелефон оправителя заявки: {passanger["phone"]}\nПланирует ехать до: {payload["other"]["text"][1]}', keyboard = keyboards.driver_order_complete({'from_id': from_id}))
-			await message.answer('Вот координаты отправителя заявки:', lat = payload['other']['location'][0], long = payload['other']['location'][1],)
+			await message.answer(f'Заявка на доставку принята!\nТелефон оправителя заявки: {passanger["phone"]}\nПланирует ехать до: {payload["other"]["text"][1]}\nВот координаты отправителя заявки:', keyboard = keyboards.driver_order_complete({'from_id': from_id}), lat = payload['other']['location'][0], long = payload['other']['location'][1])
+			await asyncio.sleep(1)
 			await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
 		else:
 			await message.answer(f'На вашем балансе недостаточно средств\nСтоимость одной заявки: {parameters["count"]} руб.\nНа вашем балансе: {driver_info[1]["balance"]} руб.', keyboard = keyboards.inline.payments)
@@ -234,8 +234,8 @@ async def driver_delivery(message:Message):
 			)
 			await forms.stop_form(message.from_id)
 			forms.all_forms[from_id]['driver_id'] = driver_id
-			await message.answer(f'Заявка на доставку принята!\nТелефон оправителя заявки: {passanger["phone"]}\nПланирует ехать до: {payload["other"]["text"][1]}', keyboard = keyboards.driver_order_complete({'from_id': from_id}))
-			await message.answer('Вот координаты отправителя заявки:', lat = payload['other']['location'][0], long = payload['other']['location'][1],)
+			await message.answer(f'Заявка на доставку принята!\nТелефон оправителя заявки: {passanger["phone"]}\nПланирует ехать до: {payload["other"]["text"][1]}\nВот координаты отправителя заявки:', keyboard = keyboards.driver_order_complete({'from_id': from_id}), lat = payload['other']['location'][0], long = payload['other']['location'][1])
+			await asyncio.sleep(1)
 			await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
 		else:
 			await message.answer(f'На вашем балансе недостаточно средств\nСтоимость одной заявки: {parameters["count"]} руб.\nНа вашем балансе: {driver_info[1]["balance"]} руб.', keyboard = keyboards.inline.payments)
@@ -318,6 +318,11 @@ async def passanger_exit(message:Message):
 		random_id = 0,
 		message = 'Пассажир вышел и ожидает вас!'
 	)
+
+@vk.on.private_message(payload = {'passager': 0, 'cancel': 0, 'taxi': 0})
+async def passanger_cancelling_order(message:Message):
+	await forms.stop_form(message.from_id)
+	await message.answer('Ваш заказ на вызов такси был отменён!')
 
 @vk.on.private_message(DriverCancel())
 async def driver_cancel_order(message:Message):
