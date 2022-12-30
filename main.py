@@ -1,7 +1,7 @@
 import asyncio # Импортируем асинхронность
 
 from vkbottle.bot import Bot, Message # Импортируем объект бота и сообщени я(второе - для аннотации)
-from vkbottle import CtxStorage, PhotoMessageUploader # Импортируем временное хранилищ
+from vkbottle import CtxStorage, PhotoMessageUploader, VKAPIError # Импортируем временное хранилищ
 from dadata import Dadata # Импортируем сервис по распознаванию города
 from pyqiwip2p import AioQiwiP2P
 from sys import platform
@@ -140,17 +140,20 @@ async def taxi_call(message:Message):
 		await forms.new_form(message.from_id) # Создаёи новую форму
 		driver_ids = [driver_id async for driver_id, driver_city in db.driver.get_all() if info['city'] == driver_city] # Получаем всех водителей из этого города
 		for driver_id in driver_ids: # Шлём всем им оповещение
-			await vk.api.messages.send(
-				user_id = driver_id,
-				from_id = driver_id,
-				random_id = 0,
-				message = f'&#128293;&#128293;&#128293; Новый заказ! &#128293;&#128293;&#128293;\n\n{text[0]}\n{text[1]}\nПодъезд {text[2]}\nКомментарий: {text[3]}\n\nУспей забрать пока никто не нажал',
-				keyboard = keyboards.inline.driver_new_order({'from_id': message.from_id, 'driver_id': driver_id, 'location': [message.geo.coordinates.latitude, message.geo.coordinates.longitude]}) # P.s. смотрите файл /plugins/keyboards.py
-			)
+			try:
+				await vk.api.messages.send(
+					user_id = driver_id,
+					from_id = driver_id,
+					random_id = 0,
+					message = f'&#128293;&#128293;&#128293; Новый заказ! &#128293;&#128293;&#128293;\n\n{text[0]}\n{text[1]}\nПодъезд {text[2]}\nКомментарий: {text[3]}\n\nУспей забрать пока никто не нажал',
+					keyboard = keyboards.inline.driver_new_order({'from_id': message.from_id, 'driver_id': driver_id, 'location': [message.geo.coordinates.latitude, message.geo.coordinates.longitude]}) # P.s. смотрите файл /plugins/keyboards.py
+				)
+			except VKAPIError[901]:
+				pass
 		await message.answer(f'Ваш запрос был доставлен {len(driver_ids)} водителям\nОжидайте!', keyboard = keyboards.choose_service) # Активных было бы считать труднее
 		await vk.state_dispenser.delete(message.from_id)
 	else:
-		await message.answer('Отправьте пожалуйста геолокацию по кнопке!')
+		await message.answer('Отправьте пожалуйста геолокацию по кнопке!', keyboard = keyboards.inline.location)
 
 # Принятие заявки
 @vk.on.private_message(Order())
@@ -198,22 +201,25 @@ async def delivery_tax(message:Message):
 		info = await db.passanger.get(message.from_id) # Получаем данные пассажира
 		await vk.state_dispenser.delete(message.from_id)
 		await forms.new_form(message.from_id)
-		text = storage.get(f'{message.from_id}_deliver_get') # Преобразуем 4 строки в список
+		text = storage.get(f'{message.from_id}_deliver_get')
 		storage.delete(f'{message.from_id}_deliver_get')
 		text.extend(['Не указано' for _ in range(5)]) # На случай если реально не указано
 		driver_ids = [driver_id async for driver_id, driver_city in db.driver.get_all() if info['city'] == driver_city]
 		for driver_id in driver_ids:
-			await vk.api.messages.send(
-				user_id = driver_id,
-				from_id = driver_id,
-				random_id = 0,
-				message = f'&#128640;&#128640;&#128640; Новая доставка! &#128640;&#128640;&#128640;\n\nНужно {text[0]}\nДоставить в {text[1]}\nСтоимость {text[2]}\n\nУспей забрать пока никто не нажал',
-				keyboard = keyboards.inline.delivery_driver({'from_id': message.from_id, 'driver_id': driver_id, 'location': [message.geo.coordinates.latitude, message.geo.coordinates.longitude], 'text': text})
-			)
+			try:
+				await vk.api.messages.send(
+					user_id = driver_id,
+					from_id = driver_id,
+					random_id = 0,
+					message = f'&#128640;&#128640;&#128640; Новая доставка! &#128640;&#128640;&#128640;\n\nНужно {text[0]}\nДоставить в {text[1]}\nСтоимость {text[2]}\n\nУспей забрать пока никто не нажал',
+					keyboard = keyboards.inline.delivery_driver({'from_id': message.from_id, 'driver_id': driver_id, 'location': [message.geo.coordinates.latitude, message.geo.coordinates.longitude], 'text': text})
+				)
+			except VKAPIError[901]:
+				pass
 		await message.answer(f'Твой запрос на доставку был доставлен {len(driver_ids)} водителям', keyboard = keyboards.choose_service)
 		await vk.state_dispenser.delete(message.from_id)
 	else:
-		return 'Введите вместе со всеми данными геолокацию!'
+		await message.answer('Отправьте пожалуйста геолокацию по кнопке!', keyboard = keyboards.inline.location)
 
 # Принимаем доставку
 @vk.on.private_message(Delivery())
