@@ -146,7 +146,7 @@ async def taxi_call(message:Message):
 					from_id = driver_id,
 					random_id = 0,
 					message = f'&#128293;&#128293;&#128293; Новый заказ! &#128293;&#128293;&#128293;\n\n{text[0]}\n{text[1]}\nПодъезд {text[2]}\nКомментарий: {text[3]}\n\nУспей забрать пока никто не нажал',
-					keyboard = keyboards.inline.driver_new_order({'from_id': message.from_id, 'driver_id': driver_id, 'location': [message.geo.coordinates.latitude, message.geo.coordinates.longitude]}) # P.s. смотрите файл /plugins/keyboards.py
+					keyboard = keyboards.inline.driver_new_order({'from_id': message.from_id, 'driver_id': driver_id, 'location': [message.geo.coordinates.latitude, message.geo.coordinates.longitude], 'text': text}) # P.s. смотрите файл /plugins/keyboards.py
 				)
 			except VKAPIError[901]:
 				pass
