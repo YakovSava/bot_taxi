@@ -35,7 +35,7 @@ class keyboards:
 		.add(Text('Успешно доехал', payload = {'user': 0, 'success': 0}), color = KeyboardButtonColor.POSITIVE)
 	).get_json()
 	passanger_get_taxi_and_driver_will_arrived = (Keyboard(one_time = False)
-		.add(Text('Выходите', payload = {'passanger': 0, 'arrived': 0}), color = KeyboardButtonColor.PRIMARY)
+		.add(Text('Выхожу!', payload = {'passanger': 0, 'arrived': 0}), color = KeyboardButtonColor.PRIMARY)
 		.row()
 		.add(Text('Отменить вызов', payload = {'user': 0, 'cancel': 0}), color = KeyboardButtonColor.NEGATIVE)
 		.row()
