@@ -21,12 +21,12 @@ if platform in ['win32', 'cygwin', 'msys']:
 	except:
 		pass
 
-try:
-	from loguru import logger
-except ImportError:
-	pass
-else:
-	logger.disable("vkbottle")
+#try:
+#	from loguru import logger
+#except ImportError:
+#	pass
+#else:
+#	logger.disable("vkbottle")
 
 try:
 	import logging
@@ -150,7 +150,7 @@ async def taxi_call(message:Message):
 				)
 			except VKAPIError[901]:
 				pass
-		await message.answer(f'Ваш запрос был доставлен {len(driver_ids)} водителям\nОжидайте!', keyboard = keyboards.choose_service) # Активных было бы считать труднее
+		await message.answer(f'Ваш запрос был доставлен {len(driver_ids)} водителям\nОжидайте!', keyboard = keyboards.choose_service_before_tax) # Активных было бы считать труднее
 		await vk.state_dispenser.delete(message.from_id)
 	else:
 		await message.answer('Отправьте пожалуйста геолокацию по кнопке!', keyboard = keyboards.inline.location)
@@ -216,7 +216,7 @@ async def delivery_tax(message:Message):
 				)
 			except VKAPIError[901]:
 				pass
-		await message.answer(f'Твой запрос на доставку был доставлен {len(driver_ids)} водителям', keyboard = keyboards.choose_service)
+		await message.answer(f'Твой запрос на доставку был доставлен {len(driver_ids)} водителям', keyboard = keyboards.choose_service_before_tax)
 		await vk.state_dispenser.delete(message.from_id)
 	else:
 		await message.answer('Отправьте пожалуйста геолокацию по кнопке!', keyboard = keyboards.inline.location)
