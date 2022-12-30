@@ -21,12 +21,12 @@ if platform in ['win32', 'cygwin', 'msys']:
 	except:
 		pass
 
-#try:
-#	from loguru import logger
-#except ImportError:
-#	pass
-#else:
-#	logger.disable("vkbottle")
+try:
+	from loguru import logger
+except ImportError:
+	pass
+else:
+	logger.disable("vkbottle")
 
 try:
 	import logging
@@ -320,7 +320,7 @@ async def passanger_exit(message:Message):
 		user_id = driver_id,
 		peer_id = driver_id,
 		random_id = 0,
-		message = 'Пассажир вышел и ожидает вас!'
+		message = 'Выхожу!'
 	)
 
 @vk.on.private_message(payload = {'passager': 0, 'cancel': 0, 'taxi': 0})
