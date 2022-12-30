@@ -328,7 +328,7 @@ async def passanger_exit(message:Message):
 @vk.on.private_message(payload = {'passager': 0, 'cancel': 0, 'taxi': 0})
 async def passanger_cancelling_order(message:Message):
 	await forms.stop_form(message.from_id)
-	await message.answer('Ваш заказ на вызов такси был отменён!')
+	await message.answer('Ваш заказ на вызов такси был отменён!', keyboard = keyboards.choose_service)
 
 @vk.on.private_message(DriverCancel())
 async def driver_cancel_order(message:Message):
