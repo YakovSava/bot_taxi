@@ -74,8 +74,9 @@ async def reg_driver_1(message:Message):
 @vk.on.private_message(payload = {'driver': 0, 'profie': 0})
 async def driver_profile(message:Message):
 	info = await db.driver.get(message.from_id)
+	parameters = await binder.get_parameters()
 	if info != [None, None]:
-		await message.answer(f'Анкета водителя!\nВаше имя: {info[0]["name"]}\nВаш номер телефона: {info[0]["phone"]}\nВаш город: {info[0]["city"]}\nМашина: {info[0]["auto"]}\nЦвет: {info[0]["color"]}\nГосномер: {info[0]["state_number"]}\nКол-во поездок: {info[1]["quantity"]}\nБаланс: {info[1]["balance"]} руб.', keyboard = keyboards.driver_profile)
+		await message.answer(f'Анкета водителя!\nВаше имя: {info[0]["name"]}\nВаш номер телефона: {info[0]["phone"]}\nВаш город: {info[0]["city"]}\nМашина: {info[0]["auto"]}\nЦвет: {info[0]["color"]}\nГосномер: {info[0]["state_number"]}\nКол-во поездок: {info[1]["quantity"]}\nБаланс: {info[1]["balance"]} руб.\nОдна заявка стоит: {parameters["count"]}', keyboard = keyboards.driver_profile)
 
 # Редактирование (пперерегистрация водителя)
 @vk.on.private_message(payload = {'driver': 0, 'edit': 0})
@@ -283,7 +284,7 @@ async def driver_success_order(message:Message):
 		peer_id = eval(f'dict({message.payload})')['other']['from_id'],
 		random_id = 0,
 		message = 'Водитель заявил о том что вы доехали',
-		keyboard = keyboards.user_profile
+		keyboard = keyboards.choose_service
 	)
 	await db.driver.set_balance(message.from_id, -parameters['count'])
 	await db.driver.set_qunatity(message.from_id)
