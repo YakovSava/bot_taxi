@@ -404,6 +404,7 @@ async def admin_com(message:Message, commands:str):
 		if command[0] == 'change':
 			if command[1].isdigit():
 				await binder.set_count(int(command[1]))
+				await message.answer(f'Стоимость за одну заявку изменена на {command[1]}')
 			else:
 				await message.answer('Нужно ввести число!') 
 		elif command[0] == 'histogram':
