@@ -32,7 +32,7 @@ class Plotter:
 		sns.set_style("white")
 
 	async def _get_name(self):
-		return join('cache', f'{random.randint(10000, 99999)}_{time}.png')
+		return join('cache', f'{random.randint(10000, 99999)}.png')
 
 	async def get_area_diagramm(self, csv:Union[list, dict], time:Optional[str]) -> str:
 		'''

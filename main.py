@@ -1,7 +1,7 @@
 import asyncio # Импортируем асинхронность
 
 from vkbottle.bot import Bot, Message # Импортируем объект бота и сообщени я(второе - для аннотации)
-from vkbottle import CtxStorage, PhotoMessageUploader, VKAPIError # Импортируем временное хранилищ
+from vkbottle import CtxStorage, PhotoMessageUploader, VKAPIError, DocUploader # Импортируем временное хранилищ
 from dadata import Dadata # Импортируем сервис по распознаванию города
 from pyqiwip2p import AioQiwiP2P
 from sys import platform
@@ -9,7 +9,7 @@ from plugins.binder import Binder # Импортируем связывател�
 from plugins.database import Database # Импортируем класс для работы с базой данных
 from plugins.plotter import Plotter # Импортируем статистикуу
 from plugins.keyboards import keyboards # Импортируем клавиатуры
-from plugins.states import PassangerRegState, TaxiState, DeliveryState, DriverRegState, VkPayPay, QiwiPay # Импорируем все стейты (для регистарций)
+from plugins.states import PassangerRegState, TaxiState, DeliveryState, DriverRegState, VkPayPay, QiwiPay, Helper # Импорируем все стейты (для регистарций)
 from plugins.forms import Forms # Импортируем формы и некоторые функции оттуда
 from plugins.rules import Order, Delivery, DriverSuccess, DriverCancel, QiwiPayRule, WillArriveMinutes, Arrived, VkPayRule
 from plugins.csveer import Csveer
@@ -90,8 +90,12 @@ async def driver_edit_profile(message:Message):
 # Удаление водителя
 @vk.on.private_message(payload = {'driver': 0, 'delete': 0})
 async def driver_profile_delete(message:Message):
-	await db.driver.delete(message.from_id)
-	await message.answer('Ваш профиль был удалён!\nСоздай свою анкету, жми кнопку "Начать" &#128071;&#128071;&#128071;', keyboard = keyboards.starter)
+	driver_info = await db.driver.get(message.from_id)
+	if driver_info[1]['balance'] > 0:
+		await message.answer(f'У вас на балансе есть ещё {driver_info[1]["balance"]} руб., вы можете обратиться в тех.поддержку с этим вопросом (тех.поддержка вызывается командой "техпод")')
+	else:
+		await db.driver.delete(message.from_id)
+		await message.answer('Ваш профиль был удалён!\nСоздай свою анкету, жми кнопку "Начать" &#128071;&#128071;&#128071;', keyboard = keyboards.starter)
 
 # профиль пассажира
 @vk.on.private_message(payload = {'user': 0, 'profile': 0})
@@ -425,24 +429,65 @@ async def admin_com(message:Message, commands:str):
 				document = await PhotoMessageUploader(vk.api).upload(photo, peer_id = message.from_id)
 				await message.answer(attachment = document)
 		elif command[0] == 'get':
-			drivers = await db.driver.admin_get_all()
-			passangers = await db.passanger.admin_get_all()
-			await csv.get_csv([passangers, drivers])
+			names = await csv.get_csv(
+				await asyncio.gather(
+					db.driver.admin_get_all(),
+					db.passanger.admin_get_all()
+				)
+			)
+			docs = await asyncio.gather(
+				DocUploader(vk.api).upload(names[0]),
+				DocUploader(vk.api).upload(names[1])
+			)
+			for doc in docs:
+				await message.answer(attachment = doc)
+		elif command[0] == 'answer':
+			if command[1].isdigit():
+				message_id = await vk.api.messages.send(
+					user_id = command[1],
+					peer_id = command[1],
+					random_id = 1,
+					message = command[2]
+				)
+				await message.answer(f'Вы успешно ответили на вопрос {command[0]}\nЕсли вам не нравится ответ, то пропишите "admin delanswer {command[1]} {message_id}"')
+			else:
+				await message.answer('ID дролжен быть цифровой!')
+		elif command[0] == 'delanswer':
+			pass
 		else:
 			await message.answer('Неизвестная команда!')
+
+@vk.on.private_message(text='техпод')
+async def helper(message:Message):
+	await vk.state_dispenser.set(message.from_id, Helper.question)
+	await message.answer('Опишите здесь то что вас интересует и вам ответят в ближайшее время')
+
+@vk.on.private_message(state = Helper.question)
+async def helper_support(message:Message):
+	parameters = await binder.get_parameters()
+	await vk.state_dispenser.delete(message.from_id)
+	await message.answer('Ваш запрос отправлен в техподдержку')
+	await vk.api.messages.send(
+		user_id = parameters['admin'],
+		peer_id = parameters['admin'],
+		random_id = 0,
+		message = f'ID: {message.from_id}\nВопрос: {message.text}\n\nОтветить можно командой "admin answer (ID) (message)"'
+	)
+
+
 
 # Если человек регестрируется как пассажир (шаг 1)
 @vk.on.private_message(payload = {'passanger': 1})
 async def reg_passanger_1(message:Message):
 	await vk.state_dispenser.set(message.from_id, PassangerRegState.phone)
-	await message.answer('Введите ваш телефон для связи с водителем')
+	await message.answer('Введите ваш телефон для связи с водителем\nТелфон вы можете не указывать, однако вам будет труднее связываться с водителем')
 
 # Регсирация пользователя (шаг 2)
 @vk.on.private_message(state = PassangerRegState.phone)
 async def reg_passanger_2(message:Message):
 	storage.set(f'phone_{message.from_id}', message.text)
 	await vk.state_dispenser.set(message.from_id, PassangerRegState.location)
-	await message.answer('A теперь отправьте вашу геолокацию или напишите свой город буквами', keyboard = keyboards.inline.location)
+	await message.answer('A теперь отправьте вашу геолокацию (из геолокации мы узанём лишь ваш город, вы можете просто указать любую точку вашего города) или напишите свой город буквами', keyboard = keyboards.inline.location)
 
 # Регистрация пользователя (шаг 3)
 @vk.on.private_message(state = PassangerRegState.location)
@@ -482,7 +527,7 @@ async def reg_driver_loc(message:Message):
 			return 'Город возможно написан неверно. Попробуйте снова'
 	storage.set(f'location_{message.from_id}', location)
 	await vk.state_dispenser.set(message.from_id, DriverRegState.phone)
-	return 'Теперь введите ваш номер телефона для связи с пассажиром'
+	return 'Теперь введите ваш номер телефона для связи с пассажиром\nНомер телефона можно не указывать, однако вы не сможете связываться с пассажиром'
 
 # Регистрация водителя (шаг 2)
 @vk.on.private_message(state = DriverRegState.phone)

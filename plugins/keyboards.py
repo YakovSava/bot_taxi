@@ -108,6 +108,16 @@ class keyboards:
 		.row()
 		.add(Text('Моя анкета &#128519;', payload = {'user': 0, 'profile': 0}), color = KeyboardButtonColor.SECONDARY)
 	).get_json()
+	month_no_activity_driver = (Keyboard(one_time = False)
+		.add(Text('Вернуться!', payload = {'driver': 0, 'profie': 0}), color = KeyboardButtonColor.POSITIVE)
+		.row()
+		.add(Text('Отключить анкету', payload={'driver': 0, 'off': 0}), color=KeyboardButtonColor.NEGATIVE)
+	).get_json()
+	month_no_activity_passanger = (Keyboard(one_time = False)
+		.add(Text('Вернуться!', payload = {'user': 0, 'back': 0}), color = KeyboardButtonColor.POSITIVE)
+		.row()
+		.add(Text('Отключить анкету', payload={'user': 0, 'off': 0}), color=KeyboardButtonColor.NEGATIVE)
+	).get_json()
 
 	def construct(keyboard_texts:list, keyboard_action:list, payload:list, **kwargs): # Это конструктор клавиатур для людей которые не ссильно разбираются в vkbottle, но которые будт поддерживать этот проект в будущем
 		keyboard_object = Keyboard(**kwargs)

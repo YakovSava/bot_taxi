@@ -1,7 +1,7 @@
 import sqlite3
 
 from os.path import join
-from time import strftime, gmtime
+from time import time
 
 class Database:
 
@@ -71,7 +71,10 @@ class Database:
 
 		async def admin_get_all(self):
 			self.cursor.execute('SELECT * FROM passanger')
-			return self.cursor.fetchall()
+			for info in (self.cursor.fetchall()):
+				if info is not None: 
+					yield info
+
 
 	class _driver:
 
@@ -120,16 +123,16 @@ class Database:
 				json['vk'], 1, json['gender'],
 				json['city'], json['name'], json['phone'],
 				json['auto'], json['color'], json['state_number'],
-				strftime('%c', gmtime())
+				time()
 			))
 			self.db.commit()
 			self.cursor.execute('INSERT INTO driver2 VALUES (?,?,?,?)', (
-				json['vk'], strftime('%c', gmtime()), 0, json['balance']
+				json['vk'], time(), 0, json['balance']
 			))
 			self.db.commit()
 
 		async def set_activity(self, vk:str) -> None:
-			self.cursor.execute(f'UPDATE driver2 SET last_activity = "{strftime("%c", gmtime())}" WHERE VK = "{vk}"')
+			self.cursor.execute(f'UPDATE driver2 SET last_activity = "{time()}" WHERE VK = "{vk}"')
 			self.db.commit()
 
 		async def set_balance(self, vk:str, set:int) -> None:
@@ -146,7 +149,7 @@ class Database:
 
 		async def get_all(self) -> tuple:
 			self.cursor.execute('SELECT * FROM driver')
-			for info in self.cursor.fetchall():
+			for info in (self.cursor.fetchall()):
 				if info is not None:
 					yield info['VK'], info['city']
 
@@ -160,3 +163,9 @@ class Database:
 			all1 = self.cursor.fetchall()
 			self.cursor.execute('SELECT * FROM driver2')
 			return [all1, self.cursor.fetchall()]
+
+		async def get_all_inform(self):
+			self.cursor.execute('SELECT * FROM driver2')
+			for info in (self.cursor.fetchall()):
+				if info is not None:
+					yield info

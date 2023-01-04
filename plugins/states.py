@@ -15,6 +15,7 @@ class DeliveryState(BaseStateGroup):
 	three_quest = 0
 	location = 1
 
+
 class DriverRegState(BaseStateGroup):
 	phone = 0
 	location = 1
@@ -29,3 +30,7 @@ class VkPayPay(BaseStateGroup):
 
 class QiwiPay(BaseStateGroup):
 	pay = 0
+
+
+class Helper(BaseStateGroup):
+	question = 0

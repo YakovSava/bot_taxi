@@ -36,14 +36,15 @@ class Csveer:
 			string += f'{rec[0]};{rec[1]}\n'
 		return string
 
-	async def get_csv(self, all_db:list) -> list:
+	async def get_csv(self, all_db:list) -> tuple:
 		string = 'VK;gender;city;name;phone;quantity;\n'
 		for passanger in all_db[0]:
 			string += f'{passanger["VK"]};{passanger["gender"]};{passanger["city"]};{passanger["name"]};{passanger["phone"]};{passanger["quantity"]};\n'
 		async with aiopen(join('cache', 'passangers.csv'), 'w', encoding = 'utf-8') as new_csv:
 			await new_csv.write(string)
 		string = 'VK;status;gender;city;name;phone;auto;color;"state number";"first activity";"last activity";quantity;balance\n'
-		for oned, twod in all_db[1]:
-			string += f'{ones["VK"]};{ones["status"]};{ones["gender"]};{ones["city"]};{ones["name"]};{ones["phone"]};{ones["auto"]};{ones["color"]};{ones["state_number"]};{ones["first_activity"]};{twod["last_activity"]};{twod["quantity"]};{twod["balance"]}'
+		for ones, twos in all_db[1]:
+			string += f'{ones["VK"]};{ones["status"]};{ones["gender"]};{ones["city"]};{ones["name"]};{ones["phone"]};{ones["auto"]};{ones["color"]};{ones["state_number"]};{ones["first_activity"]};{twos["last_activity"]};{twos["quantity"]};{twos["balance"]}'
 		async with aiopen(join('cache', 'drivers.csv'), 'w', encoding = 'utf-8') as new_csv:
 			await new_csv.write(string)
+		return join('cache', 'passangers.csv'), join('cache', 'drivers.csv')
