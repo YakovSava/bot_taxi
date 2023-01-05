@@ -35,15 +35,15 @@ class Dispath:
 					keyboard=keyboards.month_no_activity_driver
 				)
 				await asyncio.sleep(1)
-		async for rec in self.database.passanger.admin_get_all():
-			if (time() - int(rec['last_activity']) >= 30*24*60*60) and (rec['vk'] not in service_file):
-				await self.api.messages.send(
-					user_id=rec['vk'],
-					peer_id=rec['vk'],
-					random_id=0,
-					message='Привет!\nТы целый месяц не пользовался нашим ботом :( (временный смайлик)\nНажми на кнопку что бы снова начать',
-					keyboard=keyboards.month_no_activity_passanger
-				)
+		# async for rec in self.database.passanger.admin_get_all():
+		# 	if (time() - int(rec['last_activity']) >= 30*24*60*60) and (rec['vk'] not in service_file):
+		# 		await self.api.messages.send(
+		# 			user_id=rec['vk'],
+		# 			peer_id=rec['vk'],
+		# 			random_id=0,
+		# 			message='Привет!\nТы целый месяц не пользовался нашим ботом :( (временный смайлик)\nНажми на кнопку что бы снова начать',
+		# 			keyboard=keyboards.month_no_activity_passanger
+		# 		)
 
 	async def _get_service_file(self) -> list:
 		async with aiopen('cache/off.mas', 'r', encoding='utf-8') as list_file:

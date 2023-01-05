@@ -13,6 +13,8 @@ from plugins.states import PassangerRegState, TaxiState, DeliveryState, DriverRe
 from plugins.forms import Forms # Импортируем формы и некоторые функции оттуда
 from plugins.rules import Order, Delivery, DriverSuccess, DriverCancel, QiwiPayRule, WillArriveMinutes, Arrived, VkPayRule
 from plugins.csveer import Csveer
+from plugins.timer import Timer
+from plugins.dispather import Dispath
 from config import vk_token, ddt_token, qiwi_token # Импрртируем токены
 
 if platform in ['win32', 'cygwin', 'msys']:
@@ -45,6 +47,12 @@ storage = CtxStorage() # Инциализируем врмеенное хран�
 forms = Forms() # Инициализируем формы
 qiwi = AioQiwiP2P(auth_key = qiwi_token)
 csv = Csveer()
+timer = Timer()
+dispather = Dispath(
+	timer=timer,
+	database=db,
+	api=vk.api
+)
 
 # Начало бота (в группе должно стоять что бы в самом начале пользователь мог нажать на кнопку)
 @vk.on.private_message(text = 'начать')
