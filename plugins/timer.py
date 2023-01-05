@@ -16,5 +16,5 @@ class Timer:
 		thread = Thread(target=self._run_async, kwargs={'coroutine': coroutine, 'arguments': [args, kwargs]})
 		thread.start()
 
-	def _run_async(self, coroutine:Coroutine=None, arguments:dict={}):
+	def _run_async(self, coroutine:Coroutine=None, arguments:list=[]):
 		self.loop.run_until_complete(coroutine(*arguments[0], **arguments[1]))

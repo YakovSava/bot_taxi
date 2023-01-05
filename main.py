@@ -11,17 +11,11 @@ from plugins.plotter import Plotter # Импортируем статистик�
 from plugins.keyboards import keyboards # Импортируем клавиатуры
 from plugins.states import PassangerRegState, TaxiState, DeliveryState, DriverRegState, VkPayPay, QiwiPay, Helper # Импорируем все стейты (для регистарций)
 from plugins.forms import Forms # Импортируем формы и некоторые функции оттуда
-from plugins.rules import Order, Delivery, DriverSuccess, DriverCancel, QiwiPayRule, WillArriveMinutes, Arrived, VkPayRule
+from plugins.rules import Order, Delivery, DriverSuccess, DriverCancel, QiwiPayRule, WillArriveMinutes, Arrived, VkPayRule, OffAccountRule
 from plugins.csveer import Csveer
 from plugins.timer import Timer
 from plugins.dispather import Dispath
 from config import vk_token, ddt_token, qiwi_token # Импрртируем токены
-
-if platform in ['win32', 'cygwin', 'msys']:
-	try:
-		asyncio.set_event_loop(asyncio.WindowsSelectorEventLoopPolicy())
-	except:
-		pass
 
 try:
 	from loguru import logger
@@ -36,6 +30,14 @@ except ImportError:
 	pass
 else:
 	logging.getLogger("vkbottle").setLevel(logging.INFO)
+
+if platform in ['win32', 'cygwin', 'msys']:
+	try:
+		asyncio.set_event_loop(asyncio.WindowsSelectorEventLoopPolicy())
+	except:
+		pass
+
+asyncio.set_event_loop(asyncio.get_event_loop())
 
 vk = Bot(token = vk_token) # Инициализируем класс бота
 vk.on.vbml_ignore_case = True # Объявляем об игноре регистра
@@ -76,7 +78,7 @@ async def driver_post_edit(message:Message):
 async def reg_driver_1(message:Message):
 	storage.set(f'{message.from_id}_balance', 0)
 	await vk.state_dispenser.set(message.from_id, DriverRegState.location)
-	await message.answer('Регистрация!\nОтправьте вашу геолокацию или напишите свой город буквами', keyboard = keyboards.inline.location)
+	await message.answer('Регистрация!\nТекущий город: Няндома\n\nЕсли вы из другого города то напишите город или отправьте геолокацию', keyboard = keyboards.inline.location)
 
 # Отобразитьь профиль водителя
 @vk.on.private_message(payload = {'driver': 0, 'profie': 0})
@@ -85,6 +87,11 @@ async def driver_profile(message:Message):
 	parameters = await binder.get_parameters()
 	if info != [None, None]:
 		await message.answer(f'Анкета водителя!\nВаше имя: {info[0]["name"]}\nВаш номер телефона: {info[0]["phone"]}\nВаш город: {info[0]["city"]}\nМашина: {info[0]["auto"]}\nЦвет: {info[0]["color"]}\nГосномер: {info[0]["state_number"]}\nКол-во поездок: {info[1]["quantity"]}\nБаланс: {info[1]["balance"]} руб.\nОдна заявка стоит: {parameters["count"]}', keyboard = keyboards.driver_profile)
+
+@vk.on.private_message(OffAccountRule())
+async def off_driver(message:Message):
+	await dispather.off_account(message.from_id)
+	await message.answer('Ваш аккаунт был отключён, больше вам не будут присылать некоторые сообщения')
 
 # Редактирование (пперерегистрация водителя)
 @vk.on.private_message(payload = {'driver': 0, 'edit': 0})
@@ -483,7 +490,6 @@ async def helper_support(message:Message):
 	)
 
 
-
 # Если человек регестрируется как пассажир (шаг 1)
 @vk.on.private_message(payload = {'passanger': 1})
 async def reg_passanger_1(message:Message):
@@ -495,13 +501,15 @@ async def reg_passanger_1(message:Message):
 async def reg_passanger_2(message:Message):
 	storage.set(f'phone_{message.from_id}', message.text)
 	await vk.state_dispenser.set(message.from_id, PassangerRegState.location)
-	await message.answer('A теперь отправьте вашу геолокацию (из геолокации мы узанём лишь ваш город, вы можете просто указать любую точку вашего города) или напишите свой город буквами', keyboard = keyboards.inline.location)
+	await message.answer('Теекущий город: Няндома\n\nЕсли вы хотите сменить город то напишите его название или пришлите геолокацию', keyboard = keyboards.inline.pass_this_step)
 
 # Регистрация пользователя (шаг 3)
 @vk.on.private_message(state = PassangerRegState.location)
 async def reg_passanger_3(message:Message):
 	if message.geo is not None: # Если геолокация отправлена
 		location = message.geo.place.city
+	elif message.text.lower() == 'пропустить шаг':
+		location = 'Няндома'
 	else:
 		if ddt.suggest('address', message.text) != []:
 			location = message.text
@@ -528,6 +536,8 @@ async def reg_passanger_3(message:Message):
 async def reg_driver_loc(message:Message):
 	if message.geo is not None:
 		location = message.geo.place.city
+	elif message.text.lower() == 'пропустить шаг':
+		location = 'Няндома'
 	else:
 		if ddt.suggest('address', message.text) != []:
 			location = message.text
@@ -589,6 +599,12 @@ async def reg_driver_5(message:Message):
 
 @vk.on.private_message()
 async def no_command(message:Message):
+	test = await vk.api.messages.get_history(
+		user_id=message.from_id,
+		offset=0,
+		count=5
+	)
+	print(test)
 	some_state = await vk.state_dispenser.get(message.from_id)
 	#print(some_state)
 	if some_state is not None:

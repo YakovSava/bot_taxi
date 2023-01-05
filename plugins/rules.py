@@ -94,3 +94,7 @@ class VkPayRule(ABCRule[Message]):
 			return False
 		else:
 			return True
+
+class OffAccountRule(ABCRule[Message]):
+	async def check(self, message:Message):
+		return ({'driver': 0, 'off': 0} == eval(message.payload)) or ({'user': 0, 'off': 0} == eval(message.payload))

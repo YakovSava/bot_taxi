@@ -20,6 +20,11 @@ class keyboards:
 			.row()
 			.add(Text('Принимать заявки', payload = {'driver': 0, 'post_reg': 0}), color = KeyboardButtonColor.POSITIVE)
 		).get_json()
+		pass_this_step = (Keyboard(one_time=False, inline=True)
+			.add(Text('Пропустить шаг'), color=KeyboardButtonColor.SECONDARY)
+			.row()
+			.add(Location(), color=KeyboardButtonColor.PRIMARY)
+		).get_json()
 
 	driver_registartion_success = (Keyboard(one_time = True, inline = False)
 			.add(Text('Моя анкета &#128526;', payload = {'driver': 0, 'profie': 0}), color = KeyboardButtonColor.POSITIVE)
@@ -112,11 +117,6 @@ class keyboards:
 		.add(Text('Вернуться!', payload = {'driver': 0, 'profie': 0}), color = KeyboardButtonColor.POSITIVE)
 		.row()
 		.add(Text('Отключить анкету', payload={'driver': 0, 'off': 0}), color=KeyboardButtonColor.NEGATIVE)
-	).get_json()
-	month_no_activity_passanger = (Keyboard(one_time = False)
-		.add(Text('Вернуться!', payload = {'user': 0, 'back': 0}), color = KeyboardButtonColor.POSITIVE)
-		.row()
-		.add(Text('Отключить анкету', payload={'user': 0, 'off': 0}), color=KeyboardButtonColor.NEGATIVE)
 	).get_json()
 
 	def construct(keyboard_texts:list, keyboard_action:list, payload:list, **kwargs): # Это конструктор клавиатур для людей которые не ссильно разбираются в vkbottle, но которые будт поддерживать этот проект в будущем
