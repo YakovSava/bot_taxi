@@ -22,10 +22,6 @@ class Dispath:
 		self.timer = timer
 		self.database = database
 		self.api = api
-
-	async def start(self):
-		pass
-
 	async def _check_all_datas(self) -> None:
 		service_file = await self._get_service_file()
 		async for rec in self.database.driver.get_all():

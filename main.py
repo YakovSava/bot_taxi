@@ -17,12 +17,12 @@ from plugins.timer import Timer
 from plugins.dispather import Dispath
 from config import vk_token, ddt_token, qiwi_token # Импрртируем токены
 
-try:
-	from loguru import logger
-except ImportError:
-	pass
-else:
-	logger.disable("vkbottle")
+# try:
+# 	from loguru import logger
+# except ImportError:
+# 	pass
+# else:
+# 	logger.disable("vkbottle")
 
 try:
 	import logging
@@ -36,9 +36,7 @@ if platform in ['win32', 'cygwin', 'msys']:
 		asyncio.set_event_loop(asyncio.WindowsSelectorEventLoopPolicy())
 	except:
 		pass
-
-asyncio.set_event_loop(asyncio.get_event_loop())
-
+		
 vk = Bot(token = vk_token) # Инициализируем класс бота
 vk.on.vbml_ignore_case = True # Объявляем об игноре регистра
 ddt = Dadata(ddt_token) # Инициализируем объект сервиса
@@ -78,7 +76,7 @@ async def driver_post_edit(message:Message):
 async def reg_driver_1(message:Message):
 	storage.set(f'{message.from_id}_balance', 0)
 	await vk.state_dispenser.set(message.from_id, DriverRegState.location)
-	await message.answer('Регистрация!\nТекущий город: Няндома\n\nЕсли вы из другого города то напишите город или отправьте геолокацию', keyboard = keyboards.inline.location)
+	await message.answer('Регистрация!\nТекущий город: Няндома\n\nЕсли вы из другого города то напишите город или отправьте геолокацию', keyboard = keyboards.inline.pass_this_step)
 
 # Отобразитьь профиль водителя
 @vk.on.private_message(payload = {'driver': 0, 'profie': 0})
@@ -191,8 +189,7 @@ async def taxi_tax(message:Message):
 				message = f'&#9989; Водитель принял ваш заказ! &#9989;\n\nТелефон водителя: {driver_info[0]["phone"]}\nМашина: {driver_info[0]["auto"]}\nЦвет: {driver_info[0]["color"]}\nГосномер: {driver_info[0]["state_number"]}\nВ конце поездки нажми "Успешно доехал"',
 				keyboard = keyboards.passanger_get_taxi
 			)
-			await forms.stop_form(from_id) # Останавливаем форму
-			forms.all_forms[from_id]['driver_id'] = driver_id # Пишем в форме что водитель принял заявку
+			await forms.start_drive(from_id, driver_id)
 			await message.answer(f'Заявка принята!\nТелефон оправителя заявки: {passanger["phone"]}\n{payload["other"]["text"]}\nВот координаты отправителя заявки:', keyboard = keyboards.driver_order_complete({'from_id': from_id}), lat = payload['other']['location'][0], long = payload['other']['location'][1])
 			await asyncio.sleep(1)
 			await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
@@ -256,8 +253,7 @@ async def driver_delivery(message:Message):
 				message = f'&#9989; Водитель принял ваш заказ! &#9989;\n\nТелефон водителя: {driver_info[0]["phone"]}\nМашина: {driver_info[0]["auto"]}\nЦвет: {driver_info[0]["color"]}\nГосномер: {driver_info[0]["state_number"]}\n\nОжидайте доставки!',
 				keyboard = keyboards.passanger_get_taxi
 			)
-			await forms.stop_form(message.from_id)
-			forms.all_forms[from_id]['driver_id'] = driver_id
+			await forms.start_drive(from_id, driver_id)
 			await message.answer(f'Заявка на доставку принята!\nТелефон оправителя заявки: {passanger["phone"]}\n{payload["other"]["text"]}\nВот координаты отправителя заявки:', keyboard = keyboards.driver_order_complete({'from_id': from_id}), lat = payload['other']['location'][0], long = payload['other']['location'][1])
 			await asyncio.sleep(1)
 			await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
@@ -276,6 +272,7 @@ async def user_cancelling_order(message:Message):
 		message = 'К сожалению пассажир отменил заказ :(\nСкоро будут ещё заявки, не отчаивайтесь!',
 		keyboard = keyboards.driver_registartion_success
 	)
+	await forms.stop_drive(message.from_id)
 	await message.answer('Вы отменили заказ!', keyboard = keyboards.choose_service)
 
 # Если пассажир доехал
@@ -290,28 +287,31 @@ async def passanger_success_order(message:Message):
 		message = 'Пассажир заявил что вы доехали',
 		keyboard = keyboards.driver_registartion_success
 	)
+	await forms.stop_drive(message.from_id)
 	await db.driver.set_balance(forms.all_forms[message.from_id]['driver_id'], -parameters['count'])
 	await db.driver.set_qunatity(forms.all_forms[message.from_id]['driver_id'])
 	await db.passanger.set_qunatity(message.from_id)
 
 @vk.on.private_message(DriverSuccess())
 async def driver_success_order(message:Message):
+	payload = eval(f'{message.payload}')
 	parameters = await binder.get_parameters()
 	await message.answer('Вы успешно довезли пассажира!', keyboard = keyboards.driver_registartion_success)
 	await vk.api.messages.send(
-		user_id = eval(f'dict({message.payload})')['other']['from_id'],
-		peer_id = eval(f'dict({message.payload})')['other']['from_id'],
+		user_id = payload['other']['from_id'],
+		peer_id = payload['other']['from_id'],
 		random_id = 0,
 		message = 'Водитель заявил о том что вы доехали',
 		keyboard = keyboards.choose_service
 	)
+	await forms.stop_drive(payload['other']['from_id'])
 	await db.driver.set_balance(message.from_id, -parameters['count'])
 	await db.driver.set_qunatity(message.from_id)
-	await db.passanger.set_qunatity(eval(f'dict({message.payload})')['other']['from_id'])
+	await db.passanger.set_qunatity(payload['other']['from_id'])
 
 @vk.on.private_message(WillArriveMinutes())
 async def will_arived_with_minutes_with_minute(message:Message):
-	payload = eval(f'dict({message.payload})')
+	payload = eval(f'{message.payload})')
 	await message.answer('Сообщение отправлено пассажиру!', keyboard = keyboards.driver_order_complete_will_arrive(payload['other']))
 	await vk.api.messages.send(
 		user_id = payload['other']['from_id'],
@@ -350,13 +350,15 @@ async def passanger_cancelling_order(message:Message):
 
 @vk.on.private_message(DriverCancel())
 async def driver_cancel_order(message:Message):
+	payload = eval(f'{message.payload}')
 	await vk.api.messages.send(
-		user_id = eval(f'dict({message.payload})')['other']['from_id'],
-		peer_id = eval(f'dict({message.payload})')['other']['from_id'],
+		user_id = payload['other']['from_id'],
+		peer_id = payload['other']['from_id'],
 		random_id = 0,
 		message = 'К сожалению водитель отменил заказ :(\nВы можете заказать такси снова',
 		keyboard = keyboards.choose_service
 	)
+	await forms.stop_drive(payload['other']['from_id'])
 	await message.answer('Вы отменили заказ!', keyboard = keyboards.driver_registartion_success)
 
 @vk.on.private_message(payload = {'driver': 0, 'money': 'vk pay'})

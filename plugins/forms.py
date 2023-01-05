@@ -9,13 +9,13 @@ class Forms:
 	def __init__(self):
 		self.all_forms = {}
 		asyncio.run(self._downoload_forms())
-		thread = Thread(target=self._reload_starter())
+		thread = Thread(target=self._reload_starter)
 		thread.start()
 
 	async def _downoload_forms(self):
 		async with aiopen('cache/forms.json', 'r', encoding='utf-8') as form_getter:
 			forms = await form_getter.read()
-		self.all_forms = eval(forms)
+		self.all_forms = eval(f'{forms}')
 
 	async def _backup(self):
 		async with aiopen('cache/forms.json', 'w', encoding='utf-8') as backup_file:
@@ -23,23 +23,29 @@ class Forms:
 
 	def _reload_starter(self):
 		sleep(60)
-		some_loop = asyncio.get_running_loop()
+		some_loop = asyncio.get_event_loop()
 		while True:
 			some_loop.run_until_complete(self._reload_timer())
 
 	async def new_form(self, from_id:int) -> None:
-		self.all_forms[from_id] = {'from_id': from_id, 'driver_id': 0, 'active': True, 'in_driver': False}
+		self.all_forms[from_id] = {'from_id': from_id, 'driver_id': 0, 'active': True, 'in_drive': False}
 		await self._form_timer(from_id)
+
+	async def start_drive(self, from_id:int, driver_id:int) -> None:
+		self.all_forms[from_id]['active'] = False
+		self.all_forms[from_id]['in_drive'] = True
+		self.all_forms[from_id]['driver_id'] = driver_id
+
+	async def stop_drive(self, from_id:int):
+		self.all_forms[from_id]['active'] = False
+		self.all_forms[from_id]['in_drive'] = False
 
 	async def stop_form(self, from_id:int) -> None:
 		self.all_forms[from_id]['active'] = False
 
-	async def driver_stop(self, from_id:int) -> None:
-		del self.all_forms[from_id]
-
-	async def _delete_all_form(self) -> None:
+	async def delete_all_form(self) -> None:
 		for from_id in list(self.all_forms.keys()):
-			if not self.all_forms[from_id]['active']:
+			if not self.all_forms[from_id]['active'] and not self.all_forms[from_id]['in_drive']:
 				del self.all_forms[from_id]
 
 	def get(self, from_id:int) -> dict:

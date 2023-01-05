@@ -6,7 +6,7 @@ from typing import Callable, Coroutine
 class Timer:
 
 	def __init__(self):
-		self.loop = asyncio.new_event_loop()
+		pass
 
 	def new_sync_task(self, function:Callable, *args, **kwargs):
 		thread = Thread(target=function, args=args, kwargs=kwargs)
@@ -17,4 +17,4 @@ class Timer:
 		thread.start()
 
 	def _run_async(self, coroutine:Coroutine=None, arguments:list=[]):
-		self.loop.run_until_complete(coroutine(*arguments[0], **arguments[1]))
+		asyncio.run(coroutine(*arguments[0], **arguments[1]))
