@@ -23,13 +23,14 @@ class Forms:
 
 	def _reload_starter(self):
 		sleep(60)
-		some_loop = asyncio.get_event_loop()
+		some_loop = asyncio.new_event_loop()
 		while True:
 			some_loop.run_until_complete(self._reload_timer())
 
 	async def new_form(self, from_id:int) -> None:
 		self.all_forms[from_id] = {'from_id': from_id, 'driver_id': 0, 'active': True, 'in_drive': False}
-		await self._form_timer(from_id)
+		thread = Thread(target=self._form_timer_starter)
+		thread.start()
 
 	async def start_drive(self, from_id:int, driver_id:int) -> None:
 		self.all_forms[from_id]['active'] = False
@@ -50,6 +51,10 @@ class Forms:
 
 	def get(self, from_id:int) -> dict:
 		return self.all_forms[from_id]
+
+	def _form_timer_starter(self, *args) -> None:
+		loop = asyncio.get_event_loop()
+		loop.run_until_complete(self._form_timer(*args))
 
 	async def _form_timer(self, from_id:int) -> None:
 		async def wrapper():

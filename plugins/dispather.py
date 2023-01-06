@@ -22,6 +22,7 @@ class Dispath:
 		self.timer = timer
 		self.database = database
 		self.api = api
+
 	async def _check_all_datas(self) -> None:
 		service_file = await self._get_service_file()
 		async for rec in self.database.driver.get_all():
@@ -49,21 +50,33 @@ class Dispath:
 					keyboard=keyboards.month_no_activity_passanger
 				)
 
-	async def _get_service_file(self) -> list:
+	async def get_service_file(self) -> list:
 		async with aiopen('cache/off.pylist', 'r', encoding='utf-8') as list_file:
 			lines = await list_file.read()
-		return eval(lines)
+		return eval(f'{lines}')
 
 	async def off_account(self, new_id:int) -> None:
-		old_list = await self._get_service_file()
+		old_list = await self.get_service_file()
 		async with aiopen('cache/off.pylist', 'w', encoding='utf-8') as list_file:
 			old_list.append(new_id)
+			await list_file.write(f'{old_list}')
+
+	async def on_account(self, off_id:int) -> None:
+		old_list = await self.get_service_file()
+		old_list.remove(off_id)
+		async with aiopen('cache/off.pylist', 'w', encoding='utf-8') as list_file:
 			await list_file.write(f'{old_list}')
 
 	async def get_no_registred_drivers(self) -> list:
 		async with aiopen('cache/no_registred.pylist', 'r', encoding='utf-8') as file:
 			list_lines = await file.read()
-		return eval(list_lines)
+		return eval(f'{list_lines}')
+
+	async def remove_on_registred_drivers(self, registred_id:int) -> None:
+		old_list = await self.get_no_registred_drivers()
+		old_list.remove(registred_id)
+		async with aiopen('cache/no_registred.pylist', 'w', encoding='utf-8') as file:
+			await file.write(f'{old_list}')
 
 	async def update_no_registred_driver(self, new_id:int) -> None:
 		list_lines = await self.get_no_registred_drivers()

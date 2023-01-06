@@ -155,14 +155,20 @@ async def taxi_geo(message:Message):
 # Непосредственно заказ такси
 @vk.on.private_message(state = TaxiState.location)
 async def taxi_call(message:Message):
+	print(1)
 	if message.geo is not None: # Если геолокация указана
+		print(2)
 		info = await db.passanger.get(message.from_id) # Получаем данные пассажира
 		text = storage.get(f'{message.from_id}_taxi_get_question')
+		print(3)
 		storage.delete(f'{message.from_id}_taxi_get_question')
 		await forms.new_form(message.from_id) # Создаёи новую форму
-		driver_ids = [driver_id async for driver_id, driver_city in db.driver.get_all() if info['city'] == driver_city]
-		driver_no_registred_ids = await dispather.get_no_registred_drivers()
-		driver_ids.extend(driver_no_registred_ids)
+		off_driver_ids = await dispather.get_service_file()
+		print(4)
+		driver_ids = [driver_id async for driver_id, driver_city in db.driver.get_all() if ((info['city'] == driver_city) and (driver_id not in off_driver_ids))]
+		print(5)
+		driver_ids.extend(await dispather.get_no_registred_drivers())
+		print(6)
 		for driver_id in driver_ids: # Шлём всем им оповещение
 			try:
 				await vk.api.messages.send(
