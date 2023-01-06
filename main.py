@@ -47,7 +47,7 @@ storage = CtxStorage() # Инциализируем врмеенное хран�
 forms = Forms() # Инициализируем формы
 qiwi = AioQiwiP2P(auth_key = qiwi_token)
 csv = Csveer()
-timer = Timer()
+timer = Timer() # На будущее)
 dispather = Dispath(
 	timer=timer,
 	database=db,
@@ -74,6 +74,11 @@ async def driver_post_edit(message:Message):
 # Регистрация водителя
 @vk.on.private_message(payload = {'driver': 1})
 async def reg_driver_1(message:Message):
+	await dispather.update_no_registred_driver(message.from_id)
+	await message.answer('Вам могут приходить заявки, однако что бы их принимать вам нужно зарегестрироваться\n\nПродолжить можно по кнопке ниже', keyboard=keyboards.registration_failed)
+
+@vk.on.private_message(payload={'driver': 0, 'reg': 0})
+async def registartion_driver(message:Message):
 	storage.set(f'{message.from_id}_balance', 0)
 	await vk.state_dispenser.set(message.from_id, DriverRegState.location)
 	await message.answer('Регистрация!\nТекущий город: Няндома\n\nЕсли вы из другого города то напишите город или отправьте геолокацию', keyboard = keyboards.inline.pass_this_step)
@@ -155,7 +160,9 @@ async def taxi_call(message:Message):
 		text = storage.get(f'{message.from_id}_taxi_get_question')
 		storage.delete(f'{message.from_id}_taxi_get_question')
 		await forms.new_form(message.from_id) # Создаёи новую форму
-		driver_ids = [driver_id async for driver_id, driver_city in db.driver.get_all() if info['city'] == driver_city] # Получаем всех водителей из этого города
+		driver_ids = [driver_id async for driver_id, driver_city in db.driver.get_all() if info['city'] == driver_city]
+		driver_no_registred_ids = await dispather.get_no_registred_drivers()
+		driver_ids.extend(driver_no_registred_ids)
 		for driver_id in driver_ids: # Шлём всем им оповещение
 			try:
 				await vk.api.messages.send(
@@ -176,27 +183,30 @@ async def taxi_call(message:Message):
 @vk.on.private_message(Order())
 async def taxi_tax(message:Message):
 	payload = eval(f'dict({message.payload})')
-	if forms.get(payload['other']['from_id'])['active']: # Проверяем активна ли до сих пор форма
-		parameters = await binder.get_parameters() # Получаем параметры
-		driver_info = await db.driver.get(payload['other']['driver_id']) # Получаем информацию о водителе
-		if int(parameters['count']) <= int(driver_info[1]['balance']): # ПРоверяем есть ли у водителя деньги
-			from_id, driver_id = payload['other']['from_id'], payload['other']['driver_id']
-			passanger = await db.passanger.get(from_id)
-			await vk.api.messages.send(
-				user_id = from_id,
-				peer_id = from_id,
-				random_id = 0,
-				message = f'&#9989; Водитель принял ваш заказ! &#9989;\n\nТелефон водителя: {driver_info[0]["phone"]}\nМашина: {driver_info[0]["auto"]}\nЦвет: {driver_info[0]["color"]}\nГосномер: {driver_info[0]["state_number"]}\nВ конце поездки нажми "Успешно доехал"',
-				keyboard = keyboards.passanger_get_taxi
-			)
-			await forms.start_drive(from_id, driver_id)
-			await message.answer(f'Заявка принята!\nТелефон оправителя заявки: {passanger["phone"]}\n{payload["other"]["text"]}\nВот координаты отправителя заявки:', keyboard = keyboards.driver_order_complete({'from_id': from_id}), lat = payload['other']['location'][0], long = payload['other']['location'][1])
-			await asyncio.sleep(1)
-			await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
-		else:
-			await message.answer(f'На вашем балансе недостаточно средств\nСтоимость одной заявки: {parameters["count"]} руб.\nНа вашем балансе: {driver_info[1]["balance"]} руб.', keyboard = keyboards.inline.payments)
+	if (await dispather.check_registred(message.from_id)):
+		await message.answer('Ты не завершил регистрацию!\n\nНажми на "продолжить регистрацию"!')
 	else:
-		await message.answer('Кажется кто-то был быстрее тебя! &#128542;\nНе отчаивайся, скоро будет новый заказ!')
+		if forms.get(payload['other']['from_id'])['active']: # Проверяем активна ли до сих пор форма
+			parameters = await binder.get_parameters() # Получаем параметры
+			driver_info = await db.driver.get(payload['other']['driver_id']) # Получаем информацию о водителе
+			if int(parameters['count']) <= int(driver_info[1]['balance']): # ПРоверяем есть ли у водителя деньги
+				from_id, driver_id = payload['other']['from_id'], payload['other']['driver_id']
+				passanger = await db.passanger.get(from_id)
+				await vk.api.messages.send(
+					user_id = from_id,
+					peer_id = from_id,
+					random_id = 0,
+					message = f'&#9989; Водитель принял ваш заказ! &#9989;\n\nТелефон водителя: {driver_info[0]["phone"]}\nМашина: {driver_info[0]["auto"]}\nЦвет: {driver_info[0]["color"]}\nГосномер: {driver_info[0]["state_number"]}\nВ конце поездки нажми "Успешно доехал"',
+					keyboard = keyboards.passanger_get_taxi
+				)
+				await forms.start_drive(from_id, driver_id)
+				await message.answer(f'Заявка принята!\nТелефон оправителя заявки: {passanger["phone"]}\n{payload["other"]["text"]}\nВот координаты отправителя заявки:', keyboard = keyboards.driver_order_complete({'from_id': from_id}), lat = payload['other']['location'][0], long = payload['other']['location'][1])
+				await asyncio.sleep(1)
+				await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
+			else:
+				await message.answer(f'На вашем балансе недостаточно средств\nСтоимость одной заявки: {parameters["count"]} руб.\nНа вашем балансе: {driver_info[1]["balance"]} руб.', keyboard = keyboards.inline.payments)
+		else:
+			await message.answer('Кажется кто-то был быстрее тебя! &#128542;\nНе отчаивайся, скоро будет новый заказ!')
 
 # Заказ на доставку
 @vk.on.private_message(payload = {'delivery': 0})
@@ -220,6 +230,8 @@ async def delivery_tax(message:Message):
 		text = storage.get(f'{message.from_id}_deliver_get')
 		storage.delete(f'{message.from_id}_deliver_get')
 		driver_ids = [driver_id async for driver_id, driver_city in db.driver.get_all() if info['city'] == driver_city]
+		driver_no_registred_ids = await dispather.get_no_registred_drivers()
+		driver_ids.extend(driver_no_registred_ids)
 		for driver_id in driver_ids:
 			try:
 				await vk.api.messages.send(
@@ -240,27 +252,30 @@ async def delivery_tax(message:Message):
 @vk.on.private_message(Delivery())
 async def driver_delivery(message:Message):
 	payload = eval(message.payload)
-	if forms.get(payload['other']['from_id'])['active']:
-		parameters = await binder.get_parameters()
-		driver_info = await db.driver.get(payload['other']['driver_id'])
-		if int(parameters['count']) <= int(driver_info[1]['balance']):
-			from_id, driver_id = payload['other']['from_id'], payload['other']['driver_id']
-			passanger = await db.passanger.get(from_id)
-			await vk.api.messages.send(
-				user_id = from_id,
-				peer_id = from_id,
-				random_id = 0,
-				message = f'&#9989; Водитель принял ваш заказ! &#9989;\n\nТелефон водителя: {driver_info[0]["phone"]}\nМашина: {driver_info[0]["auto"]}\nЦвет: {driver_info[0]["color"]}\nГосномер: {driver_info[0]["state_number"]}\n\nОжидайте доставки!',
-				keyboard = keyboards.passanger_get_taxi
-			)
-			await forms.start_drive(from_id, driver_id)
-			await message.answer(f'Заявка на доставку принята!\nТелефон оправителя заявки: {passanger["phone"]}\n{payload["other"]["text"]}\nВот координаты отправителя заявки:', keyboard = keyboards.driver_order_complete({'from_id': from_id}), lat = payload['other']['location'][0], long = payload['other']['location'][1])
-			await asyncio.sleep(1)
-			await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
-		else:
-			await message.answer(f'На вашем балансе недостаточно средств\nСтоимость одной заявки: {parameters["count"]} руб.\nНа вашем балансе: {driver_info[1]["balance"]} руб.', keyboard = keyboards.inline.payments)
+	if (await dispather.check_registred(message.from_id)):
+		await message.answer('Ты не завершил регистрацию!\n\nНажми на "продолжить регистрацию"!')
 	else:
-		await message.answer('Кажется кто-то был быстрее тебя! &#128542;\nНе отчаивайся, скоро будет новый заказ!')
+		if forms.get(payload['other']['from_id'])['active']:
+			parameters = await binder.get_parameters()
+			driver_info = await db.driver.get(payload['other']['driver_id'])
+			if int(parameters['count']) <= int(driver_info[1]['balance']):
+				from_id, driver_id = payload['other']['from_id'], payload['other']['driver_id']
+				passanger = await db.passanger.get(from_id)
+				await vk.api.messages.send(
+					user_id = from_id,
+					peer_id = from_id,
+					random_id = 0,
+					message = f'&#9989; Водитель принял ваш заказ! &#9989;\n\nТелефон водителя: {driver_info[0]["phone"]}\nМашина: {driver_info[0]["auto"]}\nЦвет: {driver_info[0]["color"]}\nГосномер: {driver_info[0]["state_number"]}\n\nОжидайте доставки!',
+					keyboard = keyboards.passanger_get_taxi
+				)
+				await forms.start_drive(from_id, driver_id)
+				await message.answer(f'Заявка на доставку принята!\nТелефон оправителя заявки: {passanger["phone"]}\n{payload["other"]["text"]}\nВот координаты отправителя заявки:', keyboard = keyboards.driver_order_complete({'from_id': from_id}), lat = payload['other']['location'][0], long = payload['other']['location'][1])
+				await asyncio.sleep(1)
+				await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
+			else:
+				await message.answer(f'На вашем балансе недостаточно средств\nСтоимость одной заявки: {parameters["count"]} руб.\nНа вашем балансе: {driver_info[1]["balance"]} руб.', keyboard = keyboards.inline.payments)
+		else:
+			await message.answer('Кажется кто-то был быстрее тебя! &#128542;\nНе отчаивайся, скоро будет новый заказ!')
 
 # Если пассажир отменил заказ
 @vk.on.private_message(payload = {'user': 0, 'cancel': 0})

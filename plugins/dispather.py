@@ -60,7 +60,7 @@ class Dispath:
 			old_list.append(new_id)
 			await list_file.write(f'{old_list}')
 
-	async def get_no_registred_driver(self) -> list:
+	async def get_no_registred_drivers(self) -> list:
 		async with aiopen('cache/no_registred.pylist', 'r', encoding='utf-8') as file:
 			list_lines = await file.read()
 		return eval(list_lines)
