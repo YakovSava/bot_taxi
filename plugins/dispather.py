@@ -66,11 +66,11 @@ class Dispath:
 		return eval(list_lines)
 
 	async def update_no_registred_driver(self, new_id:int) -> None:
-		list_lines = await self.get_no_registred_driver()
+		list_lines = await self.get_no_registred_drivers()
 		async with aiopen('cache/no_registred.pylist', 'w', encoding='utf-8') as file:
 			list_lines.append(new_id)
 			await file.write(f'{list_lines}')
 
 	async def check_registred(self, from_id:int) -> bool:
-		list_lines = await self.get_no_registred_driver()
+		list_lines = await self.get_no_registred_drivers()
 		return from_id in list_lines
