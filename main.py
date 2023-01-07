@@ -19,12 +19,12 @@ from plugins.timer import Timer
 from plugins.dispatcher import Dispatch
 from config import vk_token, ddt_token, qiwi_token # Импрртируем токены
 
-# try:
-# 	from loguru import logger
-# except ImportError:
-# 	pass
-# else:
-# 	logger.disable("vkbottle")
+try:
+	from loguru import logger
+except ImportError:
+	pass
+else:
+	logger.disable("vkbottle")
 
 try:
 	import logging
@@ -33,11 +33,11 @@ except ImportError:
 else:
 	logging.getLogger("vkbottle").setLevel(logging.INFO)
 
-# if platform in ['win32', 'cygwin', 'msys']:
-# 	try:
-# 		asyncio.set_event_loop(asyncio.WindowsSelectorEventLoopPolicy())
-# 	except:
-# 		pass
+if platform in ['win32', 'cygwin', 'msys']:
+	try:
+		asyncio.set_event_loop(asyncio.WindowsSelectorEventLoopPolicy())
+	except:
+		pass
 
 asyncio.set_event_loop(asyncio.new_event_loop())
 
@@ -146,7 +146,7 @@ async def user_profile(message:Message):
 async def passanger_edit_profile(message:Message):
 	await db.passanger.delete(message.from_id)
 	await vk.state_dispenser.set(message.from_id, PassangerRegState.phone)
-	await message.answer('Введите ваш номер телефона', keyboard = keyboards.empty)
+	await message.answer('Введите ваш номер телефона\nНомер телефона можно не вводить, но в таком случае вы не сможете связываться напрямую с водителем', keyboard = keyboards.empty)
 
 # Волшебная кнопка "назад"
 @vk.on.private_message(payload = {'user': 0, 'back': 0})
@@ -535,7 +535,7 @@ async def helper_support(message:Message):
 @vk.on.private_message(payload = {'passanger': 1})
 async def reg_passanger_1(message:Message):
 	await vk.state_dispenser.set(message.from_id, PassangerRegState.phone)
-	await message.answer('Введите ваш телефон для связи с водителем\nТелфон вы можете не указывать, однако вам будет труднее связываться с водителем')
+	await message.answer('Введите ваш телефон для связи с водителем\nТелфон вы можете не указывать, однако вы не смможете напрямую связаться с водителем')
 
 # Регсирация пользователя (шаг 2)
 @vk.on.private_message(state = PassangerRegState.phone)
@@ -586,7 +586,7 @@ async def reg_driver_loc(message:Message):
 			return 'Город возможно написан неверно. Попробуйте снова'
 	storage.set(f'location_{message.from_id}', location)
 	await vk.state_dispenser.set(message.from_id, DriverRegState.phone)
-	return 'Теперь введите ваш номер телефона для связи с пассажиром\nНомер телефона можно не указывать, однако вы не сможете связываться с пассажиром'
+	return 'Теперь введите ваш номер телефона для связи с пассажиром\nНомер телефона можно не указывать, однако вы не сможете напрямую связываться с пассажиром'
 
 # Регистрация водителя (шаг 2)
 @vk.on.private_message(state = DriverRegState.phone)
@@ -607,7 +607,7 @@ async def reg_driver_3(message:Message):
 async def reg_driver_4(message:Message):
 	storage.set(f'color_{message.from_id}', message.text)
 	await vk.state_dispenser.set(message.from_id, DriverRegState.state_number)
-	return 'И последнее - введите ваш госномер'
+	return 'И последнее - укажите госномер автомобиля'
 
 """
 Регистрация водителя (шаг 5)
