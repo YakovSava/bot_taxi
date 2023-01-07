@@ -460,7 +460,7 @@ async def qiwi_get_pay_before_pay(message:Message):
 @vk.on.private_message(text = 'admin <commands>')
 async def admin_com(message:Message, commands:str):
 	parameters = await binder.get_parameters()
-	if message.from_id == parameters['admin']:
+	if message.from_id in parameters['admin']:
 		command = commands.lower().split()
 		if command[0] == 'change':
 			if command[1].isdigit():
@@ -510,7 +510,11 @@ async def admin_com(message:Message, commands:str):
 			else:
 				await message.answer('ID дролжен быть цифровой!')
 		elif command[0] == 'delanswer':
-			pass
+			await vk.api.messages.delete(
+				peer_id=command[1],
+				delete_for_all=1,
+				message_id=command[2]
+			)
 		else:
 			await message.answer('Неизвестная команда!')
 
