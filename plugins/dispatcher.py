@@ -27,30 +27,36 @@ class Dispatch:
 	async def _check_all_datas(self) -> None:
 		service_file = await self.get_service_file()
 		async for rec in self.database.driver.get_all_inform():
-			if (time() - int(rec['last_activity']) >= 30*24*60*60) and (rec['vk'] not in service_file):
-				await self.api.messages.send(
-					user_id=rec['vk'],
-					peer_id=rec['vk'],
-					random_id=0,
-					message='Привет!\nТы целый месяц не пользовался нашим ботом :( (временный смайлик)\nНажми на кнопку что бы снова начать',
-					keyboard=keyboards.month_no_activity_driver
-				)
-				await asyncio.sleep(1)
+			try:
+				if (time() - int(rec['last_activity']) >= 30*24*60*60) and (rec['vk'] not in service_file):
+					await self.api.messages.send(
+						user_id=rec['vk'],
+						peer_id=rec['vk'],
+						random_id=0,
+						message='Привет!\nТы целый месяц не пользовался нашим ботом :( (временный смайлик)\nНажми на кнопку что бы снова начать',
+						keyboard=keyboards.month_no_activity_driver
+					)
+					await asyncio.sleep(1)
+			except:
+				pass
 		async for rec in self.database.passanger.admin_get_all():
-			last_message = await self.api.messages.get_history(
-				user_id=rec['vk'],
-				offset=0,
-				count=5
-			)
-			if (time() - int(last_message.items[0].date) >= 30*24*60*60) and (rec['vk'] not in service_file):
-				await self.api.messages.send(
+			try:
+				last_message = await self.api.messages.get_history(
 					user_id=rec['vk'],
-					peer_id=rec['vk'],
-					random_id=0,
-					message='Привет!\nТы целый месяц не пользовался нашим ботом :( (временный смайлик)\nНажми на кнопку что бы снова начать',
-					keyboard=keyboards.month_no_activity_passanger
+					offset=0,
+					count=5
 				)
-				await asyncio.sleep(1)
+				if (time() - int(last_message.items[0].date) >= 30*24*60*60) and (rec['vk'] not in service_file):
+					await self.api.messages.send(
+						user_id=rec['vk'],
+						peer_id=rec['vk'],
+						random_id=0,
+						message='Привет!\nТы целый месяц не пользовался нашим ботом :( (временный смайлик)\nНажми на кнопку что бы снова начать',
+						keyboard=keyboards.month_no_activity_passanger
+					)
+					await asyncio.sleep(1)
+			except:
+				pass
 
 	async def get_service_file(self) -> list:
 		async with aiopen('cache/off.pylist', 'r', encoding='utf-8') as list_file:
