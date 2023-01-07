@@ -1,6 +1,7 @@
 import asyncio
 
 from threading import Thread
+from time import sleep
 from typing import Callable, Coroutine
 
 class Timer:
@@ -13,8 +14,11 @@ class Timer:
 		thread.start()
 
 	def new_async_task(self, coroutine:Coroutine, *args, **kwargs):
-		thread = Thread(target=self._run_async, kwargs={'coroutine': coroutine, 'arguments': [args, kwargs]})
-		thread.start()
+		proc = Thread(target=self._run_async, args=(coroutine,) + args, kwargs=kwargs)
+		proc.start()
 
-	def _run_async(self, coroutine:Coroutine=None, arguments:list=[]):
-		asyncio.run(coroutine(*arguments[0], **arguments[1]))
+	def _run_async(self, coroutine:Coroutine, *args, **kwargs):
+		sleep(20)
+		loop = asyncio.new_event_loop()
+		loop.run_until_complete(coroutine(*args, **kwargs))
+		loop.close()

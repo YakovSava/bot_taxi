@@ -1,20 +1,22 @@
 import asyncio # Импортируем асинхронность
 
 from vkbottle.bot import Bot, Message # Импортируем объект бота и сообщени я(второе - для аннотации)
-from vkbottle import CtxStorage, PhotoMessageUploader, VKAPIError, DocUploader # Импортируем временное хранилищ
-from dadata import Dadata # Импортируем сервис по распознаванию города
+from vkbottle import CtxStorage, PhotoMessageUploader, VKAPIError, DocUploader
+from dadata import Dadata
 from pyqiwip2p import AioQiwiP2P
 from sys import platform
 from plugins.binder import Binder # Импортируем связыватель
 from plugins.database import Database # Импортируем класс для работы с базой данных
 from plugins.plotter import Plotter # Импортируем статистикуу
 from plugins.keyboards import keyboards # Импортируем клавиатуры
-from plugins.states import PassangerRegState, TaxiState, DeliveryState, DriverRegState, VkPayPay, QiwiPay, Helper # Импорируем все стейты (для регистарций)
+from plugins.states import PassangerRegState, TaxiState, DeliveryState, DriverRegState,\
+	VkPayPay, QiwiPay, Helper # Импорируем все стейты (для регистарций)
 from plugins.forms import Forms # Импортируем формы и некоторые функции оттуда
-from plugins.rules import Order, Delivery, DriverSuccess, DriverCancel, QiwiPayRule, WillArriveMinutes, Arrived, VkPayRule, OffAccountRule
+from plugins.rules import Order, Delivery, DriverSuccess, DriverCancel, QiwiPayRule, WillArriveMinutes,\
+	Arrived, VkPayRule, OffAccountRule, DeleteAccount
 from plugins.csveer import Csveer
 from plugins.timer import Timer
-from plugins.dispather import Dispath
+from plugins.dispatcher import Dispatch
 from config import vk_token, ddt_token, qiwi_token # Импрртируем токены
 
 # try:
@@ -31,13 +33,15 @@ except ImportError:
 else:
 	logging.getLogger("vkbottle").setLevel(logging.INFO)
 
-if platform in ['win32', 'cygwin', 'msys']:
-	try:
-		asyncio.set_event_loop(asyncio.WindowsSelectorEventLoopPolicy())
-	except:
-		pass
-		
-vk = Bot(token = vk_token) # Инициализируем класс бота
+# if platform in ['win32', 'cygwin', 'msys']:
+# 	try:
+# 		asyncio.set_event_loop(asyncio.WindowsSelectorEventLoopPolicy())
+# 	except:
+# 		pass
+
+asyncio.set_event_loop(asyncio.new_event_loop())
+
+vk = Bot(token=vk_token) # Инициализируем класс бота
 vk.on.vbml_ignore_case = True # Объявляем об игноре регистра
 ddt = Dadata(ddt_token) # Инициализируем объект сервиса
 binder = Binder() # Инициализируем объект связыввателя
@@ -48,33 +52,42 @@ forms = Forms() # Инициализируем формы
 qiwi = AioQiwiP2P(auth_key = qiwi_token)
 csv = Csveer()
 timer = Timer() # На будущее)
-dispather = Dispath(
+dispatcher = Dispatch(
 	timer=timer,
-	database=db,
-	api=vk.api
+	database=db
 )
 
 # Начало бота (в группе должно стоять что бы в самом начале пользователь мог нажать на кнопку)
 @vk.on.private_message(text = 'начать')
 async def start_handler(message:Message):
 	user = await vk.api.users.get(message.from_id)
-	passanger_is_exists = await db.passanger.exists(message.from_id) # проверка на регистрацию... Да, сделать синхронно -  не судьба
-	driver_is_exists = await db.driver.exists(message.from_id)
-	if passanger_is_exists:
+	if (await db.passanger.exists(message.from_id)): # проверка на регистрацию... Да, сделать синхронно -  не судьба:
 		await message.answer('Вы уже зарегестрированы как пассажир!', keyboard = keyboards.choose_service)
-	elif driver_is_exists:
+	elif (await db.driver.exists(message.from_id)):
 		await message.answer('Вы уже зарегестрированы как водитель!', keyboard = keyboards.driver_registartion_success)
 	else:
 		await message.answer(f'Привет {user[0].first_name}!\nЯ бот-такси, помогаю пассажирам найти такси, а водителю пассажира!\n\nСоздай анкету!&#128071;&#128071;&#128071;', keyboard=keyboards.start) # А это сообщение если чеовек не зарегестрирован
 
 @vk.on.private_message(payload = {'driver': 0, 'post_reg': 0})
 async def driver_post_edit(message:Message):
+	await db.driver.set_activity(message.from_id)
 	await message.answer('Ожидайте новых заявок', keyboard = keyboards.driver_registartion_success)
+
+@vk.on.private_message(payload={'on': 1})
+async def on_account(message:Message):
+	await dispatcher.on_account(message.from_id)
+	if (await db.passanger.get(message.from_id)) is None:
+		keyboard = keyboards.driver_registartion_success
+		await db.driver.set_activity(message.from_id)
+	else:
+		keyboard = keyboards.choose_service
+	await message.answer('Ваш аккаунт был снова включён, если вы хотите его отключить нажмите соответвующую кнопку на клавиатуре', keyboard=keyboard)
 
 # Регистрация водителя
 @vk.on.private_message(payload = {'driver': 1})
 async def reg_driver_1(message:Message):
-	await dispather.update_no_registred_driver(message.from_id)
+	await db.driver.set_activity(message.from_id)
+	await dispatcher.update_no_registred_driver(message.from_id)
 	await message.answer('Вам могут приходить заявки, однако что бы их принимать вам нужно зарегестрироваться\n\nПродолжить можно по кнопке ниже', keyboard=keyboards.registration_failed)
 
 @vk.on.private_message(payload={'driver': 0, 'reg': 0})
@@ -89,12 +102,13 @@ async def driver_profile(message:Message):
 	info = await db.driver.get(message.from_id)
 	parameters = await binder.get_parameters()
 	if info != [None, None]:
+		await db.driver.set_activity(message.from_id)
 		await message.answer(f'Анкета водителя!\nВаше имя: {info[0]["name"]}\nВаш номер телефона: {info[0]["phone"]}\nВаш город: {info[0]["city"]}\nМашина: {info[0]["auto"]}\nЦвет: {info[0]["color"]}\nГосномер: {info[0]["state_number"]}\nКол-во поездок: {info[1]["quantity"]}\nБаланс: {info[1]["balance"]} руб.\nОдна заявка стоит: {parameters["count"]}', keyboard = keyboards.driver_profile)
 
 @vk.on.private_message(OffAccountRule())
 async def off_driver(message:Message):
-	await dispather.off_account(message.from_id)
-	await message.answer('Ваш аккаунт был отключён, больше вам не будут присылать некоторые сообщения')
+	await dispatcher.off_account(message.from_id)
+	await message.answer('Ваш аккаунт был отключён, больше вам не будут присылать некоторые сообщения', keyboard=keyboards.account_is_off)
 
 # Редактирование (пперерегистрация водителя)
 @vk.on.private_message(payload = {'driver': 0, 'edit': 0})
@@ -103,16 +117,21 @@ async def driver_edit_profile(message:Message):
 	storage.set(f'{message.from_id}_balance', driver_profile[1]['balance'])
 	await db.driver.delete(message.from_id)
 	await vk.state_dispenser.set(message.from_id, DriverRegState.location)
-	await message.answer('Редактирование! Введите ваш город!', keyboard = keyboards.inline.location)
+	await message.answer('Редактирование!\n\nТекущий город: Няндома\nЕсли вы из другого города, отправьте название вашего города или пришлите геолокацию', keyboard = keyboards.inline.pass_this_step)
 
-# Удаление водителя
-@vk.on.private_message(payload = {'driver': 0, 'delete': 0})
+# Удаление
+@vk.on.private_message(DeleteAccount())
 async def driver_profile_delete(message:Message):
-	driver_info = await db.driver.get(message.from_id)
-	if driver_info[1]['balance'] > 0:
-		await message.answer(f'У вас на балансе есть ещё {driver_info[1]["balance"]} руб., вы можете обратиться в тех.поддержку с этим вопросом (тех.поддержка вызывается командой "техпод")')
+	if (await db.passanger.get(message.from_id)) is None:
+		driver_info = await db.driver.get(message.from_id)
+		if driver_info[1]['balance'] > 0:
+			await db.driver.set_activity(message.from_id)
+			await message.answer(f'У вас на балансе есть ещё {driver_info[1]["balance"]} руб., вы можете обратиться в тех.поддержку с этим вопросом (тех.поддержка вызывается командой "техпод")')
+		else:
+			await db.driver.delete(message.from_id)
+			await message.answer('Ваш профиль был удалён!\nСоздай свою анкету, жми кнопку "Начать" &#128071;&#128071;&#128071;', keyboard = keyboards.starter)
 	else:
-		await db.driver.delete(message.from_id)
+		await db.passanger.delete(message.from_id)
 		await message.answer('Ваш профиль был удалён!\nСоздай свою анкету, жми кнопку "Начать" &#128071;&#128071;&#128071;', keyboard = keyboards.starter)
 
 # профиль пассажира
@@ -134,12 +153,6 @@ async def passanger_edit_profile(message:Message):
 async def passanger_back(message:Message):
 	await message.answer('Готово!\nВыбери услугу:', keyboard = keyboards.choose_service)
 
-# Удаление профиля пользователя
-@vk.on.private_message(payload = {'user': 0, 'delete': 0})
-async def passanger_delete(message:Message):
-	await db.passanger.delete(message.from_id)
-	await message.answer('Ваш профиль был удалён!\nСоздай свою анкету, жми кнопку "Начать" &#128071;&#128071;&#128071;', keyboard = keyboards.starter)
-
 # Заказ такси
 @vk.on.private_message(payload = {'taxi': 0})
 async def passanger_get_taxi_def(message:Message):
@@ -155,20 +168,14 @@ async def taxi_geo(message:Message):
 # Непосредственно заказ такси
 @vk.on.private_message(state = TaxiState.location)
 async def taxi_call(message:Message):
-	print(1)
 	if message.geo is not None: # Если геолокация указана
-		print(2)
 		info = await db.passanger.get(message.from_id) # Получаем данные пассажира
 		text = storage.get(f'{message.from_id}_taxi_get_question')
-		print(3)
 		storage.delete(f'{message.from_id}_taxi_get_question')
 		await forms.new_form(message.from_id) # Создаёи новую форму
-		off_driver_ids = await dispather.get_service_file()
-		print(4)
+		off_driver_ids = await dispatcher.get_service_file()
 		driver_ids = [driver_id async for driver_id, driver_city in db.driver.get_all() if ((info['city'] == driver_city) and (driver_id not in off_driver_ids))]
-		print(5)
-		driver_ids.extend(await dispather.get_no_registred_drivers())
-		print(6)
+		driver_ids.extend(await dispatcher.get_no_registred_drivers())
 		for driver_id in driver_ids: # Шлём всем им оповещение
 			try:
 				await vk.api.messages.send(
@@ -188,10 +195,11 @@ async def taxi_call(message:Message):
 # Принятие заявки
 @vk.on.private_message(Order())
 async def taxi_tax(message:Message):
-	payload = eval(f'dict({message.payload})')
-	if (await dispather.check_registred(message.from_id)):
+	payload = eval(f'{message.payload}')
+	if (await dispatcher.check_registred(message.from_id)):
 		await message.answer('Ты не завершил регистрацию!\n\nНажми на "продолжить регистрацию"!')
 	else:
+		await db.driver.set_activity(message.from_id)
 		if forms.get(payload['other']['from_id'])['active']: # Проверяем активна ли до сих пор форма
 			parameters = await binder.get_parameters() # Получаем параметры
 			driver_info = await db.driver.get(payload['other']['driver_id']) # Получаем информацию о водителе
@@ -236,7 +244,7 @@ async def delivery_tax(message:Message):
 		text = storage.get(f'{message.from_id}_deliver_get')
 		storage.delete(f'{message.from_id}_deliver_get')
 		driver_ids = [driver_id async for driver_id, driver_city in db.driver.get_all() if info['city'] == driver_city]
-		driver_no_registred_ids = await dispather.get_no_registred_drivers()
+		driver_no_registred_ids = await dispatcher.get_no_registred_drivers()
 		driver_ids.extend(driver_no_registred_ids)
 		for driver_id in driver_ids:
 			try:
@@ -257,10 +265,11 @@ async def delivery_tax(message:Message):
 # Принимаем доставку
 @vk.on.private_message(Delivery())
 async def driver_delivery(message:Message):
-	payload = eval(message.payload)
-	if (await dispather.check_registred(message.from_id)):
+	payload = eval(f'{message.payload}')
+	if (await dispatcher.check_registred(message.from_id)):
 		await message.answer('Ты не завершил регистрацию!\n\nНажми на "продолжить регистрацию"!')
 	else:
+		await db.driver.set_activity(message.from_id)
 		if forms.get(payload['other']['from_id'])['active']:
 			parameters = await binder.get_parameters()
 			driver_info = await db.driver.get(payload['other']['driver_id'])
@@ -317,6 +326,7 @@ async def passanger_success_order(message:Message):
 async def driver_success_order(message:Message):
 	payload = eval(f'{message.payload}')
 	parameters = await binder.get_parameters()
+	await db.driver.set_activity(message.from_id)
 	await message.answer('Вы успешно довезли пассажира!', keyboard = keyboards.driver_registartion_success)
 	await vk.api.messages.send(
 		user_id = payload['other']['from_id'],
@@ -332,6 +342,7 @@ async def driver_success_order(message:Message):
 
 @vk.on.private_message(WillArriveMinutes())
 async def will_arived_with_minutes_with_minute(message:Message):
+	await db.driver.set_activity(message.from_id)
 	payload = eval(f'{message.payload})')
 	await message.answer('Сообщение отправлено пассажиру!', keyboard = keyboards.driver_order_complete_will_arrive(payload['other']))
 	await vk.api.messages.send(
@@ -343,7 +354,8 @@ async def will_arived_with_minutes_with_minute(message:Message):
 
 @vk.on.private_message(Arrived())
 async def will_arrived(message:Message):
-	payload = eval(f'dict({message.payload})')
+	await db.driver.set_activity(message.from_id)
+	payload = eval(f'{message.payload}')
 	await message.answer('Сообщение отправлено пассажиру!')
 	await vk.api.messages.send(
 		user_id = payload['other']['from_id'],
@@ -372,6 +384,7 @@ async def passanger_cancelling_order(message:Message):
 @vk.on.private_message(DriverCancel())
 async def driver_cancel_order(message:Message):
 	payload = eval(f'{message.payload}')
+	await db.driver.set_activity(message.from_id)
 	await vk.api.messages.send(
 		user_id = payload['other']['from_id'],
 		peer_id = payload['other']['from_id'],
@@ -384,11 +397,13 @@ async def driver_cancel_order(message:Message):
 
 @vk.on.private_message(payload = {'driver': 0, 'money': 'vk pay'})
 async def vkpay_pay(message:Message):
+	await db.driver.set_activity(message.from_id)
 	await vk.state_dispenser.set(message.from_id, VkPayPay.pay)
 	return 'Введите сумму (только число!) которую хотите занести на ваш баланс'
 
 @vk.on.private_message(state = VkPayPay.pay)
 async def vk_pay(message:Message):
+	await db.driver.set_activity(message.from_id)
 	if message.text.isdigit():
 		parameters = await binder.get_parameters()
 		await vk.state_dispenser.delete(message.from_id)
@@ -398,7 +413,8 @@ async def vk_pay(message:Message):
 
 @vk.on.private_message(VkPayRule())
 async def pay_handler(message:Message):
-	payload = dict(message.payload)
+	payload = dict(f'{message.payload}')
+	await db.driver.set_activity(message.from_id)
 	parameters = await binder.get_parameters()
 	await db.driver.set_balance(message.from_id, payload['amount'])
 	await message.answer(f'Вы успешно пополнили свой баланс на {payload["amount"]} руб.')
@@ -411,11 +427,13 @@ async def pay_handler(message:Message):
 
 @vk.on.private_message(payload = {'driver': 0, 'money': 'qiwi'})
 async def qiwi_pay(message:Message):
+	await db.driver.set_activity(message.from_id)
 	await vk.state_dispenser.set(message.from_id, QiwiPay.pay)
 	return 'Введите сумму которую хотите внести на баланс'
 
 @vk.on.private_message(state = QiwiPay.pay)
 async def qiwi_get_pay(message:Message):
+	await db.driver.set_activity(message.from_id)
 	if message.text.isdigit():
 		bill = await qiwi.bill(
 			lifetime = 15,
@@ -429,6 +447,7 @@ async def qiwi_get_pay(message:Message):
 
 @vk.on.private_message(QiwiPayRule())
 async def qiwi_get_pay_before_pay(message:Message):
+	await db.driver.set_activity(message.from_id)
 	payload = eval(f'dict({message.payload})')
 	bill = await qiwi.check(payload['other']['bill_id'])
 	print(bill.status)
@@ -511,7 +530,6 @@ async def helper_support(message:Message):
 		random_id = 0,
 		message = f'ID: {message.from_id}\nВопрос: {message.text}\n\nОтветить можно командой "admin answer (ID) (message)"'
 	)
-
 
 # Если человек регестрируется как пассажир (шаг 1)
 @vk.on.private_message(payload = {'passanger': 1})
@@ -598,6 +616,7 @@ async def reg_driver_4(message:Message):
 """
 @vk.on.private_message(state = DriverRegState.state_number)
 async def reg_driver_5(message:Message):
+	await dispatcher.remove_no_registred_drivers(message.from_id)
 	balance = storage.get(f'{message.from_id}_balance')
 	storage.delete(f'{message.from_id}_balance')
 	await vk.state_dispenser.delete(message.from_id)
@@ -646,4 +665,5 @@ async def polling():
 
 if __name__ == '__main__':
 	print('Начало работы!')
-	asyncio.run(polling())
+	loop = asyncio.new_event_loop()
+	loop.run_until_complete(polling())

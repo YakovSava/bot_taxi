@@ -30,11 +30,7 @@ class Database:
 			self.db.commit()
 
 		async def exists(self, vk:int) -> bool:
-			what = await self.get(vk)
-			if what is not None:
-				return True
-			else:
-				return False
+			return (await self.get(vk)) is not None
 
 		async def get(self, vk:str) -> dict:
 			self.cursor.execute(f"SELECT * FROM passanger WHERE VK = '{vk}'")
@@ -84,11 +80,7 @@ class Database:
 			self.cursor = self.db.cursor()
 
 		async def exists(self, vk:int) -> bool:
-			what = await self.get(vk)
-			if what != [None, None]:
-				return True
-			else:
-				return False
+			return (await self.get(vk)) != [None, None]
 
 		def _create_table(self):
 			self.cursor.execute('''CREATE TABLE if not exists driver (

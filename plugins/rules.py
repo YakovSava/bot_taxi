@@ -98,3 +98,9 @@ class VkPayRule(ABCRule[Message]):
 class OffAccountRule(ABCRule[Message]):
 	async def check(self, message:Message):
 		return ({'driver': 0, 'off': 0} == eval(f'{message.payload}')) or ({'user': 0, 'off': 0} == eval(f'{message.payload}'))
+
+
+class DeleteAccount(ABCRule[Message]):
+	async def check(self, message:Message):
+		payload = eval(f'{message.payload}')
+		return (payload == {'driver': 0, 'delete': 0}) or (payload == {'user': 0, 'delete': 0})

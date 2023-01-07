@@ -27,8 +27,10 @@ class keyboards:
 		).get_json()
 
 	driver_registartion_success = (Keyboard(one_time = True, inline = False)
-			.add(Text('Моя анкета &#128526;', payload = {'driver': 0, 'profie': 0}), color = KeyboardButtonColor.POSITIVE)
-		).get_json()
+		.add(Text('Моя анкета &#128526;', payload = {'driver': 0, 'profie': 0}), color = KeyboardButtonColor.POSITIVE)
+		.row()
+		.add(Text('Отключить анкету', payload={'driver': 0, 'off': 0}), color=KeyboardButtonColor.NEGATIVE)
+	).get_json()
 	start = (Keyboard(one_time = True)
 		.add(Text('Я пассажир &#128519;', payload = {'passanger': 1}), color = KeyboardButtonColor.POSITIVE)
 		.row()
@@ -59,6 +61,9 @@ class keyboards:
 		.add(Text('Удалить анкету', payload = {'user': 0, 'delete': 0}), color = KeyboardButtonColor.NEGATIVE)
 		.row()
 		.add(Text('Назад', payload = {'user': 0, 'back': 0}), color = KeyboardButtonColor.PRIMARY)
+		.row()
+		.add(Text('Техподдержка'), color=KeyboardButtonColor.PRIMARY)
+		.add(Text('Отключить аккаунт', payload={'user': 0, 'off': 0}), color=KeyboardButtonColor.NEGATIVE)
 	).get_json()
 	driver_profile = (Keyboard(one_time = False)
 		.add(Text('Пополнить при помощи VK PAY', payload = {'driver': 0, 'money': 'vk pay'}), color = KeyboardButtonColor.POSITIVE)
@@ -131,7 +136,11 @@ class keyboards:
 		.row()
 		.add(Text('Отключить анкету', payload={'driver': 0, 'off': 0}), color=KeyboardButtonColor.NEGATIVE)
 	).get_json()
-
+	account_is_off = (Keyboard(one_time=False)
+		.add(Text('Включить анкету', payload={'on': 1}), color=KeyboardButtonColor.POSITIVE)
+		.row()
+		.add(Text('Выйти и удалить анкету', payload={'driver': 0, 'delete': 0}), color=KeyboardButtonColor.NEGATIVE)
+	)
 
 	def construct(keyboard_texts:list, keyboard_action:list, payload:list, **kwargs): # Это конструктор клавиатур для людей которые не ссильно разбираются в vkbottle, но которые будт поддерживать этот проект в будущем
 		keyboard_object = Keyboard(**kwargs)

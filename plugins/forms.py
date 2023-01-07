@@ -8,7 +8,9 @@ class Forms:
 
 	def __init__(self):
 		self.all_forms = {}
-		asyncio.run(self._downoload_forms())
+		loop = asyncio.new_event_loop()
+		loop.run_until_complete(self._downoload_forms())
+		loop.close()
 		thread = Thread(target=self._reload_starter)
 		thread.start()
 
@@ -22,7 +24,7 @@ class Forms:
 			await backup_file.write(f'{self.all_forms}')
 
 	def _reload_starter(self):
-		sleep(60)
+		sleep(20)
 		some_loop = asyncio.new_event_loop()
 		while True:
 			some_loop.run_until_complete(self._reload_timer())
