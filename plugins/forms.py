@@ -31,7 +31,7 @@ class Forms:
 
 	async def new_form(self, from_id:int) -> None:
 		self.all_forms[from_id] = {'from_id': from_id, 'driver_id': 0, 'active': True, 'in_drive': False}
-		thread = Thread(target=self._form_timer_starter)
+		thread = Thread(target=self._form_timer_starter, args=(from_id,))
 		thread.start()
 
 	async def start_drive(self, from_id:int, driver_id:int) -> None:
@@ -55,7 +55,7 @@ class Forms:
 		return self.all_forms[from_id]
 
 	def _form_timer_starter(self, *args) -> None:
-		loop = asyncio.get_event_loop()
+		loop = asyncio.new_event_loop()
 		loop.run_until_complete(self._form_timer(*args))
 
 	async def _form_timer(self, from_id:int) -> None:

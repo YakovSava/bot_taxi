@@ -26,37 +26,23 @@ class Dispatch:
 
 	async def _check_all_datas(self) -> None:
 		service_file = await self.get_service_file()
-		async for rec in self.database.driver.get_all_inform():
-			try:
-				if (time() - int(rec['last_activity']) >= 30*24*60*60) and (rec['vk'] not in service_file):
+		try:
+			all_chats = await self.api.messages.get_conversations(
+			offset=0,
+			count=200,
+			filter='all'
+			)
+			for chat in all_chats.items:
+				if (chat.conversation.peer.id not in service_file):
 					await self.api.messages.send(
-						user_id=rec['vk'],
-						peer_id=rec['vk'],
+						user_id=chat.conversation.peer.id,
+						peer_id=chat.conversation.peer.id,
 						random_id=0,
 						message='Привет!\nТы целый месяц не пользовался нашим ботом &#128532;\nНажми на кнопку что бы снова начать',
-						keyboard=keyboards.month_no_activity_driver
+						keyboard=keyboards.month_no_activity
 					)
-					await asyncio.sleep(1)
-			except:
-				pass
-		async for rec in self.database.passanger.admin_get_all():
-			try:
-				last_message = await self.api.messages.get_history(
-					user_id=rec['vk'],
-					offset=0,
-					count=5
-				)
-				if (time() - int(last_message.items[0].date) >= 30*24*60*60) and (rec['vk'] not in service_file):
-					await self.api.messages.send(
-						user_id=rec['vk'],
-						peer_id=rec['vk'],
-						random_id=0,
-						message='Привет!\nТы целый месяц не пользовался нашим ботом &#128532;\nНажми на кнопку что бы снова начать',
-						keyboard=keyboards.month_no_activity_passanger
-					)
-					await asyncio.sleep(1)
-			except:
-				pass
+		except:
+			pass
 
 	async def get_service_file(self) -> list:
 		async with aiopen('cache/off.pylist', 'r', encoding='utf-8') as list_file:

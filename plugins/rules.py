@@ -1,6 +1,8 @@
 from vkbottle.dispatch import ABCRule
 from vkbottle.bot import Message
 
+null = None
+
 class Order(ABCRule[Message]):
 	async def check(self, message:Message) -> bool:
 		if message.payload is None:

@@ -132,7 +132,7 @@ async def driver_profile_delete(message:Message):
 		driver_info = await db.driver.get(message.from_id)
 		if driver_info[1]['balance'] > 0:
 			await db.driver.set_activity(message.from_id)
-			await message.answer(f'У вас на балансе есть ещё {driver_info[1]["balance"]} руб., вы можете обратиться в тех.поддержку с этим вопросом (тех.поддержка вызывается командой "техпод")')
+			await message.answer(f'У вас на балансе есть ещё {driver_info[1]["balance"]} руб., вы можете обратиться в тех.поддержку с этим вопросом (тех.поддержка вызывается командой "техподдержка")')
 		else:
 			await db.driver.delete(message.from_id)
 			await message.answer('Ваш профиль был удалён!\nСоздай свою анкету, жми кнопку "Начать" &#128071;&#128071;&#128071;', keyboard = keyboards.starter)
@@ -530,10 +530,29 @@ async def admin_com(message:Message, commands:str):
 				message_id=command[2]
 			)
 			await message.answer('Ответ был удалён!')
+		elif command[0] == 'off':
+			if command[1].isdigit():
+				await dispatcher.off_account(int(command[1]))
+				await message.answer('Успешно отключено')
+			else:
+				await message.answer('ID должен быть числом!')
+		elif command[0] == 'mailing':
+			all_chats = await vk.api.messages.get_conversations(
+				offset=0,
+				count=200,
+				filter='all'
+			)
+			for chat in all_chats.items:
+				await vk.api.messages.send(
+					user_id=chat.conversation.peer.id,
+					peer_id=chat.conversation.peer.id,
+					random_id=0,
+					message=command[1]
+				)
 		else:
 			await message.answer('Неизвестная команда!')
 
-@vk.on.private_message(text='техпод')
+@vk.on.private_message(payload={'help': 0})
 async def helper(message:Message):
 	await vk.state_dispenser.set(message.from_id, Helper.question)
 	await message.answer('Опишите здесь то что вас интересует и вам ответят в ближайшее время')
@@ -564,7 +583,7 @@ async def reg_passanger_2(message:Message):
 	else:
 		storage.set(f'phone_{message.from_id}', message.text)
 	await vk.state_dispenser.set(message.from_id, PassangerRegState.location)
-	await message.answer('Теекущий город: Няндома\n\nЕсли вы хотите сменить город то напишите его название или пришлите геолокацию', keyboard = keyboards.inline.pass_this_step)
+	await message.answer('Текущий город: Няндома\n\nЕсли вы хотите сменить город то напишите его название или пришлите геолокацию', keyboard = keyboards.inline.pass_this_step)
 
 # Регистрация пользователя (шаг 3)
 @vk.on.private_message(state = PassangerRegState.location)
@@ -572,7 +591,7 @@ async def reg_passanger_3(message:Message):
 	if message.geo is not None: # Если геолокация отправлена
 		location = message.geo.place.city
 	elif message.text.lower() == 'пропустить шаг':
-		location = 'Няндома'
+		location = 'няндома'
 	else:
 		if ddt.suggest('address', message.text) != []:
 			location = message.text
@@ -597,10 +616,11 @@ async def reg_passanger_3(message:Message):
 # Регистрация водителя (шаг 1) 
 @vk.on.private_message(state = DriverRegState.location)
 async def reg_driver_loc(message:Message):
+	await dispatcher.update_no_registred_driver(message.from_id)
 	if message.geo is not None:
 		location = message.geo.place.city
 	elif message.text.lower() == 'пропустить шаг':
-		location = 'Няндома'
+		location = 'няндома'
 	else:
 		if ddt.suggest('address', message.text) != []:
 			location = message.text
