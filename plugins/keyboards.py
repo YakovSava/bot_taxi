@@ -39,7 +39,7 @@ class keyboards:
 	start = (Keyboard(one_time = True)
 		.add(Text('Я пассажир &#128519;', payload = {'passanger': 1}), color = KeyboardButtonColor.POSITIVE)
 		.row()
-		.add(Text('Я водитель &#128526;', payload = {'driver': 1}), color = KeyboardButtonColor.POSITIVE)
+		.add(Text('Я водитель &#128526;', payload = {'driver': 0, 'reg': 0}), color = KeyboardButtonColor.POSITIVE)
 	).get_json()
 	passanger_get_taxi = (Keyboard(one_time = False)
 		.add(Text('Отменить вызов', payload = {'user': 0, 'cancel': 0}), color = KeyboardButtonColor.NEGATIVE)

@@ -33,7 +33,7 @@ class Dispatch:
 						user_id=rec['vk'],
 						peer_id=rec['vk'],
 						random_id=0,
-						message='Привет!\nТы целый месяц не пользовался нашим ботом :( (временный смайлик)\nНажми на кнопку что бы снова начать',
+						message='Привет!\nТы целый месяц не пользовался нашим ботом &#128532;\nНажми на кнопку что бы снова начать',
 						keyboard=keyboards.month_no_activity_driver
 					)
 					await asyncio.sleep(1)
@@ -51,7 +51,7 @@ class Dispatch:
 						user_id=rec['vk'],
 						peer_id=rec['vk'],
 						random_id=0,
-						message='Привет!\nТы целый месяц не пользовался нашим ботом :( (временный смайлик)\nНажми на кнопку что бы снова начать',
+						message='Привет!\nТы целый месяц не пользовался нашим ботом &#128532;\nНажми на кнопку что бы снова начать',
 						keyboard=keyboards.month_no_activity_passanger
 					)
 					await asyncio.sleep(1)
