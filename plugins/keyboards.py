@@ -25,6 +25,9 @@ class keyboards:
 			.row()
 			.add(Location(), color=KeyboardButtonColor.PRIMARY)
 		).get_json()
+		phone_pass_this_step = (Keyboard(one_time=False, inline=True)
+			.add(Text('Пропустить шаг'), color=KeyboardButtonColor.SECONDARY)
+		).get_json()
 
 	driver_registartion_success = (Keyboard(one_time = True, inline = False)
 		.add(Text('Моя анкета &#128526;', payload = {'driver': 0, 'profie': 0}), color = KeyboardButtonColor.POSITIVE)

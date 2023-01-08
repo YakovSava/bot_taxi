@@ -19,12 +19,12 @@ from plugins.timer import Timer
 from plugins.dispatcher import Dispatch
 from config import vk_token, ddt_token, qiwi_token # Импрртируем токены
 
-try:
-	from loguru import logger
-except ImportError:
-	pass
-else:
-	logger.disable("vkbottle")
+# try:
+# 	from loguru import logger
+# except ImportError:
+# 	pass
+# else:
+# 	logger.disable("vkbottle")
 
 try:
 	import logging
@@ -146,7 +146,7 @@ async def user_profile(message:Message):
 async def passanger_edit_profile(message:Message):
 	await db.passanger.delete(message.from_id)
 	await vk.state_dispenser.set(message.from_id, PassangerRegState.phone)
-	await message.answer('Введите ваш номер телефона\nНомер телефона можно не вводить, но в таком случае вы не сможете связываться напрямую с водителем', keyboard = keyboards.empty)
+	await message.answer('Отправьте ваш телефон для связи с водителем!\n\nТелефон можно не указывать, однако тогда водитель не сможет связаться с Вами, когда подъедет к месту вызова!', keyboard=keyboards.inline.phone_pass_this_step)
 
 # Волшебная кнопка "назад"
 @vk.on.private_message(payload = {'user': 0, 'back': 0})
@@ -515,6 +515,7 @@ async def admin_com(message:Message, commands:str):
 				delete_for_all=1,
 				message_id=command[2]
 			)
+			await message.answer('Ответ был удалён!')
 		else:
 			await message.answer('Неизвестная команда!')
 
@@ -539,12 +540,15 @@ async def helper_support(message:Message):
 @vk.on.private_message(payload = {'passanger': 1})
 async def reg_passanger_1(message:Message):
 	await vk.state_dispenser.set(message.from_id, PassangerRegState.phone)
-	await message.answer('Введите ваш телефон для связи с водителем\nТелфон вы можете не указывать, однако вы не смможете напрямую связаться с водителем')
+	await message.answer('Отправьте ваш телефон для связи с водителем!\n\nТелефон можно не указывать, однако тогда водитель не сможет связаться с Вами, когда подъедет к месту вызова!', keyboard=keyboards.inline.phone_pass_this_step)
 
 # Регсирация пользователя (шаг 2)
 @vk.on.private_message(state = PassangerRegState.phone)
 async def reg_passanger_2(message:Message):
-	storage.set(f'phone_{message.from_id}', message.text)
+	if message.text.lower() == 'пропустить шаг':
+		storage.set(f'phone_{message.from_id}', f'@id{message.from_id}')
+	else:
+		storage.set(f'phone_{message.from_id}', message.text)
 	await vk.state_dispenser.set(message.from_id, PassangerRegState.location)
 	await message.answer('Теекущий город: Няндома\n\nЕсли вы хотите сменить город то напишите его название или пришлите геолокацию', keyboard = keyboards.inline.pass_this_step)
 
@@ -590,12 +594,15 @@ async def reg_driver_loc(message:Message):
 			return 'Город возможно написан неверно. Попробуйте снова'
 	storage.set(f'location_{message.from_id}', location)
 	await vk.state_dispenser.set(message.from_id, DriverRegState.phone)
-	return 'Теперь введите ваш номер телефона для связи с пассажиром\nНомер телефона можно не указывать, однако вы не сможете напрямую связываться с пассажиром'
+	await message.answer('Отправьте ваш телефон для связи с пассажиром!\n\nТелефон можно не указывать, однако тогда пассажир не сможет связаться с Вами, когда вы подъедете к месту вызова!', keyboard=keyboards.inline.phone_pass_this_step)
 
 # Регистрация водителя (шаг 2)
 @vk.on.private_message(state = DriverRegState.phone)
 async def reg_driver_2(message:Message):
-	storage.set(f'phone_{message.from_id}', message.text)
+	if message.text.lower() == 'пропустить шаг':
+		storage.set(f'phone_{message.from_id}', f'@id{message.from_id}')
+	else:
+		storage.set(f'phone_{message.from_id}', message.text)
 	await vk.state_dispenser.set(message.from_id, DriverRegState.auto)
 	return 'Теперь введите марку вашего авто!'
 
