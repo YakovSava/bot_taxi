@@ -58,11 +58,6 @@ dispatcher = Dispatch(
 )
 null = None # Not debug!
 
-@vk.on.private_message(text = 'debug')
-async def debug_data(message:Message):
-	await message.answer('1')
-	print(await vk.state_dispenser.get(message.from_id))
-
 # Начало бота (в группе должно стоять что бы в самом начале пользователь мог нажать на кнопку)
 @vk.on.private_message(text = 'начать')
 async def start_handler(message:Message):
