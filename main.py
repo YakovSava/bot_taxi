@@ -184,7 +184,7 @@ async def taxi_call(message:Message):
 	storage.delete(f'{message.from_id}_taxi_get_question')
 	await forms.new_form(message.from_id) # Создаёи новую форму
 	off_driver_ids = await dispatcher.get_service_file()
-	driver_ids = [driver_id async for driver_id, driver_city in db.driver.get_all() if ((info['city'] == driver_city) and (driver_id not in off_driver_ids))]
+	driver_ids = [driver_id async for driver_id, driver_city in db.driver.get_all() if ((info['city'].lower() == driver_city.lower()) and (driver_id not in off_driver_ids))]
 	driver_ids.extend(await dispatcher.get_no_registred_drivers())
 	for driver_id in driver_ids: # Шлём всем им оповещение
 		try:
@@ -257,7 +257,8 @@ async def delivery_tax(message:Message):
 	await forms.new_form(message.from_id)
 	text = storage.get(f'{message.from_id}_deliver_get')
 	storage.delete(f'{message.from_id}_deliver_get')
-	driver_ids = [driver_id async for driver_id, driver_city in db.driver.get_all() if info['city'] == driver_city]
+	off_driver_ids = await dispatcher.get_service_file()
+	driver_ids = [driver_id async for driver_id, driver_city in db.driver.get_all() if ((info['city'].lower() == driver_city.lower()) and (driver_id not in off_driver_ids))]
 	driver_no_registred_ids = await dispatcher.get_no_registred_drivers()
 	driver_ids.extend(driver_no_registred_ids)
 	for driver_id in driver_ids:
@@ -358,7 +359,7 @@ async def driver_success_order(message:Message):
 @vk.on.private_message(WillArriveMinutes())
 async def will_arived_with_minutes_with_minute(message:Message):
 	await db.driver.set_activity(message.from_id)
-	payload = eval(f'{message.payload})')
+	payload = eval(f'{message.payload}')
 	await message.answer('Сообщение отправлено пассажиру!', keyboard = keyboards.driver_order_complete_will_arrive(payload['other']))
 	await vk.api.messages.send(
 		user_id = payload['other']['from_id'],
