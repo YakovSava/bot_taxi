@@ -35,16 +35,25 @@ class Forms:
 		thread.start()
 
 	async def start_drive(self, from_id:int, driver_id:int) -> None:
-		self.all_forms[from_id]['active'] = False
-		self.all_forms[from_id]['in_drive'] = True
-		self.all_forms[from_id]['driver_id'] = driver_id
+		try:
+			self.all_forms[from_id]['active'] = False
+			self.all_forms[from_id]['in_drive'] = True
+			self.all_forms[from_id]['driver_id'] = driver_id
+		except:
+			pass
 
 	async def stop_drive(self, from_id:int):
-		self.all_forms[from_id]['active'] = False
-		self.all_forms[from_id]['in_drive'] = False
+		try:
+			self.all_forms[from_id]['active'] = False
+			self.all_forms[from_id]['in_drive'] = False
+		except:
+			pass
 
 	async def stop_form(self, from_id:int) -> None:
-		self.all_forms[from_id]['active'] = False
+		try:
+			self.all_forms[from_id]['active'] = False
+		except:
+			pass
 
 	async def delete_all_form(self) -> None:
 		for from_id in list(self.all_forms.keys()):
