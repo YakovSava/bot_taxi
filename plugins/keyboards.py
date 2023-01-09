@@ -32,6 +32,9 @@ class keyboards:
 		phone_pass_this_step = (Keyboard(one_time=False, inline=True)
 			.add(Text('Пропустить шаг'), color=KeyboardButtonColor.POSITIVE)
 		).get_json()
+		resume_reg = (Keyboard(one_time=False, inline=True)
+			.add(Text('Продолжить регистрацию', payload={'resume': 0}), color=KeyboardButtonColor.POSITIVE)
+		).get_json()
 
 	driver_registartion_success = (Keyboard(one_time = True, inline = False)
 		.add(Text('Моя анкета &#128526;', payload = {'driver': 0, 'profie': 0}), color = KeyboardButtonColor.POSITIVE)

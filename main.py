@@ -19,12 +19,12 @@ from plugins.timer import Timer
 from plugins.dispatcher import Dispatch
 from config import vk_token, ddt_token, qiwi_token # Импрртируем токены
 
-# try:
-# 	from loguru import logger
-# except ImportError:
-# 	pass
-# else:
-# 	logger.disable("vkbottle")
+try:
+	from loguru import logger
+except ImportError:
+	pass
+else:
+	logger.disable("vkbottle")
 
 try:
 	import logging
@@ -58,6 +58,11 @@ dispatcher = Dispatch(
 )
 null = None # Not debug!
 
+@vk.on.private_message(text = 'debug')
+async def debug_data(message:Message):
+	await message.answer('1')
+	print(await vk.state_dispenser.get(message.from_id))
+
 # Начало бота (в группе должно стоять что бы в самом начале пользователь мог нажать на кнопку)
 @vk.on.private_message(text = 'начать')
 async def start_handler(message:Message):
@@ -83,6 +88,10 @@ async def on_account(message:Message):
 	else:
 		keyboard = keyboards.choose_service
 	await message.answer('Ваш аккаунт был снова включён, если вы хотите его отключить нажмите соответвующую кнопку на клавиатуре', keyboard=keyboard)
+
+@vk.on.private_message(payload={'resume': 0})
+async def resume(message:Message):
+	pass
 
 # Регистрация водителя
 @vk.on.private_message(payload = {'driver': 1})
@@ -205,7 +214,18 @@ async def taxi_call(message:Message):
 async def taxi_tax(message:Message):
 	payload = eval(f'{message.payload}')
 	if (await dispatcher.check_registred(message.from_id)):
-		await message.answer('Ты не завершил регистрацию!\n\nПродолжи регистрацию что бы брать заявки!')
+		state_num = int((await vk.state_dispenser.get(message.from_id)).state[-1])
+		if state_num == 0:
+			resume = 'телефон!'
+		elif state_num == 1:
+			resume = 'город!'
+		elif state_num == 2:
+			resume = 'марку автомобиля!'
+		elif state_num == 3:
+			resume = 'цвет автомобиля!'
+		elif state_num == 4:
+			resume = 'госномер автомобиля!'
+		await message.answer(f'Ты не завершил регистрацию!\n\nПродолжи регистрацию что бы брать заявки. Тебе нужно ввести {resume}')
 	else:
 		await db.driver.set_activity(message.from_id)
 		if forms.get(payload['other']['from_id'])['active']: # Проверяем активна ли до сих пор форма
@@ -280,7 +300,18 @@ async def delivery_tax(message:Message):
 async def driver_delivery(message:Message):
 	payload = eval(f'{message.payload}')
 	if (await dispatcher.check_registred(message.from_id)):
-		await message.answer('Ты не завершил регистрацию!\n\nПродолжи регистрацию что бы брать заявки!')
+		state_num = int((await vk.state_dispenser.get(message.from_id)).state[-1])
+		if state_num == 0:
+			resume = 'телефон!'
+		elif state_num == 1:
+			resume = 'город!'
+		elif state_num == 2:
+			resume = 'марку автомобиля!'
+		elif state_num == 3:
+			resume = 'цвет автомобиля!'
+		elif state_num == 4:
+			resume = 'госномер автомобиля!'
+		await message.answer(f'Ты не завершил регистрацию!\n\nПродолжи регистрацию что бы брать заявки. Тебе нужно ввести {resume}')
 	else:
 		await db.driver.set_activity(message.from_id)
 		if forms.get(payload['other']['from_id'])['active']:
@@ -688,12 +719,6 @@ async def reg_driver_5(message:Message):
 
 @vk.on.private_message()
 async def no_command(message:Message):
-	test = await vk.api.messages.get_history(
-		user_id=message.from_id,
-		offset=0,
-		count=5
-	)
-	print(test)
 	some_state = await vk.state_dispenser.get(message.from_id)
 	#print(some_state)
 	if some_state is not None:
