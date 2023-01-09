@@ -56,6 +56,7 @@ dispatcher = Dispatch(
 	timer=timer,
 	database=db
 )
+null = None # Not debug!
 
 # Начало бота (в группе должно стоять что бы в самом начале пользователь мог нажать на кнопку)
 @vk.on.private_message(text = 'начать')
@@ -204,7 +205,7 @@ async def taxi_call(message:Message):
 async def taxi_tax(message:Message):
 	payload = eval(f'{message.payload}')
 	if (await dispatcher.check_registred(message.from_id)):
-		await message.answer('Ты не завершил регистрацию!\n\nНажми на "продолжить регистрацию"!')
+		await message.answer('Ты не завершил регистрацию!\n\nПродолжи регистрацию что бы брать заявки!')
 	else:
 		await db.driver.set_activity(message.from_id)
 		if forms.get(payload['other']['from_id'])['active']: # Проверяем активна ли до сих пор форма
@@ -278,7 +279,7 @@ async def delivery_tax(message:Message):
 async def driver_delivery(message:Message):
 	payload = eval(f'{message.payload}')
 	if (await dispatcher.check_registred(message.from_id)):
-		await message.answer('Ты не завершил регистрацию!\n\nНажми на "продолжить регистрацию"!')
+		await message.answer('Ты не завершил регистрацию!\n\nПродолжи регистрацию что бы брать заявки!')
 	else:
 		await db.driver.set_activity(message.from_id)
 		if forms.get(payload['other']['from_id'])['active']:
