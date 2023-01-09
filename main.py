@@ -199,7 +199,7 @@ async def taxi_call(message:Message):
 				user_id = driver_id,
 				from_id = driver_id,
 				random_id = 0,
-				message = f'&#128293;&#128293;&#128293; Новый заказ! &#128293;&#128293;&#128293;\n\n{text}\n\nУспей забрать пока никто не нажал',
+				message = f'&#128293;&#128293;&#128293; Новый заказ! &#128293;&#128293;&#128293;\n\n{text}\n\nЖми кнопку &#128071;, пока никто не забрал!',
 				keyboard = keyboards.inline.driver_new_order({'from_id': message.from_id, 'driver_id': driver_id, 'location': loc, 'text': text}) # P.s. смотрите файл /plugins/keyboards.py
 			)
 		except VKAPIError[901]:
@@ -290,7 +290,7 @@ async def delivery_tax(message:Message):
 				user_id = driver_id,
 				from_id = driver_id,
 				random_id = 0,
-				message = f'&#128640;&#128640;&#128640; Новая доставка! &#128640;&#128640;&#128640;\n\n{text}\n\nУспей забрать пока никто не нажал',
+				message = f'&#128640;&#128640;&#128640; Новая доставка! &#128640;&#128640;&#128640;\n\n{text}\n\nЖми кнопку &#128071;, пока никто не забрал!',
 				keyboard = keyboards.inline.delivery_driver({'from_id': message.from_id, 'driver_id': driver_id, 'location': loc, 'text': text})
 			)
 		except VKAPIError[901]:
