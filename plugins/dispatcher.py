@@ -1,6 +1,3 @@
-import asyncio
-
-from time import time
 from aiofiles import open as aiopen
 from vkbottle import API, AiohttpClient
 from aiohttp import ClientSession
@@ -51,13 +48,15 @@ class Dispatch:
 
 	async def off_account(self, new_id:int) -> None:
 		old_list = await self.get_service_file()
-		async with aiopen('cache/off.pylist', 'w', encoding='utf-8') as list_file:
-			old_list.append(new_id)
-			await list_file.write(f'{old_list}')
+		if new_id not in old_list:
+			async with aiopen('cache/off.pylist', 'w', encoding='utf-8') as list_file:
+				old_list.append(new_id)
+				await list_file.write(f'{old_list}')
 
 	async def on_account(self, off_id:int) -> None:
 		old_list = await self.get_service_file()
-		old_list.remove(off_id)
+		while off_id in old_list:
+			old_list.remove(off_id)
 		async with aiopen('cache/off.pylist', 'w', encoding='utf-8') as list_file:
 			await list_file.write(f'{old_list}')
 
@@ -68,19 +67,17 @@ class Dispatch:
 
 	async def remove_no_registred_drivers(self, registred_id:int) -> None:
 		old_list = await self.get_no_registred_drivers()
-		try:
+		while registred_id in old_list:
 			old_list.remove(registred_id)
-		except:
-			pass
-		else:
-			async with aiopen('cache/no_registred.pylist', 'w', encoding='utf-8') as file:
-				await file.write(f'{old_list}')
+		async with aiopen('cache/no_registred.pylist', 'w', encoding='utf-8') as file:
+			await file.write(f'{old_list}')
 
 	async def update_no_registred_driver(self, new_id:int) -> None:
 		list_lines = await self.get_no_registred_drivers()
-		async with aiopen('cache/no_registred.pylist', 'w', encoding='utf-8') as file:
-			list_lines.append(new_id)
-			await file.write(f'{list_lines}')
+		if new_id not in list_lines:
+			async with aiopen('cache/no_registred.pylist', 'w', encoding='utf-8') as file:
+				list_lines.append(new_id)
+				await file.write(f'{list_lines}')
 
 	async def check_registred(self, from_id:int) -> bool:
 		list_lines = await self.get_no_registred_drivers()
