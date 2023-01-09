@@ -66,6 +66,9 @@ async def start_handler(message:Message):
 		await message.answer('Вы уже зарегестрированы как пассажир!', keyboard = keyboards.choose_service)
 	elif (await db.driver.exists(message.from_id)):
 		await message.answer('Вы уже зарегестрированы как водитель!', keyboard = keyboards.driver_registartion_success)
+	elif (await dispatcher.check_registred(message.from_id)):
+		await message.answer('Нужно завершить регистрацию!\nВведите ваш телефон!', keyboard=keyboards.inline.phone_pass_this_step)
+		await vk.state_dispenser.set(message.from_id, DriverRegState.phone)
 	else:
 		await message.answer(f'Привет {user[0].first_name}!\nЯ бот-такси, помогаю пассажирам найти такси, а водителю пассажира!\n\nСоздай анкету!&#128071;&#128071;&#128071;', keyboard=keyboards.start) # А это сообщение если чеовек не зарегестрирован
 
@@ -211,16 +214,21 @@ async def taxi_tax(message:Message):
 	if (await dispatcher.check_registred(message.from_id)):
 		state_num = int((await vk.state_dispenser.get(message.from_id)).state[-1])
 		if state_num == 0:
-			resume = 'телефон!'
+			resume = 'номер телефона!'
+			keyboard = keyboards.inline.phone_pass_this_step
 		elif state_num == 1:
 			resume = 'город!'
+			keyboard = keyboards.inline.pass_this_step
 		elif state_num == 2:
 			resume = 'марку автомобиля!'
+			keyboard = keyboards.empty
 		elif state_num == 3:
 			resume = 'цвет автомобиля!'
+			keyboard = keyboards.empty
 		elif state_num == 4:
 			resume = 'госномер автомобиля!'
-		await message.answer(f'Ты не завершил регистрацию!\n\nПродолжи регистрацию что бы брать заявки. Тебе нужно ввести {resume}')
+			keyboard = keyboards.empty
+		await message.answer(f'Твоя анкета водителя заполнена не до конца!\n\nЗаверши создание анкеты чтобы брать заявки.\nНапиши свой {resume}', keyboard=keyboard)
 	else:
 		await db.driver.set_activity(message.from_id)
 		if forms.get(payload['other']['from_id'])['active']: # Проверяем активна ли до сих пор форма
@@ -297,16 +305,21 @@ async def driver_delivery(message:Message):
 	if (await dispatcher.check_registred(message.from_id)):
 		state_num = int((await vk.state_dispenser.get(message.from_id)).state[-1])
 		if state_num == 0:
-			resume = 'телефон!'
+			resume = 'номер телефона!'
+			keyboard = keyboards.inline.phone_pass_this_step
 		elif state_num == 1:
 			resume = 'город!'
+			keyboard = keyboards.inline.pass_this_step
 		elif state_num == 2:
 			resume = 'марку автомобиля!'
+			keyboard = keyboards.empty
 		elif state_num == 3:
 			resume = 'цвет автомобиля!'
+			keyboard = keyboards.empty
 		elif state_num == 4:
 			resume = 'госномер автомобиля!'
-		await message.answer(f'Ты не завершил регистрацию!\n\nПродолжи регистрацию что бы брать заявки. Тебе нужно ввести {resume}')
+			keyboard = keyboards.empty
+		await message.answer(f'Твоя анкета водителя заполнена не до конца!\n\nЗаверши создание анкеты чтобы брать заявки.\nНапиши свой {resume}', keyboard=keyboard)
 	else:
 		await db.driver.set_activity(message.from_id)
 		if forms.get(payload['other']['from_id'])['active']:
