@@ -154,7 +154,7 @@ class Database:
 			self.cursor.execute('SELECT * FROM driver')
 			all1 = self.cursor.fetchall()
 			self.cursor.execute('SELECT * FROM driver2')
-			return [all1, self.cursor.fetchall()]
+			return list(zip(all1, self.cursor.fetchall()))
 
 		async def get_all_inform(self):
 			self.cursor.execute('SELECT * FROM driver2')

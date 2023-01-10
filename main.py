@@ -1,7 +1,8 @@
 import asyncio # Импортируем асинхронность
 
 from vkbottle.bot import Bot, Message # Импортируем объект бота и сообщени я(второе - для аннотации)
-from vkbottle import CtxStorage, PhotoMessageUploader, VKAPIError, DocUploader
+from vkbottle import CtxStorage, PhotoMessageUploader, VKAPIError
+from aiohttp import ClientSession, TCPConnector
 from dadata import Dadata
 from pyqiwip2p import AioQiwiP2P
 from sys import platform
@@ -19,12 +20,12 @@ from plugins.timer import Timer
 from plugins.dispatcher import Dispatch
 from config import vk_token, ddt_token, qiwi_token # Импрртируем токены
 
-try:
-	from loguru import logger
-except ImportError:
-	pass
-else:
-	logger.disable("vkbottle")
+# try:
+# 	from loguru import logger
+# except ImportError:
+# 	pass
+# else:
+# 	logger.disable("vkbottle")
 
 try:
 	import logging
@@ -54,7 +55,8 @@ csv = Csveer()
 timer = Timer() # На будущее)
 dispatcher = Dispatch(
 	timer=timer,
-	database=db
+	database=db,
+	api=vk.api
 )
 null = None # Not debug!
 
@@ -526,7 +528,7 @@ async def admin_com(message:Message, commands:str):
 		elif command[0] == 'histogram':
 			await message.answer('Идёт получение данных (надолго!)')
 			drivers = await db.driver.admin_get_all()
-			passangers = await db.passanger.admin_get_all()
+			passangers = [info async for info in db.passanger.admin_get_all()]
 			csv_for_sort_histogramm, csv_for_histogram, csv_for_histogram_passangers = await asyncio.gather(
 				asyncio.create_task(csv.get_csv_for_sort_histogramm([[one['name'], one['VK'], two['quntity']] for one, two in drivers])),
 				asyncio.create_task(csv.get_csv_for_histogram([[one['city'], one['name']] for one, two in drivers])),
@@ -541,18 +543,29 @@ async def admin_com(message:Message, commands:str):
 				document = await PhotoMessageUploader(vk.api).upload(photo, peer_id = message.from_id)
 				await message.answer(attachment = document)
 		elif command[0] == 'get':
-			names = await csv.get_csv(
-				await asyncio.gather(
-					db.driver.admin_get_all(),
-					db.passanger.admin_get_all()
-				)
-			)
-			docs = await asyncio.gather(
-				DocUploader(vk.api).upload(names[0]),
-				DocUploader(vk.api).upload(names[1])
-			)
-			for doc in docs:
-				await message.answer(attachment = doc)
+			names = [
+				[info async for info in db.passanger.admin_get_all()],
+				await db.driver.admin_get_all()
+			]
+
+			csv_files = await csv.get_csv(names)
+			async with ClientSession(trust_env=True, connector=TCPConnector(limit=50, force_close=True)) as session:
+				for file in csv_files:
+					url = await vk.api.docs.get_messages_upload_server(
+						peer_id=message.from_id,
+						type='doc'
+					)
+					async with session.post(url.upload_url, data={'file': open(file, 'rb')}) as resp:
+						if resp.status == 200:
+							response = await resp.json()
+							try:
+								data = await vk.api.docs.save(file=response['file'], title='CSV')
+								await message.answer('Файл:', attachment=data.doc.url.split('?')[0])
+							except KeyError:
+								await message.answer(f'Что-то пошлоне так {response["error"]}')
+						else:
+							page = await resp.read()
+							await message.answer(f'Прозошла неизвестная ошибка!\nСтатус: {resp.status}\nОшибка: {page.decode()}')
 		elif command[0] == 'answer':
 			if command[1].isdigit():
 				message_id = await vk.api.messages.send(
@@ -563,7 +576,7 @@ async def admin_com(message:Message, commands:str):
 				)
 				await message.answer(f'Вы успешно ответили на вопрос {command[0]}\nЕсли вам не нравится ответ, то пропишите "admin delanswer {command[1]} {message_id}"')
 			else:
-				await message.answer('ID дролжен быть цифровой!')
+				await message.answer('ID должен быть цифровой!')
 		elif command[0] == 'delanswer':
 			await vk.api.messages.delete(
 				peer_id=command[1],
@@ -588,7 +601,7 @@ async def admin_com(message:Message, commands:str):
 					user_id=chat.conversation.peer.id,
 					peer_id=chat.conversation.peer.id,
 					random_id=0,
-					message=command[1]
+					message=message.text.split(' ', 2)[2]
 				)
 		else:
 			await message.answer('Неизвестная команда!')
@@ -603,11 +616,12 @@ async def helper_support(message:Message):
 	parameters = await binder.get_parameters()
 	await vk.state_dispenser.delete(message.from_id)
 	await message.answer('Ваш запрос отправлен в техподдержку')
-	await vk.api.messages.send(
-		user_id = parameters['admin'],
-		peer_id = parameters['admin'],
-		random_id = 0,
-		message = f'ID: {message.from_id}\nВопрос: {message.text}\n\nОтветить можно командой "admin answer (ID) (message)"'
+	for admin_id in parameters['admin']:
+		await vk.api.messages.send(
+			user_id = admin_id,
+			peer_id = admin_id,
+			random_id = 0,
+			message = f'ID: {message.from_id}\nВопрос: {message.text}\n\nОтветить можно командой "admin answer (ID) (message)"'
 	)
 
 # Если человек регестрируется как пассажир (шаг 1)
@@ -740,10 +754,13 @@ async def no_command(message:Message):
 	else:
 		await message.answer('Пользоваться ботом могут только зарегестрированные пользователи', keyboard=keyboards.start) # А это сообщение если человек не зарегестрирован
 
-async def polling():
-	await vk.run_polling()
-
 if __name__ == '__main__':
 	print('Начало работы!')
 	loop = asyncio.new_event_loop()
-	loop.run_until_complete(polling())
+	loop.run_until_complete(
+		asyncio.wait([
+			loop.create_task(dispatcher.checker()),
+			loop.create_task(vk.run_polling()),
+			loop.create_task(forms.cache_cleaner())
+		])
+	)

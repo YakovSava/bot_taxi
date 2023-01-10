@@ -3,8 +3,8 @@ import calmap
 import warnings
 import random
 
-import numpy as pd
-import pandas as np
+import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import seaborn as sns

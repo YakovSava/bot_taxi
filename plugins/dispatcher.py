@@ -1,10 +1,11 @@
+import asyncio
+
 from aiofiles import open as aiopen
-from vkbottle import API, AiohttpClient
-from aiohttp import ClientSession
+from vkbottle import API
+from time import time
 from plugins.database import Database # For annotation
 from plugins.timer import Timer # For annotation
 from plugins.keyboards import keyboards
-from config import vk_token
 
 class Dispatch:
 
@@ -12,34 +13,40 @@ class Dispatch:
 
 	def __init__(self,
 		timer:Timer=None,
-		database:Database=None	):
-		if (timer is None) or (database is None):
+		database:Database=None,
+		api:API=None
+	):
+		if (timer is None) or (database is None) and (api is None):
 			raise self.DispatchNotGetOneParameterError(f'The dispatcher did not receive one of the items (something from the following list is "None", however it should not be "None"): \n\
-{timer = }\n{database = }')
+{timer = }\n{database = }\n{api = }')
 		self.timer = timer
 		self.database = database
-		self.api = API(vk_token, http_client=AiohttpClient(session=ClientSession(trust_env=True)))
-		self.timer.new_async_task(self._check_all_datas)
+		self.api = api
 
-	async def _check_all_datas(self) -> None:
-		service_file = await self.get_service_file()
-		try:
+	async def checker(self) -> None:
+		while True:
+			await asyncio.sleep(24*60*60)
+			service_file = await self.get_service_file()
 			all_chats = await self.api.messages.get_conversations(
-			offset=0,
-			count=200,
-			filter='all'
+				offset=0,
+				count=200
 			)
 			for chat in all_chats.items:
-				if (chat.conversation.peer.id not in service_file):
-					await self.api.messages.send(
-						user_id=chat.conversation.peer.id,
-						peer_id=chat.conversation.peer.id,
-						random_id=0,
-						message='Привет!\nТы целый месяц не пользовался нашим ботом &#128532;\nНажми на кнопку что бы снова начать',
-						keyboard=keyboards.month_no_activity
-					)
-		except:
-			pass
+				try:
+					if (chat.last_message.peer_id not in service_file) and ((time() - chat.last_message.date) >= 30*24*60*60):
+						if (await self.database.passanger.get(chat.last_message.peer_id)) is None:
+							keyboard = keyboards.month_no_activity_driver
+						else:
+							keyboard = keyboards.month_no_activity_passanger
+						await self.api.messages.send(
+							user_id=chat.last_message.peer_id,
+							peer_id=chat.last_message.peer_id,
+							random_id=0,
+							message='Привет!\nТы целый месяц не пользовался нашим ботом &#128532;\nНажми на кнопку что бы снова начать',
+							keyboard=keyboard
+						)
+				except:
+					continue
 
 	async def get_service_file(self) -> list:
 		async with aiopen('cache/off.pylist', 'r', encoding='utf-8') as list_file:
