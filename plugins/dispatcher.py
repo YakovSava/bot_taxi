@@ -24,8 +24,8 @@ class Dispatch:
 		self.api = api
 
 	async def checker(self) -> None:
+		await asyncio.sleep(20) # Debug mode
 		while True:
-			await asyncio.sleep(24*60*60)
 			service_file = await self.get_service_file()
 			all_chats = await self.api.messages.get_conversations(
 				offset=0,
@@ -34,19 +34,17 @@ class Dispatch:
 			for chat in all_chats.items:
 				try:
 					if (chat.last_message.peer_id not in service_file) and ((time() - chat.last_message.date) >= 30*24*60*60):
-						if (await self.database.passanger.get(chat.last_message.peer_id)) is None:
-							keyboard = keyboards.month_no_activity_driver
-						else:
-							keyboard = keyboards.month_no_activity_passanger
 						await self.api.messages.send(
 							user_id=chat.last_message.peer_id,
 							peer_id=chat.last_message.peer_id,
 							random_id=0,
 							message='Привет!\nТы целый месяц не пользовался нашим ботом &#128532;\nНажми на кнопку что бы снова начать',
-							keyboard=keyboard
+							keyboard=keyboards.month_no_activity
 						)
-				except:
+				except Exception as err:
+					print(err)
 					continue
+			await asyncio.sleep(24*60*60)
 
 	async def get_service_file(self) -> list:
 		async with aiopen('cache/off.pylist', 'r', encoding='utf-8') as list_file:

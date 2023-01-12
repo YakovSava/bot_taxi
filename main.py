@@ -89,9 +89,33 @@ async def on_account(message:Message):
 		keyboard = keyboards.choose_service
 	await message.answer('Ваш аккаунт был снова включён, если вы хотите его отключить нажмите соответвующую кнопку на клавиатуре', keyboard=keyboard)
 
-@vk.on.private_message(payload={'resume': 0})
-async def resume(message:Message):
-	pass
+@vk.on.private_message(payload={'back': 0, 'not user': 0})
+async def back(message:Message):
+	if (await db.passanger.exists(message.from_id)):
+		await message.answer('Что бы продолжить нажмите на кнопку ниже', keyboard = keyboards.choose_service)
+	elif (await db.driver.exists(message.from_id)):
+		await message.answer('Что бы продолжить нажмите на кнопку ниже', keyboard = keyboards.driver_registartion_success)
+	elif (await dispatcher.check_registred(message.from_id)):
+		state_num = int((await vk.state_dispenser.get(message.from_id)).state[-1])
+		if state_num == 0:
+			resume = 'номер телефона!'
+			keyboard = keyboards.inline.phone_pass_this_step
+		elif state_num == 1:
+			resume = 'город!'
+			keyboard = keyboards.inline.pass_this_step
+		elif state_num == 2:
+			resume = 'марку автомобиля!'
+			keyboard = keyboards.empty
+		elif state_num == 3:
+			resume = 'цвет автомобиля!'
+			keyboard = keyboards.empty
+		elif state_num == 4:
+			resume = 'госномер автомобиля!'
+			keyboard = keyboards.empty
+		await message.answer(f'Твоя анкета водителя заполнена не до конца!\n\nЗаверши создание анкеты чтобы брать заявки.\nНапиши свой {resume}', keyboard=keyboard)
+	else:
+		user = await vk.api.users.get(message.from_id)
+		await message.answer(f'Привет {user[0].first_name}!\nЯ бот-такси, помогаю пассажирам найти такси, а водителю пассажира!\n\nСоздай анкету!&#128071;&#128071;&#128071;', keyboard=keyboards.start)
 
 # Регистрация водителя
 @vk.on.private_message(payload = {'driver': 1})
@@ -605,6 +629,78 @@ async def admin_com(message:Message, commands:str):
 				)
 		else:
 			await message.answer('Неизвестная команда!')
+
+@vk.on.private_message(text='update <passer>')
+async def admin_update_database(message:Message, passer:str):
+	parameters = await binder.get_parameters()
+	if message.from_id in parameters['admin']:
+		options = passer.lower().split()
+		print(options)
+		if options[0] == 'passanger':
+			if options[1] == 'update':
+				if options[4][0] in ['+', '-', '/', '*']:
+					db.passanger.cursor.execute(f'SELECT * FROM passanger WHERE VK = "{options[2]}"')
+					result = db.passanger.cursor.fetchone()
+					result1 = eval(f'{result[options[3]]} {options[4][0]} {options[4][1:]}')
+					print(f'UPDATE passanger SET {options[3]} = {result1} WHERE VK = "{options[2]}"')
+					db.passanger.cursor.execute(f'UPDATE passanger SET {options[3]} = {result1} WHERE VK = "{options[2]}"')
+					db.passanger.db.commit()
+				else:
+					db.passanger.cursor.execute(f'UPDATE passanger SET {options[3]} = "{options[4][0]}" WHERE VK = "{options[2]}"')
+					db.passanger.db.commit()
+			elif options[1] == 'delete':
+				db.passanger.cursor.execute(f'DELETE FROM passanger WHERE VK = "{options[2]}"')
+				db.passanger.db.commit()
+			elif options[1] == 'reg':
+				await db.passanger.reg({
+					'vk': options[2],
+					'gender': options[3],
+					'city': options[4],
+					'name': options[5],
+					'phone': options[6]
+				})
+			else:
+				await message.answer('Неверный оператор')
+		else:
+			if options[1] == 'update':
+				if options[4][0] in ['+', '-', '/', '*']:
+					if options[3] in ['last_activity', 'quantity', 'balance']:
+						num = '2'
+					else:
+						num = ''
+					print(f'SELECT * FROM driver{num} WHERE VK = "{options[2]}"')
+					db.driver.cursor.execute(f'SELECT * FROM driver{num} WHERE VK = "{options[2]}"')
+					result = db.driver.cursor.fetchone()
+					print(result)
+					result1 = eval(f'{result[options[3]]} {options[4][0]} {options[4][1:]}')
+					db.driver.cursor.execute(f'UPDATE driver{num} SET {options[3]} = {result1} WHERE VK = "{options[2]}"')
+					db.driver.db.commit()
+				else:
+					if options[3] in ['last_activity', 'quantity', 'balance']:
+						num = '2'
+					else:
+						num = ''
+					db.driver.cursor.execute(f'UPDATE driver{num} SET {options[3]} = "{options[4][0]}" WHERE VK = "{options[2]}"')
+					db.driver.db.commit()
+			elif options[1] == 'delete':
+				db.driver.cursor.execute(f'DELETE FROM driver WHERE VK = "{options[2]}"')
+				db.driver.db.commit()
+				db.driver.cursor.execute(f'DELETE FROM driver2 WHERE VK = "{options[2]}"')
+				db.driver.db.commit()
+			elif options[1] == 'reg':
+				await db.driver.reg({
+					'vk': options[2],
+					'gender': options[3],
+					'city': options[4],
+					'name': options[5],
+					'phone': options[6],
+					'auto': options[7],
+					'color': options[8],
+					'state_number': options[9],
+					'balance': options[10]
+				})
+			else:
+				await message.answer('Неверный оператор')
 
 @vk.on.private_message(payload={'help': 0})
 async def helper(message:Message):

@@ -3,4 +3,6 @@ temp
 TEMP
 __pycache__
 plugins/__pycache__
-tokens
+cache
+parameters.json
+config.py
