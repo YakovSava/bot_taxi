@@ -639,26 +639,45 @@ async def admin_update_database(message:Message, passer:str):
 		if options[0] == 'passanger':
 			if options[1] == 'update':
 				if options[4][0] in ['+', '-', '/', '*']:
-					db.passanger.cursor.execute(f'SELECT * FROM passanger WHERE VK = "{options[2]}"')
-					result = db.passanger.cursor.fetchone()
-					result1 = eval(f'{result[options[3]]} {options[4][0]} {options[4][1:]}')
-					print(f'UPDATE passanger SET {options[3]} = {result1} WHERE VK = "{options[2]}"')
-					db.passanger.cursor.execute(f'UPDATE passanger SET {options[3]} = {result1} WHERE VK = "{options[2]}"')
-					db.passanger.db.commit()
+					try:
+						db.passanger.cursor.execute(f'SELECT * FROM passanger WHERE VK = "{options[2]}"')
+						result = db.passanger.cursor.fetchone()
+						result1 = eval(f'{result[options[3]]} {options[4][0]} {options[4][1:]}')
+						db.passanger.cursor.execute(f'UPDATE passanger SET {options[3]} = {result1} WHERE VK = "{options[2]}"')
+						db.passanger.db.commit()
+					except Exception as err:
+						await message.answer(f'Неизвестная ошибка.\nТрассировка (для разработчика): {str(err)}')
+					else:
+						await message.answer('Успешно изменено!')
 				else:
-					db.passanger.cursor.execute(f'UPDATE passanger SET {options[3]} = "{options[4][0]}" WHERE VK = "{options[2]}"')
-					db.passanger.db.commit()
+					try:
+						db.passanger.cursor.execute(f'UPDATE passanger SET {options[3]} = "{options[4][0]}" WHERE VK = "{options[2]}"')
+						db.passanger.db.commit()
+					except Exception as err:
+						await message.answer(f'Неизвестная ошибка.\nТрассировка (для разработчика): {str(err)}')
+					else:
+						await message.answer('Успешно изменено!')
 			elif options[1] == 'delete':
-				db.passanger.cursor.execute(f'DELETE FROM passanger WHERE VK = "{options[2]}"')
-				db.passanger.db.commit()
+				try:
+					db.passanger.cursor.execute(f'DELETE FROM passanger WHERE VK = "{options[2]}"')
+					db.passanger.db.commit()
+				except Exception as err:
+					await message.answer(f'Неизвестная ошибка.\nТрассировка (для разработчика): {str(err)}')
+				else:
+					await message.answer('Успешно удалено!')
 			elif options[1] == 'reg':
-				await db.passanger.reg({
-					'vk': options[2],
-					'gender': options[3],
-					'city': options[4],
-					'name': options[5],
-					'phone': options[6]
-				})
+				try:
+					await db.passanger.reg({
+						'vk': options[2],
+						'gender': options[3],
+						'city': options[4],
+						'name': options[5],
+						'phone': options[6]
+					})
+				except Exception as err:
+					await message.answer(f'Неизвестная ошибка.\nТрассировка (для разработчика): {str(err)}')
+				else:
+					await message.answer('Успешно зарегестрировано!')
 			else:
 				await message.answer('Неверный оператор')
 		else:
@@ -668,37 +687,55 @@ async def admin_update_database(message:Message, passer:str):
 						num = '2'
 					else:
 						num = ''
-					print(f'SELECT * FROM driver{num} WHERE VK = "{options[2]}"')
-					db.driver.cursor.execute(f'SELECT * FROM driver{num} WHERE VK = "{options[2]}"')
-					result = db.driver.cursor.fetchone()
-					print(result)
-					result1 = eval(f'{result[options[3]]} {options[4][0]} {options[4][1:]}')
-					db.driver.cursor.execute(f'UPDATE driver{num} SET {options[3]} = {result1} WHERE VK = "{options[2]}"')
-					db.driver.db.commit()
+					try:
+						db.driver.cursor.execute(f'SELECT * FROM driver{num} WHERE VK = "{options[2]}"')
+						result = db.driver.cursor.fetchone()
+						result1 = eval(f'{result[options[3]]} {options[4][0]} {options[4][1:]}')
+						db.driver.cursor.execute(f'UPDATE driver{num} SET {options[3]} = {result1} WHERE VK = "{options[2]}"')
+						db.driver.db.commit()
+					except Exception as err:
+						await message.answer(f'Неизвестная ошибка.\nТрассировка (для разработчика): {str(err)}')
+					else:
+						await message.answer('Успешно зарегестрировано!')
 				else:
 					if options[3] in ['last_activity', 'quantity', 'balance']:
 						num = '2'
 					else:
 						num = ''
-					db.driver.cursor.execute(f'UPDATE driver{num} SET {options[3]} = "{options[4][0]}" WHERE VK = "{options[2]}"')
-					db.driver.db.commit()
+					try:
+						db.driver.cursor.execute(f'UPDATE driver{num} SET {options[3]} = "{options[4][0]}" WHERE VK = "{options[2]}"')
+						db.driver.db.commit()
+					except Exception as err:
+						await message.answer(f'Неизвестная ошибка.\nТрассировка (для разработчика): {str(err)}')
+					else:
+						await message.answer('Успешно зарегестрировано!')
 			elif options[1] == 'delete':
-				db.driver.cursor.execute(f'DELETE FROM driver WHERE VK = "{options[2]}"')
-				db.driver.db.commit()
-				db.driver.cursor.execute(f'DELETE FROM driver2 WHERE VK = "{options[2]}"')
-				db.driver.db.commit()
+				try:
+					db.driver.cursor.execute(f'DELETE FROM driver WHERE VK = "{options[2]}"')
+					db.driver.db.commit()
+					db.driver.cursor.execute(f'DELETE FROM driver2 WHERE VK = "{options[2]}"')
+					db.driver.db.commit()
+				except Exception as err:
+					await message.answer(f'Неизвестная ошибка.\nТрассировка (для разработчика): {str(err)}')
+				else:
+					await message.answer('Успешно удалено!')
 			elif options[1] == 'reg':
-				await db.driver.reg({
-					'vk': options[2],
-					'gender': options[3],
-					'city': options[4],
-					'name': options[5],
-					'phone': options[6],
-					'auto': options[7],
-					'color': options[8],
-					'state_number': options[9],
-					'balance': options[10]
-				})
+				try:
+					await db.driver.reg({
+						'vk': options[2],
+						'gender': options[3],
+						'city': options[4],
+						'name': options[5],
+						'phone': options[6],
+						'auto': options[7],
+						'color': options[8],
+						'state_number': options[9],
+						'balance': options[10]
+					})
+				except Exception as err:
+					await message.answer(f'Неизвестная ошибка.\nТрассировка (для разработчика): {str(err)}')
+				else:
+					await message.answer('Успешно зарегестрировано!')
 			else:
 				await message.answer('Неверный оператор')
 
