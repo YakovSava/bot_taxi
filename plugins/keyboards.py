@@ -35,6 +35,9 @@ class keyboards:
 		resume_reg = (Keyboard(one_time=False, inline=True)
 			.add(Text('Продолжить регистрацию', payload={'resume': 0}), color=KeyboardButtonColor.POSITIVE)
 		).get_json()
+		cancel = lambda key: (Keyboard(one_time=False, inline=True)
+			.add(Text('Отменить заказ', payload = {'passager': 0, 'cancel': 0, 'taxi': 0, 'key': key}), color=KeyboardButtonColor.NEGATIVE)
+		).get_json()
 
 	driver_registartion_success = (Keyboard(one_time = True, inline = False)
 		.add(Text('Моя анкета &#128526;', payload = {'driver': 0, 'profie': 0}), color = KeyboardButtonColor.POSITIVE)
@@ -119,8 +122,6 @@ class keyboards:
 		.add(Text('Отказаться от заказа', payload = {'driver': 0, 'cancel': 0, 'other': link}), color = KeyboardButtonColor.NEGATIVE)
 	).get_json()
 	choose_service_before_tax = (Keyboard(one_time = False)
-		.add(Text('Отменить заказ', payload = {'passager': 0, 'cancel': 0, 'taxi': 0}), color=KeyboardButtonColor.NEGATIVE)
-		.row()
 		.add(Text('Заказать такси &#128662;', payload = {'taxi': 0}), color=KeyboardButtonColor.PRIMARY)
 		.row()
 		.add(Text('Заказать доставку &#128640;', payload = {'delivery': 0}), color=KeyboardButtonColor.POSITIVE)

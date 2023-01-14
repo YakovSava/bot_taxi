@@ -14,7 +14,7 @@ from plugins.states import PassangerRegState, TaxiState, DeliveryState, DriverRe
 	VkPayPay, QiwiPay, Helper # Импорируем все стейты (для регистарций)
 from plugins.forms import Forms # Импортируем формы и некоторые функции оттуда
 from plugins.rules import Order, Delivery, DriverSuccess, DriverCancel, QiwiPayRule, WillArriveMinutes,\
-	Arrived, VkPayRule, OffAccountRule, DeleteAccount
+	Arrived, VkPayRule, OffAccountRule, DeleteAccount, CancelOrder
 from plugins.csveer import Csveer
 from plugins.timer import Timer
 from plugins.dispatcher import Dispatch
@@ -257,7 +257,7 @@ async def taxi_tax(message:Message):
 		await message.answer(f'Твоя анкета водителя заполнена не до конца!\n\nЗаверши создание анкеты чтобы брать заявки.\nНапиши свой {resume}', keyboard=keyboard)
 	else:
 		await db.driver.set_activity(message.from_id)
-		if forms.get(payload['other']['from_id'])['active']: # Проверяем активна ли до сих пор форма
+		if await forms.get(payload['other']['from_id'])['active']: # Проверяем активна ли до сих пор форма
 			parameters = await binder.get_parameters() # Получаем параметры
 			driver_info = await db.driver.get(payload['other']['driver_id']) # Получаем информацию о водителе
 			if int(parameters['count']) <= int(driver_info[1]['balance']): # ПРоверяем есть ли у водителя деньги
@@ -348,7 +348,7 @@ async def driver_delivery(message:Message):
 		await message.answer(f'Твоя анкета водителя заполнена не до конца!\n\nЗаверши создание анкеты чтобы брать заявки.\nНапиши свой {resume}', keyboard=keyboard)
 	else:
 		await db.driver.set_activity(message.from_id)
-		if forms.get(payload['other']['from_id'])['active']:
+		if await forms.get(payload['other']['from_id'])['active']:
 			parameters = await binder.get_parameters()
 			driver_info = await db.driver.get(payload['other']['driver_id'])
 			if int(parameters['count']) <= int(driver_info[1]['balance']):
@@ -448,7 +448,7 @@ async def will_arrived(message:Message):
 
 @vk.on.private_message(payload = {'passanger': 0, 'arrived': 0})
 async def passanger_exit(message:Message):
-	driver_id = forms.get(message.from_id)['driver_id']
+	driver_id = await forms.get(message.from_id)['driver_id']
 	await message.answer('Сообщение отправлено водителю', keyboard = keyboards.passanger_get_taxi)
 	await vk.api.messages.send(
 		user_id = driver_id,
@@ -457,7 +457,7 @@ async def passanger_exit(message:Message):
 		message = 'Выхожу!'
 	)
 
-@vk.on.private_message(payload = {'passager': 0, 'cancel': 0, 'taxi': 0})
+@vk.on.private_message(CancelOrder())
 async def passanger_cancelling_order(message:Message):
 	await forms.stop_form(message.from_id)
 	await message.answer('Ваш заказ на вызов такси был отменён!', keyboard = keyboards.choose_service)

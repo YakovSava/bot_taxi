@@ -106,3 +106,14 @@ class DeleteAccount(ABCRule[Message]):
 	async def check(self, message:Message):
 		payload = eval(f'{message.payload}')
 		return (payload == {'driver': 0, 'delete': 0}) or (payload == {'user': 0, 'delete': 0})
+
+
+class CancelOrder(ABCRule[Message]):
+	async def check(self, message:Message):
+		payload = eval(f'{message.payload}')
+		try:
+			payload['passager'], payload['cancel'], payload['taxi']
+		except:
+			return False
+		else:
+			return True
