@@ -60,7 +60,7 @@ class keyboards:
 		.add(Text('Успешно доехал', payload = {'user': 0, 'success': 0, 'key': key}), color = KeyboardButtonColor.POSITIVE)
 	).get_json()
 	choose_service = (Keyboard(one_time = False)
-		.add(Text('Заказать такси &#128662;', payload = {'taxi': 0}), color = KeyboardButtonColor.PRIMARY)
+		.add(Text('Вызвать такси &#128662;', payload = {'taxi': 0}), color = KeyboardButtonColor.PRIMARY)
 		.row()
 		.add(Text('Заказать доставку &#128640;', payload = {'delivery': 0}), color = KeyboardButtonColor.POSITIVE)
 		.row()

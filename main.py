@@ -246,7 +246,7 @@ async def taxi_call(message:Message):
 				user_id = driver_id,
 				from_id = driver_id,
 				random_id = 0,
-				message = f'&#128293;&#128293;&#128293; Новый заказ! &#128293;&#128293;&#128293;\n\n{text}\n\nЖми кнопку &#128071;, пока никто не забрал!',
+				message = f'&#128293;&#128293;&#128293; Новый заказ! &#128293;&#128293;&#128293;\n\nАдрес: {text}\n\nЖми кнопку &#128071;, "принять заявку"!',
 				keyboard = keyboards.inline.driver_new_order({'from_id': message.from_id, 'driver_id': driver_id, 'location': loc, 'text': text, 'key': key}) # P.s. смотрите файл /plugins/keyboards.py
 			)
 		except VKAPIError[901]:
@@ -297,7 +297,7 @@ async def taxi_tax(message:Message):
 					keyboard = keyboards.passanger_get_taxi
 				)
 				await forms.start_drive(payload['other']['key'], driver_id)
-				await message.answer(f'Заявка принята!\nТелефон оправителя заявки: {passanger["phone"]}\n{payload["other"]["text"]}\nВот координаты отправителя заявки:', keyboard = keyboards.driver_order_complete({'from_id': from_id}))
+				await message.answer(f'Заявка принята!\nТелефон оправителя заявки: {passanger["phone"]}\nАдрес:{payload["other"]["text"]}', keyboard = keyboards.driver_order_complete({'from_id': from_id}))
 				# await asyncio.sleep(1)
 				# await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
 				if payload['other']['location'] is not None:
@@ -346,7 +346,7 @@ async def delivery_tax(message:Message):
 				user_id = driver_id,
 				from_id = driver_id,
 				random_id = 0,
-				message = f'&#128640;&#128640;&#128640; Новая доставка! &#128640;&#128640;&#128640;\n\nАдрес: {text}\n\nЖми кнопку &#128071;, пока никто не забрал!',
+				message = f'&#128640;&#128640;&#128640; Новая доставка! &#128640;&#128640;&#128640;\n\nАдрес: {text}\n\nЖми кнопку &#128071;, "принять заявку"!',
 				keyboard = keyboards.inline.delivery_driver({'from_id': message.from_id, 'driver_id': driver_id, 'location': loc, 'text': text, 'key': key})
 			)
 		except VKAPIError[901]:
@@ -398,8 +398,8 @@ async def driver_delivery(message:Message):
 				)
 				await forms.start_drive(payload['other']['key'], driver_id)
 				await message.answer(f'Заявка на доставку принята!\n\
-Адрес: {payload["other"]["text"]}\n\
-Телефон оправителя заявки: {passanger["phone"]}', keyboard = keyboards.driver_order_complete({'from_id': from_id}))
+Адрес пассажира: {payload["other"]["text"]}\n\
+Телефон пассажира: {passanger["phone"]}', keyboard = keyboards.driver_order_complete({'from_id': from_id}))
 				# await asyncio.sleep(1)
 				# await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
 				if payload['other']['location'] is not None:
@@ -434,7 +434,7 @@ async def passanger_success_order(message:Message):
 		user_id = forms.all_forms[payload['other']['key']]['driver_id'],
 		peer_id = forms.all_forms[payload['other']['key']]['driver_id'],
 		random_id = 0,
-		message = 'Пассажир заявил что вы доехали',
+		message = '&#9989; Заявка выполнена &#9989;\nПассажир заявил, что вы успешно доехали!',
 		keyboard = keyboards.driver_registartion_success
 	)
 	await forms.stop_drive(payload['other']['key'])
@@ -447,7 +447,7 @@ async def driver_success_order(message:Message):
 	payload = eval(f'{message.payload}')
 	parameters = await binder.get_parameters()
 	await db.driver.set_activity(message.from_id)
-	await message.answer('Вы успешно довезли пассажира!', keyboard = keyboards.driver_registartion_success)
+	await message.answer('&#9989; Заявка выполнена! &#9989;\nВы успешно довезли пассажира!', keyboard = keyboards.driver_registartion_success)
 	await vk.api.messages.send(
 		user_id = payload['other']['from_id'],
 		peer_id = payload['other']['from_id'],
