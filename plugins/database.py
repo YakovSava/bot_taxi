@@ -44,12 +44,12 @@ class Database:
 			await self.cursor.execute(f'DELETE FROM passanger WHERE phone = "{phone}"')
 			await self.db.commit()
 
-		def get_before_phone(self, phone:str) -> bool:
-			await self.cursor.execute(f'SELECT VK FROM passanger WHERE phone = "{phone}"')
-			if (await self.cursor.fetchone()) is not None:
-				return True
-			else:
-				return False
+		# def get_before_phone(self, phone:str) -> bool:
+		# 	await self.cursor.execute(f'SELECT VK FROM passanger WHERE phone = "{phone}"')
+		# 	if (await self.cursor.fetchone()) is not None:
+		# 		return True
+		# 	else:
+		# 		return False
 
 		async def reg(self, json:dict) -> None:
 			await self.cursor.execute('INSERT INTO passanger VALUES (?, ?, ?, ?, ?, ?)', (
