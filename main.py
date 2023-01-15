@@ -14,7 +14,8 @@ from plugins.states import PassangerRegState, TaxiState, DeliveryState, DriverRe
 	VkPayPay, QiwiPay, Helper # Импорируем все стейты (для регистарций)
 from plugins.forms import Forms # Импортируем формы и некоторые функции оттуда
 from plugins.rules import Order, Delivery, DriverSuccess, DriverCancel, QiwiPayRule, WillArriveMinutes,\
-	Arrived, VkPayRule, OffAccountRule, DeleteAccount, CancelOrder
+	Arrived, VkPayRule, OffAccountRule, DeleteAccount, CancelOrder, PassangerSuccessOrder, \
+	PassangerCancelOrder, PassangerArrived
 from plugins.csveer import Csveer
 from plugins.timer import Timer
 from plugins.dispatcher import Dispatch
@@ -118,12 +119,12 @@ async def back(message:Message):
 		await message.answer(f'Привет {user[0].first_name}!\nЯ бот-такси, помогаю пассажирам найти такси, а водителю пассажира!\n\nСоздай анкету!&#128071;&#128071;&#128071;', keyboard=keyboards.start)
 
 # Регистрация водителя
-@vk.on.private_message(payload = {'driver': 1})
-async def reg_driver_1(message:Message):
-	await message.answer('Обработка...', keyboard=keyboards.empty)
-	await db.driver.set_activity(message.from_id)
-	await dispatcher.update_no_registred_driver(message.from_id)
-	await message.answer('Продолжить можно по кнопке ниже', keyboard=keyboards.registration_failed)
+# @vk.on.private_message(payload = {'driver': 1})
+# async def reg_driver_1(message:Message):
+# 	await message.answer('Обработка...', keyboard=keyboards.empty)
+# 	await db.driver.set_activity(message.from_id)
+# 	await dispatcher.update_no_registred_driver(message.from_id)
+# 	await message.answer('Продолжить можно по кнопке ниже', keyboard=keyboards.registration_failed)
 
 @vk.on.private_message(payload={'driver': 0, 'reg': 0})
 async def registartion_driver(message:Message):
@@ -138,7 +139,20 @@ async def driver_profile(message:Message):
 	parameters = await binder.get_parameters()
 	if info != [None, None]:
 		await db.driver.set_activity(message.from_id)
-		await message.answer(f'Анкета водителя!\nВаше имя: {info[0]["name"]}\nВаш номер телефона: {info[0]["phone"]}\nВаш город: {info[0]["city"]}\nМашина: {info[0]["auto"]}\nЦвет: {info[0]["color"]}\nГосномер: {info[0]["state_number"]}\nКол-во поездок: {info[1]["quantity"]}\nБаланс: {info[1]["balance"]} руб.\nОдна заявка стоит: {parameters["count"]}', keyboard = keyboards.driver_profile)
+		await message.answer(f'Анкета водителя!\n\
+Ваше имя: {info[0]["name"]}\n\
+Ваш номер телефона: {info[0]["phone"]}\n\
+Ваш город: {info[0]["city"]}\n\
+Машина: {info[0]["auto"]}\n\
+Цвет: {info[0]["color"]}\n\
+Госномер: {info[0]["state_number"]}\n\
+Кол-во поездок за 3 дня: НЕТ\n\
+Кол-во поездок за 7 дней: НЕТ\n\
+Кол-во поездок с ПН по ПТ: НЕТ\n\
+Кол-во поездок за 30 дней: НЕТ\n\
+Кол-во поездок: {info[1]["quantity"]}\n\
+Баланс: {info[1]["balance"]} руб.\n\
+Одна заявка стоит: {parameters["count"]}', keyboard = keyboards.driver_profile)
 
 @vk.on.private_message(OffAccountRule())
 async def off_driver(message:Message):
@@ -179,14 +193,18 @@ async def driver_profile_delete(message:Message):
 async def user_profile(message:Message):
 	name = await db.passanger.get(message.from_id)
 	if name is not None:
-		await message.answer(f'Анкета пассажира!\n\nИмя: {name["name"]}\nТелефон: {name["phone"]}\nКол-во поездок: {name["quantity"]}\n', keyboard = keyboards.user_profile)
+		await message.answer(f'Анкета пассажира!\n\n\
+Имя: {name["name"]}\n\
+Телефон: {name["phone"]}\n\
+Кол-во поездок: {name["quantity"]}', keyboard = keyboards.user_profile)
 
 # Редактирование профиля пассажира
 @vk.on.private_message(payload = {'user': 0, 'edit': 0})
 async def passanger_edit_profile(message:Message):
 	await db.passanger.delete(message.from_id)
 	await vk.state_dispenser.set(message.from_id, PassangerRegState.phone)
-	await message.answer('Отправьте ваш телефон для связи с водителем!\n\nТелефон можно не указывать, однако тогда водитель не сможет связаться с Вами, когда подъедет к месту вызова!', keyboard=keyboards.inline.phone_pass_this_step)
+	await message.answer('Отправьте ваш телефон для связи с водителем!\n\n\
+Телефон можно не указывать, однако тогда водитель не сможет связаться с Вами, когда подъедет к месту вызова!', keyboard=keyboards.inline.phone_pass_this_step)
 
 # Волшебная кнопка "назад"
 @vk.on.private_message(payload = {'user': 0, 'back': 0})
@@ -197,7 +215,10 @@ async def passanger_back(message:Message):
 @vk.on.private_message(payload = {'taxi': 0})
 async def passanger_get_taxi_def(message:Message):
 	await vk.state_dispenser.set(message.from_id, TaxiState.four_quest)
-	await message.answer('1 - Напиши откуда и куда планируешь ехать.\n2 - Сколько человек поедет, будут ли дети\n3 - Напиши подъезд\n4 - Добавь комментарий к вызову.\nПример:\n"Ул. Ленина 8\nУл. Мира 12\nПодъезд 1\nПоедет 2 взрослых и 1 ребёнок"')
+	await message.answer('1 - Напиши откуда и куда планируешь ехать.\n\
+2 - Сколько человек поедет, будут ли дети\n3 - Напиши подъезд\n\
+4 - Добавь комментарий к вызову.\n\
+Пример:\n"Ул. Ленина 8\nУл. Мира 12\nПодъезд 1\nПоедет 2 взрослых и 1 ребёнок"')
 
 @vk.on.private_message(state = TaxiState.four_quest)
 async def taxi_geo(message:Message):
@@ -215,7 +236,7 @@ async def taxi_call(message:Message):
 	info = await db.passanger.get(message.from_id) # Получаем данные пассажира
 	text = storage.get(f'{message.from_id}_taxi_get_question')
 	storage.delete(f'{message.from_id}_taxi_get_question')
-	await forms.new_form(message.from_id) # Создаёи новую форму
+	key = await forms.new_form(message.from_id) # Создаёи новую форму
 	off_driver_ids = await dispatcher.get_service_file()
 	driver_ids = [driver_id async for driver_id, driver_city in db.driver.get_all() if ((info['city'].lower() == driver_city.lower()) and (driver_id not in off_driver_ids))]
 	driver_ids.extend(await dispatcher.get_no_registred_drivers())
@@ -226,11 +247,11 @@ async def taxi_call(message:Message):
 				from_id = driver_id,
 				random_id = 0,
 				message = f'&#128293;&#128293;&#128293; Новый заказ! &#128293;&#128293;&#128293;\n\n{text}\n\nЖми кнопку &#128071;, пока никто не забрал!',
-				keyboard = keyboards.inline.driver_new_order({'from_id': message.from_id, 'driver_id': driver_id, 'location': loc, 'text': text}) # P.s. смотрите файл /plugins/keyboards.py
+				keyboard = keyboards.inline.driver_new_order({'from_id': message.from_id, 'driver_id': driver_id, 'location': loc, 'text': text, 'key': key}) # P.s. смотрите файл /plugins/keyboards.py
 			)
 		except VKAPIError[901]:
 			pass
-	await message.answer(f'Ваш запрос был доставлен {len(driver_ids)} водителям\nОжидайте!', keyboard = keyboards.choose_service_before_tax) # Активных было бы считать труднее
+	await message.answer(f'Ваш запрос был доставлен {len(driver_ids)} водителям\nОжидайте!', keyboard = keyboards.inline.cancel(key)) # Активных было бы считать труднее
 	await vk.state_dispenser.delete(message.from_id)
 
 # Принятие заявки
@@ -257,7 +278,7 @@ async def taxi_tax(message:Message):
 		await message.answer(f'Твоя анкета водителя заполнена не до конца!\n\nЗаверши создание анкеты чтобы брать заявки.\nНапиши свой {resume}', keyboard=keyboard)
 	else:
 		await db.driver.set_activity(message.from_id)
-		if await forms.get(payload['other']['from_id'])['active']: # Проверяем активна ли до сих пор форма
+		if await forms.get(payload['other']['key'])['active']: # Проверяем активна ли до сих пор форма
 			parameters = await binder.get_parameters() # Получаем параметры
 			driver_info = await db.driver.get(payload['other']['driver_id']) # Получаем информацию о водителе
 			if int(parameters['count']) <= int(driver_info[1]['balance']): # ПРоверяем есть ли у водителя деньги
@@ -267,13 +288,18 @@ async def taxi_tax(message:Message):
 					user_id = from_id,
 					peer_id = from_id,
 					random_id = 0,
-					message = f'&#9989; Водитель принял ваш заказ! &#9989;\n\nТелефон водителя: {driver_info[0]["phone"]}\nМашина: {driver_info[0]["auto"]}\nЦвет: {driver_info[0]["color"]}\nГосномер: {driver_info[0]["state_number"]}\nВ конце поездки нажми "Успешно доехал"',
+					message = f'&#9989; Водитель принял ваш заказ! &#9989;\n\n\
+Телефон водителя: {driver_info[0]["phone"]}\n\
+Машина: {driver_info[0]["auto"]}\n\
+Цвет: {driver_info[0]["color"]}\n\
+Госномер: {driver_info[0]["state_number"]}\n\
+В конце поездки нажми "Успешно доехал"',
 					keyboard = keyboards.passanger_get_taxi
 				)
-				await forms.start_drive(from_id, driver_id)
+				await forms.start_drive(payload['other']['key'], driver_id)
 				await message.answer(f'Заявка принята!\nТелефон оправителя заявки: {passanger["phone"]}\n{payload["other"]["text"]}\nВот координаты отправителя заявки:', keyboard = keyboards.driver_order_complete({'from_id': from_id}))
-				await asyncio.sleep(1)
-				await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
+				# await asyncio.sleep(1)
+				# await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
 				if payload['other']['location'] is not None:
 					await asyncio.sleep(1)
 					await message.answer('Вот координаты пассажира', lat = payload['other']['location'][0], long = payload['other']['location'][1])
@@ -286,7 +312,11 @@ async def taxi_tax(message:Message):
 @vk.on.private_message(payload = {'delivery': 0})
 async def get_delivery(message:Message):
 	await vk.state_dispenser.set(message.from_id, DeliveryState.three_quest)
-	await message.answer('Для заказа, в одном сообщении, напиши:\n1 - Что и в каком магазине купить.\n2 - Куда нужно отвезти.\n3- Сколько ты готов заплатить за доставку.\n\nУчти, чем меньше цену доставки ты предложишь, тем дольше будешь искать курьера.')
+	await message.answer('Для заказа, в одном сообщении, напиши:\n\
+1 - Что и в каком магазине купить.\n\
+2 - Куда нужно отвезти.\n\
+3- Сколько ты готов заплатить за доставку.\n\n\
+Учти, чем меньше цену доставки ты предложишь, тем дольше будешь искать курьера.')
 
 # Заполняем данные (как при заказе такси, тут схема тоно такая же)
 @vk.on.private_message(state = DeliveryState.three_quest)
@@ -303,7 +333,7 @@ async def delivery_tax(message:Message):
 		loc = None
 	info = await db.passanger.get(message.from_id) # Получаем данные пассажира
 	await vk.state_dispenser.delete(message.from_id)
-	await forms.new_form(message.from_id)
+	key = await forms.new_form(message.from_id)
 	text = storage.get(f'{message.from_id}_deliver_get')
 	storage.delete(f'{message.from_id}_deliver_get')
 	off_driver_ids = await dispatcher.get_service_file()
@@ -316,12 +346,12 @@ async def delivery_tax(message:Message):
 				user_id = driver_id,
 				from_id = driver_id,
 				random_id = 0,
-				message = f'&#128640;&#128640;&#128640; Новая доставка! &#128640;&#128640;&#128640;\n\n{text}\n\nЖми кнопку &#128071;, пока никто не забрал!',
-				keyboard = keyboards.inline.delivery_driver({'from_id': message.from_id, 'driver_id': driver_id, 'location': loc, 'text': text})
+				message = f'&#128640;&#128640;&#128640; Новая доставка! &#128640;&#128640;&#128640;\n\nАдрес: {text}\n\nЖми кнопку &#128071;, пока никто не забрал!',
+				keyboard = keyboards.inline.delivery_driver({'from_id': message.from_id, 'driver_id': driver_id, 'location': loc, 'text': text, 'key': key})
 			)
 		except VKAPIError[901]:
 			pass
-	await message.answer(f'Твой запрос на доставку был доставлен {len(driver_ids)} водителям', keyboard = keyboards.choose_service_before_tax)
+	await message.answer(f'Твой запрос на доставку был доставлен {len(driver_ids)} водителям', keyboard = keyboards.inline.cancel(key))
 	await vk.state_dispenser.delete(message.from_id)
 
 # Принимаем доставку
@@ -348,7 +378,7 @@ async def driver_delivery(message:Message):
 		await message.answer(f'Твоя анкета водителя заполнена не до конца!\n\nЗаверши создание анкеты чтобы брать заявки.\nНапиши свой {resume}', keyboard=keyboard)
 	else:
 		await db.driver.set_activity(message.from_id)
-		if await forms.get(payload['other']['from_id'])['active']:
+		if await forms.get(payload['other']['key'])['keys']['active']:
 			parameters = await binder.get_parameters()
 			driver_info = await db.driver.get(payload['other']['driver_id'])
 			if int(parameters['count']) <= int(driver_info[1]['balance']):
@@ -358,13 +388,20 @@ async def driver_delivery(message:Message):
 					user_id = from_id,
 					peer_id = from_id,
 					random_id = 0,
-					message = f'&#9989; Водитель принял ваш заказ! &#9989;\n\nТелефон водителя: {driver_info[0]["phone"]}\nМашина: {driver_info[0]["auto"]}\nЦвет: {driver_info[0]["color"]}\nГосномер: {driver_info[0]["state_number"]}\n\nОжидайте доставки!',
+					message = f'&#9989; Водитель принял ваш заказ! &#9989;\n\n\
+Телефон водителя: {driver_info[0]["phone"]}\n\
+Машина: {driver_info[0]["auto"]}\n\
+Цвет: {driver_info[0]["color"]}\n\
+Госномер: {driver_info[0]["state_number"]}\n\n\
+Ожидайте доставки!',
 					keyboard = keyboards.passanger_get_taxi
 				)
-				await forms.start_drive(from_id, driver_id)
-				await message.answer(f'Заявка на доставку принята!\nТелефон оправителя заявки: {passanger["phone"]}\n{payload["other"]["text"]}\nВот координаты отправителя заявки:', keyboard = keyboards.driver_order_complete({'from_id': from_id}))
-				await asyncio.sleep(1)
-				await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
+				await forms.start_drive(payload['other']['key'], driver_id)
+				await message.answer(f'Заявка на доставку принята!\n\
+Адрес: {payload["other"]["text"]}\n\
+Телефон оправителя заявки: {passanger["phone"]}', keyboard = keyboards.driver_order_complete({'from_id': from_id}))
+				# await asyncio.sleep(1)
+				# await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
 				if payload['other']['location'] is not None:
 					await asyncio.sleep(1)
 					await message.answer('Вот координаты пассажира', lat = payload['other']['location'][0], long = payload['other']['location'][1])
@@ -374,33 +411,35 @@ async def driver_delivery(message:Message):
 			await message.answer('Кажется кто-то был быстрее тебя! &#128542;\nНе отчаивайся, скоро будет новый заказ!')
 
 # Если пассажир отменил заказ
-@vk.on.private_message(payload = {'user': 0, 'cancel': 0})
+@vk.on.private_message(PassangerCancelOrder())
 async def user_cancelling_order(message:Message):
+	payload = eval(f'{message.payload}')
 	await vk.api.messages.send(
-		user_id = forms.all_forms[message.from_id]['driver_id'],
-		peer_id = forms.all_forms[message.from_id]['driver_id'],
+		user_id = forms.all_forms[payload['other']['key']]['driver_id'],
+		peer_id = forms.all_forms[payload['other']['key']]['driver_id'],
 		random_id = 0,
 		message = 'К сожалению пассажир отменил заказ :(\nСкоро будут ещё заявки, не отчаивайтесь!',
 		keyboard = keyboards.driver_registartion_success
 	)
-	await forms.stop_drive(message.from_id)
+	await forms.stop_drive(payload['other']['key'])
 	await message.answer('Вы отменили заказ!', keyboard = keyboards.choose_service)
 
 # Если пассажир доехал
-@vk.on.private_message(payload = {'user': 0, 'success': 0})
+@vk.on.private_message(PassangerSuccessOrder())
 async def passanger_success_order(message:Message):
+	payload = eval(f'{message.payload}')
 	parameters = await binder.get_parameters()
 	await message.answer('Вы успешно доехали!', keyboard = keyboards.choose_service)
 	await vk.api.messages.send(
-		user_id = forms.all_forms[message.from_id]['driver_id'],
-		peer_id = forms.all_forms[message.from_id]['driver_id'],
+		user_id = forms.all_forms[payload['other']['key']]['driver_id'],
+		peer_id = forms.all_forms[payload['other']['key']]['driver_id'],
 		random_id = 0,
 		message = 'Пассажир заявил что вы доехали',
 		keyboard = keyboards.driver_registartion_success
 	)
-	await forms.stop_drive(message.from_id)
-	await db.driver.set_balance(forms.all_forms[message.from_id]['driver_id'], -parameters['count'])
-	await db.driver.set_qunatity(forms.all_forms[message.from_id]['driver_id'])
+	await forms.stop_drive(payload['other']['key'])
+	await db.driver.set_balance(forms.all_forms[payload['other']['key']]['driver_id'], -parameters['count'])
+	await db.driver.set_qunatity(forms.all_forms[payload['other']['key']]['driver_id'])
 	await db.passanger.set_qunatity(message.from_id)
 
 @vk.on.private_message(DriverSuccess())
@@ -435,21 +474,22 @@ async def will_arived_with_minutes_with_minute(message:Message):
 
 @vk.on.private_message(Arrived())
 async def will_arrived(message:Message):
-	await db.driver.set_activity(message.from_id)
 	payload = eval(f'{message.payload}')
+	await db.driver.set_activity(message.from_id)
 	await message.answer('Сообщение отправлено пассажиру!')
 	await vk.api.messages.send(
 		user_id = payload['other']['from_id'],
 		peer_id = payload['other']['from_id'],
 		random_id = 0,
 		message = f'Водитель прибыл, выходите!',
-		keyboard = keyboards.passanger_get_taxi_and_driver_will_arrived
+		keyboard = keyboards.passanger_get_taxi_and_driver_will_arrived(payload['other']['key'])
 	)
 
-@vk.on.private_message(payload = {'passanger': 0, 'arrived': 0})
+@vk.on.private_message(PassangerArrived())
 async def passanger_exit(message:Message):
-	driver_id = await forms.get(message.from_id)['driver_id']
-	await message.answer('Сообщение отправлено водителю', keyboard = keyboards.passanger_get_taxi)
+	payload = eval(f'{message.payload}')
+	driver_id = await forms.get(payload['key'])['driver_id']
+	await message.answer('Сообщение отправлено водителю', keyboard = keyboards.passanger_get_taxi(payload['key']))
 	await vk.api.messages.send(
 		user_id = driver_id,
 		peer_id = driver_id,
@@ -459,8 +499,8 @@ async def passanger_exit(message:Message):
 
 @vk.on.private_message(CancelOrder())
 async def passanger_cancelling_order(message:Message):
-	await forms.stop_form(message.from_id)
-	await message.answer('Ваш заказ на вызов такси был отменён!', keyboard = keyboards.choose_service)
+	await forms.cancel_order(eval(f'{message.payload}')['key'])
+	await message.answer('Ваш вызов был отменён!', keyboard = keyboards.choose_service)
 
 @vk.on.private_message(DriverCancel())
 async def driver_cancel_order(message:Message):
@@ -473,7 +513,7 @@ async def driver_cancel_order(message:Message):
 		message = 'К сожалению водитель отменил заказ :(\nВы можете заказать такси снова',
 		keyboard = keyboards.choose_service
 	)
-	await forms.stop_drive(payload['other']['from_id'])
+	await forms.stop_drive(payload['other']['key'])
 	await message.answer('Вы отменили заказ!', keyboard = keyboards.driver_registartion_success)
 
 @vk.on.private_message(payload = {'driver': 0, 'money': 'vk pay'})
@@ -494,7 +534,7 @@ async def vk_pay(message:Message):
 
 @vk.on.private_message(VkPayRule())
 async def pay_handler(message:Message):
-	payload = dict(f'{message.payload}')
+	payload = eval(f'{message.payload}')
 	await db.driver.set_activity(message.from_id)
 	parameters = await binder.get_parameters()
 	await db.driver.set_balance(message.from_id, payload['amount'])

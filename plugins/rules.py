@@ -7,7 +7,7 @@ class Order(ABCRule[Message]):
 	async def check(self, message:Message) -> bool:
 		if message.payload is None:
 			return False
-		payload = eval(f'dict({message.payload})')
+		payload = eval(f'{message.payload}')
 		try:
 			payload['driver'], payload['order']
 		except:
@@ -19,7 +19,7 @@ class Delivery(ABCRule[Message]):
 	async def check(self, message:Message) -> bool:
 		if message.payload is None:
 			return False
-		payload = eval(f'dict({message.payload})')
+		payload = eval(f'{message.payload}')
 		try:
 			payload['driver'], payload['delivery']
 		except:
@@ -31,7 +31,7 @@ class DriverCancel(ABCRule[Message]):
 	async def check(self, message:Message) -> bool:
 		if message.payload is None:
 			return False
-		payload = eval(f'dict({message.payload})')
+		payload = eval(f'{message.payload}')
 		try:
 			payload['driver'], payload['cancel']
 		except:
@@ -43,7 +43,7 @@ class DriverSuccess(ABCRule[Message]):
 	async def check(self, message:Message) -> bool:
 		if message.payload is None:
 			return False
-		payload = eval(f'dict({message.payload})')
+		payload = eval(f'{message.payload}')
 		try:
 			payload['driver'], payload['success']
 		except:
@@ -55,7 +55,7 @@ class QiwiPayRule(ABCRule[Message]):
 	async def check(self, message:Message) -> bool:
 		if message.payload is None:
 			return False
-		payload = eval(f'dict({message.payload})')
+		payload = eval(f'{message.payload}')
 		try:
 			payload['driver'], payload['qiwi']
 		except:
@@ -67,7 +67,7 @@ class WillArriveMinutes(ABCRule[Message]):
 	async def check(self, message:Message) -> bool:
 		if message.payload is None:
 			return False
-		payload = eval(f'dict({message.payload})')
+		payload = eval(f'{message.payload}')
 		try:
 			payload['driver'], payload['minute']
 		except:
@@ -79,7 +79,7 @@ class Arrived(ABCRule[Message]):
 	async def check(self, message:Message) -> bool:
 		if message.payload is None:
 			return False
-		payload = eval(f'dict({message.payload})')
+		payload = eval(f'{message.payload}')
 		try:
 			payload['driver'], payload['arrived']
 		except:
@@ -90,7 +90,7 @@ class Arrived(ABCRule[Message]):
 class VkPayRule(ABCRule[Message]):
 	async def check(self, message:Message):
 		try:
-			payload = dict(message.payload)
+			payload = eval(f'{message.payload}')
 			payload['driver'], payload['amount']
 		except:
 			return False
@@ -113,6 +113,39 @@ class CancelOrder(ABCRule[Message]):
 		payload = eval(f'{message.payload}')
 		try:
 			payload['passager'], payload['cancel'], payload['taxi']
+		except:
+			return False
+		else:
+			return True
+
+
+class PassangerSuccessOrder(ABCRule[Message]):
+	async def check(message:Message):
+		payload = eval(f'{message.payload}')
+		try:
+			payload['user'], payload['cancel']
+		except:
+			return False
+		else:
+			return True
+
+
+class PassangerCancelOrder(ABCRule[Message]):
+	async def check(message:Message):
+		payload = eval(f'{message.payload}')
+		try:
+			payload['user'], payload['success']
+		except:
+			return False
+		else:
+			return True
+	
+
+class PassangerArrived(ABCRule[Message]):
+	async def check(message:Message):
+		payload = eval(f'{message.payload}')
+		try:
+			payload['passager'], payload['arrived']
 		except:
 			return False
 		else:
