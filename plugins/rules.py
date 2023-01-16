@@ -120,18 +120,7 @@ class CancelOrder(ABCRule[Message]):
 
 
 class PassangerSuccessOrder(ABCRule[Message]):
-	async def check(message:Message):
-		payload = eval(f'{message.payload}')
-		try:
-			payload['user'], payload['cancel']
-		except:
-			return False
-		else:
-			return True
-
-
-class PassangerCancelOrder(ABCRule[Message]):
-	async def check(message:Message):
+	async def check(self, message:Message):
 		payload = eval(f'{message.payload}')
 		try:
 			payload['user'], payload['success']
@@ -139,13 +128,24 @@ class PassangerCancelOrder(ABCRule[Message]):
 			return False
 		else:
 			return True
+
+
+class PassangerCancelOrder(ABCRule[Message]):
+	async def check(self, message:Message):
+		payload = eval(f'{message.payload}')
+		try:
+			payload['user'], payload['cancel']
+		except:
+			return False
+		else:
+			return True
 	
 
 class PassangerArrived(ABCRule[Message]):
-	async def check(message:Message):
+	async def check(self, message:Message):
 		payload = eval(f'{message.payload}')
 		try:
-			payload['passager'], payload['arrived']
+			payload['passanger'], payload['arrived']
 		except:
 			return False
 		else:

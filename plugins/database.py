@@ -65,7 +65,7 @@ class Database:
 
 		async def set_qunatity(self, vk:str):
 			await self.cursor.execute(f'SELECT quantity FROM passanger WHERE VK = "{vk}"')
-			last = int(await self.cursor.fetchone()['quantity'])
+			last = int((await self.cursor.fetchone())['quantity'])
 			await self.cursor.execute(f'UPDATE passanger SET quantity = {last + 1} WHERE VK = "{vk}"')
 			await self.db.commit()
 
@@ -136,13 +136,13 @@ class Database:
 
 		async def set_balance(self, vk:str, set:int) -> None:
 			await self.cursor.execute(f'SELECT balance FROM driver2 WHERE VK = "{vk}"')
-			last = int(await self.cursor.fetchone()['balance'])
+			last = int((await self.cursor.fetchone())['balance'])
 			await self.cursor.execute(f'UPDATE driver2 SET balance = {last + set} WHERE VK = "{vk}"')
 			await self.db.commit()
 
 		async def set_qunatity(self, vk:str):
 			await self.cursor.execute(f"SELECT quantity FROM driver2 WHERE VK = '{vk}'")
-			last = int(await self.cursor.fetchone()['quantity'])
+			last = int((await self.cursor.fetchone())['quantity'])
 			await self.cursor.execute(f"UPDATE driver2 SET quantity = {last + 1} WHERE VK = '{vk}'")
 			await self.db.commit()
 

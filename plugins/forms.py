@@ -2,7 +2,7 @@ import asyncio
 
 from threading import Thread
 from random import randint, choice
-from string import printable
+from string import ascii_letters
 from aiofiles import open as aiopen
 
 class Forms:
@@ -24,7 +24,7 @@ class Forms:
 	async def _get_key(self) -> str:
 		key = ''
 		for _ in range(randint(10, 100)):
-			key += choice(printable)
+			key += choice(ascii_letters)
 		return key
 
 	async def new_form(self, from_id:str) -> None:
