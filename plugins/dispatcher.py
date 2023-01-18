@@ -90,8 +90,9 @@ class Dispatch:
 		return from_id in list_lines
 		
 	async def add_and_update_drive(self, date:Literal[int, float]=None, from_id:int=None):
+		await self.databas.driver.set_qunatity(from_id)
 		old_database = await self._get_database()
-		if from_id in old_database:
+		if from_id not in old_database:
 			old_database[from_id] = {
 				3: [],
 				5: [],
@@ -114,6 +115,7 @@ class Dispatch:
 }
 	Trips for all time are stored in the main database
 		'''
+		print(old_database)
 		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
 			await file.write(f'{old_database}')
 
@@ -126,6 +128,19 @@ class Dispatch:
 				asyncio.create_task(self._check_monnth())
 			)
 
+	async def get_time_database(self, from_id:int) -> dict:
+		db = await self._get_database()
+		if from_id not in db:
+			db[from_id] = {
+				3: [],
+				5: [],
+				'week': [],
+				'month': []
+			}
+			async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
+				await file.write(f'{db}')
+		return db[from_id]
+
 	async def _get_database(self) -> dict:
 		async with aiopen('cache/time_database.json', 'r', encoding='utf-8') as file:
 			lines = await file.read()
@@ -134,9 +149,9 @@ class Dispatch:
 	async def _check3(self):
 		database = await self._get_database()
 		for id in list(database.items()):
-			for date in id[3]:
+			for date in id[1][3]:
 				if time() - date >= 3*24*60*60:
-					database[id][3].remove(date)
+					database[id[0]][3].remove(date)
 		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
 			await file.write(f'{database}')
 		await asyncio.sleep(24*60*60)
@@ -144,9 +159,9 @@ class Dispatch:
 	async def _check5(self):
 		database = await self._get_database()
 		for id in list(database.items()):
-			for date in id[5]:
+			for date in id[1][5]:
 				if time() - date >= 5*24*60*60:
-					database[id][5].remove(date)
+					database[id[0]][5].remove(date)
 		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
 			await file.write(f'{database}')
 		await asyncio.sleep((24*60*60) + 10)
@@ -154,9 +169,9 @@ class Dispatch:
 	async def _check_week(self):
 		database = await self._get_database()
 		for id in list(database.items()):
-			for date in id['week']:
+			for date in id[1]['week']:
 				if (time() - date >= 7*24*60*60) and (strftime('%A', gmtime()).lower() == 'sunday'):
-					database[id]['week'].remove(date)
+					database[id[0]]['week'].remove(date)
 		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
 			await file.write(f'{database}')
 		await asyncio.sleep((24*60*60) + 20)
@@ -164,9 +179,9 @@ class Dispatch:
 	async def _check_month(self):
 		database = await self._get_database()
 		for id in list(database.items()):
-			for date in id['month']:
+			for date in id[1]['month']:
 				if time() - date >= 30*24*60*60:
-					database[id]['month'].remove(date)
+					database[id[0]]['month'].remove(date)
 		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
 			await file.write(f'{database}')
 		await asyncio.sleep((24*60*60) + 30)
@@ -174,14 +189,17 @@ class Dispatch:
 	async def debug_spec_checker(self):
 		database = await self._get_database()
 		for id in list(database.items()):
-			for date in id[3]:
+			for date in id[1][3]:
 				if time() - date >= 3*24*60*60:
-					database[id][3].remove(date)
+					database[id[0]][3].remove(date)
+			for date in id[1][5]:
 				if time() - date >= 5*24*60*60:
-					database[id][5].remove(date)
+					database[id[0]][5].remove(date)
+			for date in id[1]['week']:
 				if (time() - date >= 7*24*60*60):
-					database[id]['week'].remove(date)
+					database[id[0]]['week'].remove(date)
+			for date in id[1]['month']:
 				if time() - date >= 30*24*60*60:
-					database[id]['month'].remove(date)
+					database[id[0]]['month'].remove(date)
 		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
 			await file.write(f'{database}')

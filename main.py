@@ -139,6 +139,7 @@ async def driver_profile(message:Message):
 	info = await db.driver.get(message.from_id)
 	parameters = await binder.get_parameters()
 	if info != [None, None]:
+		time_record = await dispatcher.get_time_database(message.from_id)
 		await db.driver.set_activity(message.from_id)
 		await message.answer(f'Анкета водителя!\n\
 Ваше имя: {info[0]["name"]}\n\
@@ -147,10 +148,10 @@ async def driver_profile(message:Message):
 Машина: {info[0]["auto"]}\n\
 Цвет: {info[0]["color"]}\n\
 Госномер: {info[0]["state_number"]}\n\
-Кол-во поездок за 3 дня: НЕТ\n\
-Кол-во поездок за 7 дней: НЕТ\n\
-Кол-во поездок с ПН по ПТ: НЕТ\n\
-Кол-во поездок за 30 дней: НЕТ\n\
+Кол-во поездок за 3 дня: {len(time_record[3])}\n\
+Кол-во поездок за 5 дней: {len(time_record[5])}\n\
+Кол-во поездок с ПН по ПТ: {len(time_record["week"])}\n\
+Кол-во поездок за 30 дней: {len(time_record["month"])}\n\
 Кол-во поездок: {info[1]["quantity"]}\n\
 Баланс: {info[1]["balance"]} руб.\n\
 Одна заявка стоит: {parameters["count"]}', keyboard = keyboards.driver_profile)
@@ -158,12 +159,11 @@ async def driver_profile(message:Message):
 @vk.on.private_message(OffAccountRule())
 async def off_driver(message:Message):
 	# await dispatcher.off_account(message.from_id)
-	# await message.answer('Ваш аккаунт был отключён, больше вам не будут присылать некоторые сообщения', keyboard=keyboards.account_is_off)
+	await message.answer('Ваш аккаунт был отключён, больше вам не будут присылать некоторые сообщения', keyboard=keyboards.account_is_off)
 	if (await db.passanger.get(message.from_id)) is None:
 		await db.driver.delete(message.from_id)
 	else:
 		await db.passanger.delete(message.from_id)
-	await message.answer()
 
 # Редактирование (пперерегистрация водителя)
 @vk.on.private_message(payload = {'driver': 0, 'edit': 0})
@@ -218,7 +218,7 @@ async def passanger_success_order(message:Message):
 	)
 	await forms.stop_drive(payload['key'])
 	await db.driver.set_balance(forms.all_forms[payload['key']]['driver_id'], -parameters['count'])
-	await db.driver.set_qunatity(forms.all_forms[payload['key']]['driver_id'])
+	await dispatcher.add_and_update_drive(time(), forms.all_forms[payload['key']]['driver_id'])
 	await db.passanger.set_qunatity(message.from_id)
 
 @vk.on.private_message(DriverSuccess())
@@ -236,7 +236,7 @@ async def driver_success_order(message:Message):
 	)
 	await forms.stop_drive(payload['other']['from_id'])
 	await db.driver.set_balance(message.from_id, -parameters['count'])
-	await db.driver.set_qunatity(message.from_id)
+	await dispatcher.add_and_update_drive(time(), message.from_id)
 	await db.passanger.set_qunatity(payload['other']['from_id'])
 
 @vk.on.private_message(WillArriveMinutes())
@@ -776,14 +776,14 @@ async def admin_update_database(message:Message, passer:str):
 			else:
 				await message.answer('Неверный оператор')
 
-@vk.on.private_message(text='debug <parameters>')
-async def debug_handler(message:Message, parameters:str):
+@vk.on.private_message(text='debug <param>')
+async def debug_handler(message:Message, param:str):
 	parameters = await binder.get_parameters()
 	if message.from_id in parameters['admin']:
-		options = parameters.lower().split()
-		if options == 'add':
-			await dispatcher.add_and_update_drive(time() - int(options[2])*24*60*60, int(options[1]))
-		elif options == 'force':
+		options = param.lower().split()
+		if options[0] == 'add':
+			await dispatcher.add_and_update_drive(time() - (int(options[2])*24*60*60), int(options[1]))
+		elif options[0] == 'force':
 			await dispatcher.debug_spec_checker()
 
 @vk.on.private_message(payload={'help': 0})
