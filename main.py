@@ -1,11 +1,12 @@
 import asyncio # Импортируем асинхронность
 
+from sys import platform
+from time import time
 from vkbottle.bot import Bot, Message # Импортируем объект бота и сообщени я(второе - для аннотации)
 from vkbottle import CtxStorage, PhotoMessageUploader, VKAPIError
 from aiohttp import ClientSession, TCPConnector
 from dadata import Dadata
 from pyqiwip2p import AioQiwiP2P
-from sys import platform
 from plugins.binder import Binder # Импортируем связыватель
 from plugins.database import Database # Импортируем класс для работы с базой данных
 from plugins.plotter import Plotter # Импортируем статистикуу
@@ -22,11 +23,11 @@ from plugins.dispatcher import Dispatch
 from config import vk_token, ddt_token, qiwi_token # Импрртируем токены
 
 # try:
-# 	from loguru import logger
+#   from loguru import logger
 # except ImportError:
-# 	pass
+#   pass
 # else:
-# 	logger.disable("vkbottle")
+#   logger.disable("vkbottle")
 
 try:
 	import logging
@@ -121,10 +122,10 @@ async def back(message:Message):
 # Регистрация водителя
 # @vk.on.private_message(payload = {'driver': 1})
 # async def reg_driver_1(message:Message):
-# 	await message.answer('Обработка...', keyboard=keyboards.empty)
-# 	await db.driver.set_activity(message.from_id)
-# 	await dispatcher.update_no_registred_driver(message.from_id)
-# 	await message.answer('Продолжить можно по кнопке ниже', keyboard=keyboards.registration_failed)
+#   await message.answer('Обработка...', keyboard=keyboards.empty)
+#   await db.driver.set_activity(message.from_id)
+#   await dispatcher.update_no_registred_driver(message.from_id)
+#   await message.answer('Продолжить можно по кнопке ниже', keyboard=keyboards.registration_failed)
 
 @vk.on.private_message(payload={'driver': 0, 'reg': 0})
 async def registartion_driver(message:Message):
@@ -199,7 +200,7 @@ async def user_cancelling_order(message:Message):
 		message = 'К сожалению пассажир отменил заказ :(\nСкоро будут ещё заявки, не отчаивайтесь!',
 		keyboard = keyboards.driver_registartion_success
 	)
-	await forms.stop_drive(payload['other']['key'])
+	await forms.stop_drive(payload['key'])
 	await message.answer('Вы отменили заказ!', keyboard = keyboards.choose_service)
 
 # Если пассажир доехал
@@ -360,7 +361,7 @@ async def taxi_tax(message:Message):
 					keyboard = keyboards.passanger_get_taxi(payload['other']['key'])
 				)
 				await forms.start_drive(payload['other']['key'], driver_id)
-				await message.answer(f'Заявка принята!\nТелефон оправителя заявки: {passanger["phone"]}\nАдрес:{payload["other"]["text"]}', keyboard = keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}))
+				await message.answer(f'Заявка принята!\nТелефон оправителя заявки: {passanger["phone"]}\nАДРЕС:{payload["other"]["text"]}', keyboard = keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}))
 				# await asyncio.sleep(1)
 				# await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
 				if payload['other']['location'] is not None:
@@ -408,7 +409,7 @@ async def delivery_tax(message:Message):
 				user_id = driver_id,
 				from_id = driver_id,
 				random_id = 0,
-				message = f'&#128640;&#128640;&#128640; Новая доставка! &#128640;&#128640;&#128640;\n\nАдрес: {text}\n\nЖми кнопку &#128071;, "принять заявку"!',
+				message = f'&#128640;&#128640;&#128640; Новая доставка! &#128640;&#128640;&#128640;\n\nАДРЕС: {text}\n\nЖми кнопку &#128071;, "принять заявку"!',
 				keyboard = keyboards.inline.delivery_driver({'from_id': message.from_id, 'driver_id': driver_id, 'location': loc, 'text': text, 'key': key})
 			)
 		except VKAPIError[901]:
@@ -459,7 +460,7 @@ async def driver_delivery(message:Message):
 				)
 				await forms.start_drive(payload['other']['key'], driver_id)
 				await message.answer(f'Заявка на доставку принята!\n\
-Адрес пассажира: {payload["other"]["text"]}\n\
+АДРЕС: {payload["other"]["text"]}\n\
 Телефон пассажира: {passanger["phone"]}', keyboard = keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}))
 				# await asyncio.sleep(1)
 				# await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
@@ -506,7 +507,7 @@ async def taxi_call(message:Message):
 				user_id = driver_id,
 				from_id = driver_id,
 				random_id = 0,
-				message = f'&#128293;&#128293;&#128293; Новый заказ! &#128293;&#128293;&#128293;\n\nАдрес: {text}\n\nЖми кнопку &#128071;, "принять заявку"!',
+				message = f'&#128293;&#128293;&#128293; Новый заказ! &#128293;&#128293;&#128293;\n\nАДРЕС: {text}\n\nЖми кнопку &#128071;, "принять заявку"!',
 				keyboard = keyboards.inline.driver_new_order({'from_id': message.from_id, 'driver_id': driver_id, 'location': loc, 'text': text, 'key': key}) # P.s. смотрите файл /plugins/keyboards.py
 			)
 		except VKAPIError[901]:
@@ -775,6 +776,16 @@ async def admin_update_database(message:Message, passer:str):
 			else:
 				await message.answer('Неверный оператор')
 
+@vk.on.private_message(text='debug <parameters>')
+async def debug_handler(message:Message, parameters:str):
+	parameters = await binder.get_parameters()
+	if message.from_id in parameters['admin']:
+		options = parameters.lower().split()
+		if options == 'add':
+			await dispatcher.add_and_update_drive(time() - int(options[2])*24*60*60, int(options[1]))
+		elif options == 'force':
+			await dispatcher.debug_spec_checker()
+
 @vk.on.private_message(payload={'help': 0})
 async def helper(message:Message):
 	await vk.state_dispenser.set(message.from_id, Helper.question)
@@ -930,6 +941,7 @@ if __name__ == '__main__':
 		asyncio.wait([
 			loop.create_task(dispatcher.checker()),
 			loop.create_task(vk.run_polling()),
-			loop.create_task(forms.cache_cleaner())
+			loop.create_task(forms.cache_cleaner()),
+			loop.create_task(dispatcher.date_checker())
 		])
 	)

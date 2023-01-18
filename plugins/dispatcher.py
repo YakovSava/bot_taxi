@@ -1,8 +1,9 @@
 import asyncio
 
+from time import time, strftime, gmtime
+from typing import Literal
 from aiofiles import open as aiopen
 from vkbottle import API
-from time import time
 from plugins.database import Database # For annotation
 from plugins.timer import Timer # For annotation
 from plugins.keyboards import keyboards
@@ -24,7 +25,7 @@ class Dispatch:
 		self.api = api
 
 	async def checker(self) -> None:
-		await asyncio.sleep(20) # Debug mode
+		# await asyncio.sleep(20) # Debug mode
 		while True:
 			service_file = await self.get_service_file()
 			all_chats = await self.api.messages.get_conversations(
@@ -87,3 +88,100 @@ class Dispatch:
 	async def check_registred(self, from_id:int) -> bool:
 		list_lines = await self.get_no_registred_drivers()
 		return from_id in list_lines
+		
+	async def add_and_update_drive(self, date:Literal[int, float]=None, from_id:int=None):
+		old_database = await self._get_database()
+		if from_id in old_database:
+			old_database[from_id] = {
+				3: [],
+				5: [],
+				'week': [],
+				'month': []
+			}
+		old_database[from_id][3].append(date)
+		old_database[from_id][5].append(date)
+		old_database[from_id]['week'].append(date)
+		old_database[from_id]['month'].append(date)
+		'''
+	Structure of database
+{
+	id: {
+		3: [],
+		5: [],
+		'week': [],
+		'month': []
+	}
+}
+	Trips for all time are stored in the main database
+		'''
+		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
+			await file.write(f'{old_database}')
+
+	async def date_checker(self):
+		while True:
+			await asyncio.gather(
+				asyncio.create_task(self._check3()),
+				asyncio.create_task(self._check5()),
+				asyncio.create_task(self._check_week()),
+				asyncio.create_task(self._check_monnth())
+			)
+
+	async def _get_database(self) -> dict:
+		async with aiopen('cache/time_database.json', 'r', encoding='utf-8') as file:
+			lines = await file.read()
+		return eval(f'{lines}')
+
+	async def _check3(self):
+		database = await self._get_database()
+		for id in list(database.items()):
+			for date in id[3]:
+				if time() - date >= 3*24*60*60:
+					database[id][3].remove(date)
+		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
+			await file.write(f'{database}')
+		await asyncio.sleep(24*60*60)
+
+	async def _check5(self):
+		database = await self._get_database()
+		for id in list(database.items()):
+			for date in id[5]:
+				if time() - date >= 5*24*60*60:
+					database[id][5].remove(date)
+		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
+			await file.write(f'{database}')
+		await asyncio.sleep((24*60*60) + 10)
+
+	async def _check_week(self):
+		database = await self._get_database()
+		for id in list(database.items()):
+			for date in id['week']:
+				if (time() - date >= 7*24*60*60) and (strftime('%A', gmtime()).lower() == 'sunday'):
+					database[id]['week'].remove(date)
+		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
+			await file.write(f'{database}')
+		await asyncio.sleep((24*60*60) + 20)
+
+	async def _check_month(self):
+		database = await self._get_database()
+		for id in list(database.items()):
+			for date in id['month']:
+				if time() - date >= 30*24*60*60:
+					database[id]['month'].remove(date)
+		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
+			await file.write(f'{database}')
+		await asyncio.sleep((24*60*60) + 30)
+
+	async def debug_spec_checker(self):
+		database = await self._get_database()
+		for id in list(database.items()):
+			for date in id[3]:
+				if time() - date >= 3*24*60*60:
+					database[id][3].remove(date)
+				if time() - date >= 5*24*60*60:
+					database[id][5].remove(date)
+				if (time() - date >= 7*24*60*60):
+					database[id]['week'].remove(date)
+				if time() - date >= 30*24*60*60:
+					database[id]['month'].remove(date)
+		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
+			await file.write(f'{database}')
