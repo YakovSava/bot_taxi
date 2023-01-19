@@ -261,14 +261,14 @@ async def will_arrived(message:Message):
 		peer_id = payload['other']['from_id'],
 		random_id = 0,
 		message = f'Водитель прибыл, выходите!',
-		keyboard = keyboards.passanger_get_taxi_and_driver_will_arrived(payload['other']['key'])
+		keyboard = keyboards.inline.passanger_get_taxi_and_driver_will_arrived(payload['other']['key'])
 	)
 
 @vk.on.private_message(PassangerArrived())
 async def passanger_exit(message:Message):
 	payload = eval(f'{message.payload}')
 	driver_id = (await forms.get(payload['key']))['driver_id']
-	await message.answer('Сообщение отправлено водителю', keyboard = keyboards.passanger_get_taxi(payload['key']))
+	await message.answer('Сообщение отправлено водителю', keyboard = keyboards.inline.passanger_get_taxi(payload['key']))
 	await vk.api.messages.send(
 		user_id = driver_id,
 		peer_id = driver_id,
@@ -358,7 +358,7 @@ async def taxi_tax(message:Message):
 Цвет: {driver_info[0]["color"]}\n\
 Госномер: {driver_info[0]["state_number"]}\n\
 В конце поездки нажми "Успешно доехал"',
-					keyboard = keyboards.passanger_get_taxi(payload['other']['key'])
+					keyboard = keyboards.inline.passanger_get_taxi(payload['other']['key'])
 				)
 				await forms.start_drive(payload['other']['key'], driver_id)
 				await message.answer(f'Заявка принята!\nТелефон оправителя заявки: {passanger["phone"]}\nАДРЕС:{payload["other"]["text"]}', keyboard = keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}))
@@ -456,7 +456,7 @@ async def driver_delivery(message:Message):
 Цвет: {driver_info[0]["color"]}\n\
 Госномер: {driver_info[0]["state_number"]}\n\n\
 Ожидайте доставки!',
-					keyboard = keyboards.passanger_get_taxi(payload['other']['key'])
+					keyboard = keyboards.inline.passanger_get_taxi(payload['other']['key'])
 				)
 				await forms.start_drive(payload['other']['key'], driver_id)
 				await message.answer(f'Заявка на доставку принята!\n\
@@ -785,7 +785,7 @@ async def debug_handler(message:Message, param:str):
 			await dispatcher.add_and_update_drive(time() - (int(options[2])*24*60*60), int(options[1]))
 		elif options[0] == 'force':
 			await dispatcher.debug_spec_checker()
-
+			
 @vk.on.private_message(payload={'help': 0})
 async def helper(message:Message):
 	await vk.state_dispenser.set(message.from_id, Helper.question)
