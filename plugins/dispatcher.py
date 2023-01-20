@@ -92,17 +92,17 @@ class Dispatch:
 	async def add_and_update_drive(self, date:Literal[int, float]=None, from_id:int=None):
 		await self.database.driver.set_qunatity(from_id)
 		old_database = await self._get_database()
-		if from_id not in old_database:
-			old_database[from_id] = {
+		if int(from_id) not in old_database:
+			old_database[int(from_id)] = {
 				3: [],
 				5: [],
 				'week': [],
 				'month': []
 			}
-		old_database[from_id][3].append(date)
-		old_database[from_id][5].append(date)
-		old_database[from_id]['week'].append(date)
-		old_database[from_id]['month'].append(date)
+		old_database[int(from_id)][3].append(date)
+		old_database[int(from_id)][5].append(date)
+		old_database[int(from_id)]['week'].append(date)
+		old_database[int(from_id)]['month'].append(date)
 		'''
 	Structure of database
 {
@@ -115,7 +115,6 @@ class Dispatch:
 }
 	Trips for all time are stored in the main database
 		'''
-		print(old_database)
 		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
 			await file.write(f'{old_database}')
 
