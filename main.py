@@ -22,12 +22,12 @@ from plugins.timer import Timer
 from plugins.dispatcher import Dispatch
 from config import vk_token, ddt_token, qiwi_token # Импрртируем токены
 
-# try:
-#   from loguru import logger
-# except ImportError:
-#   pass
-# else:
-#   logger.disable("vkbottle")
+try:
+	from loguru import logger
+except ImportError:
+	pass
+else:
+	logger.disable("vkbottle")
 
 try:
 	import logging
