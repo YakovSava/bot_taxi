@@ -414,7 +414,7 @@ async def delivery_tax(message:Message):
 			)
 		except VKAPIError[901]:
 			pass
-	await message.answer(f'Твой запрос на доставку был доставлен {len(driver_ids)} водителям', keyboard = keyboards.inline.cancel(key))
+	await message.answer(f'Твой запрос на доставку был доставлен {len(driver_ids)} водителям', keyboard = keyboards.cancel(key))
 
 # Принимаем доставку
 @vk.on.private_message(Delivery())
@@ -512,7 +512,7 @@ async def taxi_call(message:Message):
 			)
 		except VKAPIError[901]:
 			pass
-	await message.answer(f'Ваш запрос был доставлен {len(driver_ids)} водителям\nОжидайте!', keyboard = keyboards.inline.cancel(key)) # Активных было бы считать труднее
+	await message.answer(f'Ваш запрос был доставлен {len(driver_ids)} водителям\nОжидайте!', keyboard = keyboards.cancel(key)) # Активных было бы считать труднее
 
 @vk.on.private_message(payload = {'driver': 0, 'money': 'vk pay'})
 async def vkpay_pay(message:Message):
