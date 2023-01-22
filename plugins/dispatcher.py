@@ -69,7 +69,7 @@ class Dispatch:
 	async def get_no_registred_drivers(self) -> list:
 		async with aiopen('cache/no_registred.pylist', 'r', encoding='utf-8') as file:
 			list_lines = await file.read()
-		return eval(f'{list_lines}')
+		return eval(list_lines)
 
 	async def remove_no_registred_drivers(self, registred_id:int) -> None:
 		old_list = await self.get_no_registred_drivers()

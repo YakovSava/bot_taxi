@@ -52,7 +52,7 @@ db = Database() # Инициализируем базу данных
 plot = Plotter() # Инициализируем статиста
 storage = CtxStorage() # Инциализируем врмеенное хранилище
 forms = Forms() # Инициализируем формы
-qiwi = AioQiwiP2P(auth_key = qiwi_token)
+qiwi = AioQiwiP2P(auth_key=qiwi_token)
 csv = Csveer()
 timer = Timer() # На будущее)
 dispatcher = Dispatch(
@@ -129,6 +129,7 @@ async def back(message:Message):
 
 @vk.on.private_message(payload={'driver': 0, 'reg': 0})
 async def registartion_driver(message:Message):
+	await dispatcher.update_no_registred_driver(message.from_id)
 	storage.set(f'{message.from_id}_balance', 0)
 	await vk.state_dispenser.set(message.from_id, DriverRegState.location)
 	await message.answer('Регистрация!\nТекущий город: Няндома\n\nЕсли вы из другого города, то напишите город или отправьте геолокацию', keyboard = keyboards.inline.pass_this_step)
@@ -851,7 +852,6 @@ async def reg_passanger_3(message:Message):
 # Регистрация водителя (шаг 1) 
 @vk.on.private_message(state = DriverRegState.location)
 async def reg_driver_loc(message:Message):
-	await dispatcher.update_no_registred_driver(message.from_id)
 	if message.geo is not None:
 		location = message.geo.place.city
 	elif message.text.lower() == 'пропустить шаг':
