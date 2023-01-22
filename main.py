@@ -362,7 +362,7 @@ async def taxi_tax(message:Message):
 					keyboard = keyboards.inline.passanger_get_taxi(payload['other']['key'])
 				)
 				await forms.start_drive(payload['other']['key'], driver_id)
-				await message.answer(f'&#9989; Заявка принята! &#9989;\nТелефон пассажира: {passanger["phone"]}\nАДРЕС:{payload["other"]["text"]}', keyboard = keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}))
+				await message.answer(f'&#9989; Заявка принята! &#9989;\n\nТелефон пассажира: {passanger["phone"]}\nАДРЕС: {payload["other"]["text"]}', keyboard = keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}))
 				# await asyncio.sleep(1)
 				# await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
 				if payload['other']['location'] is not None:
@@ -371,7 +371,7 @@ async def taxi_tax(message:Message):
 			else:
 				await message.answer(f'На вашем балансе недостаточно средств\nСтоимость одной заявки: {parameters["count"]} руб.\nНа вашем балансе: {driver_info[1]["balance"]} руб.', keyboard = keyboards.inline.payments)
 		else:
-			await message.answer('Кажется кто-то был быстрее тебя! &#128542;\nНе отчаивайся, скоро будет новый заказ!')
+			await message.answer('Другой водитель уже принял эту заявку!')
 
 # Заказ на доставку
 @vk.on.private_message(payload = {'delivery': 0})
@@ -471,7 +471,7 @@ async def driver_delivery(message:Message):
 			else:
 				await message.answer(f'На вашем балансе недостаточно средств\nСтоимость одной заявки: {parameters["count"]} руб.\nНа вашем балансе: {driver_info[1]["balance"]} руб.', keyboard = keyboards.inline.payments)
 		else:
-			await message.answer('Кажется кто-то был быстрее тебя! &#128542;\nНе отчаивайся, скоро будет новый заказ!')
+			await message.answer('Другой водитель уже принял эту заявку!')
 
 # Заказ такси
 @vk.on.private_message(payload = {'taxi': 0})
