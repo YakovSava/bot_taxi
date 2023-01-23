@@ -362,7 +362,7 @@ async def taxi_tax(message:Message):
 					keyboard = keyboards.inline.passanger_get_taxi(payload['other']['key'])
 				)
 				await forms.start_drive(payload['other']['key'], driver_id)
-				await message.answer(f'&#9989; Заявка принята! &#9989;\n\nТелефон пассажира: {"vk.me/"+passanger["phone"] if passanger["phone"][:3] == "@id" else passanger["phone"]}\nАДРЕС: {payload["other"]["text"]}', keyboard = keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}))
+				await message.answer(f'&#9989; Заявка принята! &#9989;\n\nТелефон пассажира: {"vk.me/"+passanger["phone"][1:] if passanger["phone"][:3] == "@id" else passanger["phone"]}\nАДРЕС: {payload["other"]["text"]}', keyboard = keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}))
 				# await asyncio.sleep(1)
 				# await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
 				if payload['other']['location'] is not None:
@@ -462,7 +462,7 @@ async def driver_delivery(message:Message):
 				await forms.start_drive(payload['other']['key'], driver_id)
 				await message.answer(f'&#9989; Заявка на доставку принята! &#9989;\n\
 АДРЕС: {payload["other"]["text"]}\n\
-Телефон пассажира: {"vk.me/"+passanger["phone"] if passanger["phone"][:3] == "@id" else passanger["phone"]}', keyboard = keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}))
+Телефон пассажира: {"vk.me/"+passanger["phone"][1:] if passanger["phone"][:3] == "@id" else passanger["phone"]}', keyboard = keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}))
 				# await asyncio.sleep(1)
 				# await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
 				if payload['other']['location'] is not None:
