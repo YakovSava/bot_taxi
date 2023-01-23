@@ -689,7 +689,7 @@ async def admin_update_database(message:Message, passer:str):
 						await message.answer('Успешно изменено!')
 				else:
 					try:
-						await db.passanger.cursor.execute(f'UPDATE passanger SET {options[3]} = "{options[4][0]}" WHERE VK = "{options[2]}"')
+						await db.passanger.cursor.execute(f'UPDATE passanger SET {options[3]} = "{options[4]}" WHERE VK = "{options[2]}"')
 						await db.passanger.db.commit()
 					except Exception as err:
 						await message.answer(f'Неизвестная ошибка.\nТрассировка (для разработчика): {str(err)}')
@@ -741,7 +741,7 @@ async def admin_update_database(message:Message, passer:str):
 					else:
 						num = ''
 					try:
-						await db.driver.cursor.execute(f'UPDATE driver{num} SET {options[3]} = "{options[4][0]}" WHERE VK = "{options[2]}"')
+						await db.driver.cursor.execute(f'UPDATE driver{num} SET {options[3]} = "{options[4]}" WHERE VK = "{options[2]}"')
 						await db.driver.db.commit()
 					except Exception as err:
 						await message.answer(f'Неизвестная ошибка.\nТрассировка (для разработчика): {str(err)}')
