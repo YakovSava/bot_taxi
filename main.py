@@ -198,7 +198,8 @@ async def user_cancelling_order(message:Message):
 		user_id = forms.all_forms[payload['key']]['driver_id'],
 		peer_id = forms.all_forms[payload['key']]['driver_id'],
 		random_id = 0,
-		message = 'К сожалению пассажир отменил заказ :(\nСкоро будут ещё заявки, не отчаивайтесь!',
+		message = '&#9940; ПАССАЖИР ОТМЕНИЛ ЗАКАЗ &#9940;\n\
+За возвратом средств за заявку, обратись к администратору группы.',
 		keyboard = keyboards.driver_registartion_success
 	)
 	await forms.stop_drive(payload['key'])
@@ -208,7 +209,6 @@ async def user_cancelling_order(message:Message):
 @vk.on.private_message(PassangerSuccessOrder())
 async def passanger_success_order(message:Message):
 	payload = eval(f'{message.payload}')
-	parameters = await binder.get_parameters()
 	await message.answer('Вы успешно доехали!', keyboard = keyboards.choose_service)
 	await vk.api.messages.send(
 		user_id = forms.all_forms[payload['key']]['driver_id'],
@@ -218,14 +218,12 @@ async def passanger_success_order(message:Message):
 		keyboard = keyboards.driver_registartion_success
 	)
 	await forms.stop_drive(payload['key'])
-	await db.driver.set_balance(forms.all_forms[payload['key']]['driver_id'], -parameters['count'])
 	await dispatcher.add_and_update_drive(time(), forms.all_forms[payload['key']]['driver_id'])
-	await db.passanger.set_qunatity(message.from_id)
+	await dispatcher.add_and_update_drive(time(), message.from_id)
 
 @vk.on.private_message(DriverSuccess())
 async def driver_success_order(message:Message):
 	payload = eval(f'{message.payload}')
-	parameters = await binder.get_parameters()
 	await db.driver.set_activity(message.from_id)
 	await message.answer('&#9989; Заявка выполнена! &#9989;\nВы успешно довезли пассажира!', keyboard = keyboards.driver_registartion_success)
 	await vk.api.messages.send(
@@ -236,9 +234,8 @@ async def driver_success_order(message:Message):
 		keyboard = keyboards.choose_service
 	)
 	await forms.stop_drive(payload['other']['from_id'])
-	await db.driver.set_balance(message.from_id, -parameters['count'])
 	await dispatcher.add_and_update_drive(time(), message.from_id)
-	await db.passanger.set_qunatity(payload['other']['from_id'])
+	await dispatcher.add_and_update_drive(time(), payload['other']['from_id'])
 
 @vk.on.private_message(WillArriveMinutes())
 async def will_arived_with_minutes_with_minute(message:Message):
@@ -290,21 +287,27 @@ async def driver_cancel_order(message:Message):
 		user_id = payload['other']['from_id'],
 		peer_id = payload['other']['from_id'],
 		random_id = 0,
-		message = 'К сожалению водитель отменил заказ :(\nВы можете заказать такси снова',
+		message = 'К сожалению водитель отменил заказ &#128542;\nВы можете заказать такси снова',
 		keyboard = keyboards.choose_service
 	)
 	await forms.stop_drive(payload['other']['key'])
-	await message.answer('Вы отменили заказ!', keyboard = keyboards.driver_registartion_success)
+	await message.answer('&#9940; ВЫ ОТМЕНИЛИ ЗАКАЗ &#9940;\n\
+За возвратом средств за заявку, обратись к администратору группы.', keyboard = keyboards.driver_registartion_success)
 
 # профиль пассажира
 @vk.on.private_message(payload = {'user': 0, 'profile': 0})
 async def user_profile(message:Message):
 	name = await db.passanger.get(message.from_id)
 	if name is not None:
+		time_record = await dispatcher.get_time_database(message.from_id)
 		await message.answer(f'Анкета пассажира!\n\n\
 Имя: {name["name"]}\n\
 Телефон: {name["phone"]}\n\
-Кол-во поездок: {name["quantity"]}', keyboard = keyboards.user_profile)
+Кол-во поездок за 3 дня: {len(time_record[3])}\n\
+Кол-во поездок за 5 дней: {len(time_record[5])}\n\
+Кол-во поездок с ПН по ПТ: {len(time_record["week"])}\n\
+Кол-во поездок за 30 дней: {len(time_record["month"])}\n\
+Кол-во поездок: {name["quantity"]}\n', keyboard = keyboards.user_profile)
 
 # Редактирование профиля пассажира
 @vk.on.private_message(payload = {'user': 0, 'edit': 0})
@@ -347,6 +350,7 @@ async def taxi_tax(message:Message):
 			parameters = await binder.get_parameters() # Получаем параметры
 			driver_info = await db.driver.get(payload['other']['driver_id']) # Получаем информацию о водителе
 			if int(parameters['count']) <= int(driver_info[1]['balance']): # ПРоверяем есть ли у водителя деньги
+				await db.driver.set_balance(message.from_id, -parameters['count'])
 				from_id, driver_id = payload['other']['from_id'], payload['other']['driver_id']
 				passanger = await db.passanger.get(from_id)
 				await vk.api.messages.send(
@@ -354,7 +358,7 @@ async def taxi_tax(message:Message):
 					peer_id = from_id,
 					random_id = 0,
 					message = f'&#9989; Водитель принял ваш заказ! &#9989;\n\n\
-Телефон водителя: {driver_info[0]["phone"]}\n\
+Телефон водителя: {"vk.me/"+driver_info[0]["phone"][1:] if driver_info[0]["phone"][:3] == "@id" else driver_info[0]["phone"]}\n\
 Машина: {driver_info[0]["auto"]}\n\
 Цвет: {driver_info[0]["color"]}\n\
 Госномер: {driver_info[0]["state_number"]}\n\
@@ -445,6 +449,7 @@ async def driver_delivery(message:Message):
 			parameters = await binder.get_parameters()
 			driver_info = await db.driver.get(payload['other']['driver_id'])
 			if int(parameters['count']) <= int(driver_info[1]['balance']):
+				await db.driver.set_balance(message.from_id, -parameters['count'])
 				from_id, driver_id = payload['other']['from_id'], payload['other']['driver_id']
 				passanger = await db.passanger.get(from_id)
 				await vk.api.messages.send(
@@ -452,7 +457,7 @@ async def driver_delivery(message:Message):
 					peer_id = from_id,
 					random_id = 0,
 					message = f'&#9989; Водитель принял ваш заказ! &#9989;\n\n\
-Телефон водителя: {driver_info[0]["phone"]}\n\
+Телефон водителя: {"vk.me/"+driver_info[0]["phone"][1:] if driver_info[0]["phone"][:3] == "@id" else driver_info[0]["phone"]}\n\
 Машина: {driver_info[0]["auto"]}\n\
 Цвет: {driver_info[0]["color"]}\n\
 Госномер: {driver_info[0]["state_number"]}\n\n\

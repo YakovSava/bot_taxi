@@ -90,7 +90,10 @@ class Dispatch:
 		return from_id in list_lines
 		
 	async def add_and_update_drive(self, date:Literal[int, float]=None, from_id:int=None):
-		await self.database.driver.set_qunatity(from_id)
+		if (await self.database.driver.exists(from_id)):
+			await self.database.driver.set_qunatity(from_id)
+		else:
+			await self.database.passanger.set_qunatity(from_id)
 		old_database = await self._get_database()
 		if int(from_id) not in old_database:
 			old_database[int(from_id)] = {
