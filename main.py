@@ -4,7 +4,7 @@ from sys import platform
 from time import time
 from vkbottle.bot import Bot, Message # Импортируем объект бота и сообщени я(второе - для аннотации)
 from vkbottle import CtxStorage, PhotoMessageUploader, VKAPIError
-from aiohttp import ClientSession, TCPConnector
+from aiohttp import ClientSession
 from dadata import Dadata
 from pyqiwip2p import AioQiwiP2P
 from plugins.binder import Binder # Импортируем связыватель
@@ -165,15 +165,6 @@ async def off_driver(message:Message):
 		await db.driver.delete(message.from_id)
 	else:
 		await db.passanger.delete(message.from_id)
-
-# Редактирование (пперерегистрация водителя)
-@vk.on.private_message(payload = {'driver': 0, 'edit': 0})
-async def driver_edit_profile(message:Message):
-	driver_profile = await db.driver.get(message.from_id)
-	storage.set(f'{message.from_id}_balance', driver_profile[1]['balance'])
-	await db.driver.delete(message.from_id)
-	await vk.state_dispenser.set(message.from_id, DriverRegState.location)
-	await message.answer('Редактирование!\n\nТекущий город: Няндома\nЕсли вы из другого города, то отправьте название вашего города или пришлите геолокацию', keyboard = keyboards.inline.pass_this_step)
 
 # Удаление
 @vk.on.private_message(DeleteAccount())
@@ -617,7 +608,7 @@ async def admin_com(message:Message, commands:str):
 			]
 
 			csv_files = await csv.get_csv(names)
-			async with ClientSession(trust_env=True, connector=TCPConnector(limit=50, force_close=True)) as session:
+			async with ClientSession(trust_env=True) as session:
 				for file in csv_files:
 					url = await vk.api.docs.get_messages_upload_server(
 						peer_id=message.from_id,
@@ -809,120 +800,6 @@ async def helper_support(message:Message):
 			random_id = 0,
 			message = f'ID: {message.from_id}\nВопрос: {message.text}\n\nОтветить можно командой "admin answer (ID) (message)"'
 	)
-
-# Если человек регестрируется как пассажир (шаг 1)
-@vk.on.private_message(payload = {'passanger': 1})
-async def reg_passanger_1(message:Message):
-	await vk.state_dispenser.set(message.from_id, PassangerRegState.phone)
-	await message.answer('Отправьте ваш телефон для связи с водителем!\n\nТелефон можно не указывать, однако тогда водитель не сможет связаться с Вами, когда подъедет к месту вызова!', keyboard=keyboards.inline.phone_pass_this_step)
-
-# Регсирация пользователя (шаг 2)
-@vk.on.private_message(state = PassangerRegState.phone)
-async def reg_passanger_2(message:Message):
-	if message.text.lower() == 'пропустить шаг':
-		storage.set(f'phone_{message.from_id}', f'@id{message.from_id}')
-	else:
-		storage.set(f'phone_{message.from_id}', message.text)
-	await vk.state_dispenser.set(message.from_id, PassangerRegState.location)
-	await message.answer('Текущий город: Няндома\n\nЕсли вы хотите сменить город то напишите его название или пришлите геолокацию', keyboard = keyboards.inline.pass_this_step)
-
-# Регистрация пользователя (шаг 3)
-@vk.on.private_message(state = PassangerRegState.location)
-async def reg_passanger_3(message:Message):
-	if message.geo is not None: # Если геолокация отправлена
-		location = message.geo.place.city
-	elif message.text.lower() == 'пропустить шаг':
-		location = 'няндома'
-	else:
-		if ddt.suggest('address', message.text) != []:
-			location = message.text
-		else:
-			return 'Возможно вы неверно написали город!\nПопробуйте снова'
-	phone = storage.get(f'phone_{message.from_id}')
-	storage.delete(f'phone_{message.from_id}')
-	user_data = await vk.api.users.get(
-		user_ids = message.from_id,
-		fields = 'sex'
-	)
-	await vk.state_dispenser.delete(message.from_id)
-	await message.answer('Ваша анкета успешно создана!', keyboard = keyboards.choose_service)
-	await db.passanger.reg({ # Непосредственно регистрация
-		'vk': message.from_id,
-		'gender': str(user_data[0].sex)[8:],
-		'city': location,
-		'name': user_data[0].first_name,
-		'phone': phone
-	})
-
-# Регистрация водителя (шаг 1) 
-@vk.on.private_message(state = DriverRegState.location)
-async def reg_driver_loc(message:Message):
-	if message.geo is not None:
-		location = message.geo.place.city
-	elif message.text.lower() == 'пропустить шаг':
-		location = 'няндома'
-	else:
-		if ddt.suggest('address', message.text) != []:
-			location = message.text
-		else:
-			return 'Город возможно написан неверно. Попробуйте снова'
-	storage.set(f'location_{message.from_id}', location)
-	await vk.state_dispenser.set(message.from_id, DriverRegState.phone)
-	await message.answer('Отправьте ваш телефон для связи с пассажиром!\n\nТелефон можно не указывать, однако тогда пассажир не сможет связаться с Вами, когда вы подъедете к месту вызова!', keyboard=keyboards.inline.phone_pass_this_step)
-
-# Регистрация водителя (шаг 2)
-@vk.on.private_message(state = DriverRegState.phone)
-async def reg_driver_2(message:Message):
-	if message.text.lower() == 'пропустить шаг':
-		storage.set(f'phone_{message.from_id}', f'@id{message.from_id}')
-	else:
-		storage.set(f'phone_{message.from_id}', message.text)
-	await vk.state_dispenser.set(message.from_id, DriverRegState.auto)
-	return 'Теперь введите марку вашего авто!'
-
-# Регистрация водителя (щаг 3)
-@vk.on.private_message(state = DriverRegState.auto)
-async def reg_driver_3(message:Message):
-	storage.set(f'auto_{message.from_id}', message.text)
-	await vk.state_dispenser.set(message.from_id, DriverRegState.color)
-	return 'Теперь введите цвет'
-
-# Регистрация водителя (шаг 4)
-@vk.on.private_message(state = DriverRegState.color)
-async def reg_driver_4(message:Message):
-	storage.set(f'color_{message.from_id}', message.text)
-	await vk.state_dispenser.set(message.from_id, DriverRegState.state_number)
-	return 'И последнее - укажите госномер автомобиля'
-
-"""
-Регистрация водителя (шаг 5)
-
-Надеюсь не булет таких людей кто напишет неверно госномер, иначе будет плохо... Наверное
-"""
-@vk.on.private_message(state = DriverRegState.state_number)
-async def reg_driver_5(message:Message):
-	await dispatcher.remove_no_registred_drivers(message.from_id)
-	balance = storage.get(f'{message.from_id}_balance')
-	storage.delete(f'{message.from_id}_balance')
-	await vk.state_dispenser.delete(message.from_id)
-	phone, auto, color, location = storage.get(f'phone_{message.from_id}'), storage.get(f'auto_{message.from_id}'), storage.get(f'color_{message.from_id}'), storage.get(f'location_{message.from_id}')
-	storage.delete(f'phone_{message.from_id}'); storage.delete(f'auto_{message.from_id}'); storage.delete(f'color_{message.from_id}'); storage.delete(f'location_{message.from_id}')
-	user_data = await vk.api.users.get(
-		user_ids = message.from_id,
-		fields = 'sex'
-	)
-	await db.driver.reg({ # Непсоредственная регистрация водителя
-		'vk': message.from_id,
-		'gender': str(user_data[0].sex)[8:],
-		'city': location,
-		'name': user_data[0].first_name,
-		'phone': phone,
-		'auto': auto,
-		'color': color,
-		'state_number': message.text,
-		'balance': balance
-	})
-	await message.answer('Готово!\nТеперь когда появится новый заказ, тебе придёт уведомление, поэтому не пропусти!', keyboard = keyboards.driver_registartion_success)
 
 @vk.on.private_message()
 async def no_command(message:Message):
