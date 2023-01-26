@@ -18,7 +18,5 @@ class Timer:
 		proc.start()
 
 	def _run_async(self, coroutine:Coroutine, *args, **kwargs):
-		sleep(20)
-		loop = asyncio.new_event_loop()
-		loop.run_until_complete(coroutine(*args, **kwargs))
-		loop.close()
+		sleep(10)
+		asyncio.run(coroutine(*args, **kwargs))

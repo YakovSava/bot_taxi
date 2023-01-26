@@ -1,13 +1,16 @@
 import asyncio
 
+from orjson import dumps, loads
 from threading import Thread
 from random import randint, choice
 from string import ascii_letters
 from aiofiles import open as aiopen
+from vkbottle import API
 
 class Forms:
 
-	def __init__(self):
+	def __init__(self, api:API=None):
+		self.api = api
 		self.all_forms = {}
 		loop = asyncio.new_event_loop()
 		loop.run_until_complete(self._downoload_forms())
@@ -15,11 +18,11 @@ class Forms:
 	async def _downoload_forms(self):
 		async with aiopen('cache/forms.json', 'r', encoding='utf-8') as form_getter:
 			forms = await form_getter.read()
-		self.all_forms = eval(f'{forms}')
+		self.all_forms = loads(f'{forms}')
 
 	async def _backup(self):
 		async with aiopen('cache/forms.json', 'w', encoding='utf-8') as backup_file:
-			await backup_file.write(f'{self.all_forms}')
+			await backup_file.write(f'{dumps(self.all_forms).decode()}')
 
 	async def _get_key(self) -> str:
 		key = ''
@@ -61,7 +64,7 @@ class Forms:
 	async def delete_all_form(self) -> None:
 		for key in list(self.all_forms.keys()):
 			if not self.all_forms[key]['active'] and not self.all_forms[key]['in_drive']:
-				del self.all_forms[key]
+				self.all_forms.remove(key)
 		await self._backup()
 
 	async def get(self, key:str) -> dict:
@@ -69,14 +72,21 @@ class Forms:
 		return self.all_forms[key]
 
 	def _form_timer_starter(self, *args) -> None:
-		loop = asyncio.new_event_loop()
-		loop.run_until_complete(self._form_timer(*args))
+		asyncio.run(self._form_timer(*args))
 
 	async def _form_timer(self, key:str) -> None:
-		async def wrapper():
-			await asyncio.sleep(10*60)
+		form = self.all_forms[key]; counter = 0
+		while (counter != ((10*60) // 15)) and (form['in_drive'] and not form['active']):
+			await asyncio.sleep(15)
+			await self.api.messages.send(
+				user_id=form['from_id'],
+				peer_id=form['from_id'],
+				random_id=0,
+				message='Идёт поиск водителя'
+			)
+			counter += 1
+		if (form['in_drive'] and not form['active']):
 			await self.stop_form(key)
-		await asyncio.gather(wrapper())
 
 	async def cache_cleaner(self) -> None:
 		while True:

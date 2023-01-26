@@ -1,4 +1,5 @@
 import asyncio
+import orjson
 
 from time import time, strftime, gmtime
 from typing import Literal
@@ -45,6 +46,22 @@ class Dispatch:
 				except Exception as err:
 					print(err)
 					continue
+			await asyncio.sleep(24*60*60)
+
+	async def _get_order_names(self) -> int:
+		async with aiopen('cache/orders.pyint', 'r', encoding='utf-8') as file:
+			line = await file.readline()
+		return int(line)
+
+	async def set_order_names(self) -> None:
+		so = await self._get_order_names()
+		async with aiopen('cache/orders.pyint', 'r', encoding='utf-8') as file:
+			await file.write(f'{so + 1}')
+
+	async def run_order_setter(self):
+		while True:
+			async with aiopen('cache/orders.pyint', 'r', encoding='utf-8') as file:
+				await file.write(f'{100}')
 			await asyncio.sleep(24*60*60)
 
 	async def get_service_file(self) -> list:
@@ -119,7 +136,7 @@ class Dispatch:
 	Trips for all time are stored in the main database
 		'''
 		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
-			await file.write(f'{old_database}')
+			await file.write(f'{orjson.dumps(old_database).decode()}')
 
 	async def date_checker(self):
 		while True:
@@ -146,7 +163,7 @@ class Dispatch:
 	async def _get_database(self) -> dict:
 		async with aiopen('cache/time_database.json', 'r', encoding='utf-8') as file:
 			lines = await file.read()
-		return eval(f'{lines}')
+		return orjson.loads(f'{lines}')
 
 	async def _check3(self):
 		database = await self._get_database()
@@ -155,7 +172,7 @@ class Dispatch:
 				if time() - date >= 3*24*60*60:
 					database[id[0]][3].remove(date)
 		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
-			await file.write(f'{database}')
+			await file.write(f'{orjson.dumps(database).decode()}')
 		await asyncio.sleep(24*60*60)
 
 	async def _check5(self):
@@ -165,7 +182,7 @@ class Dispatch:
 				if time() - date >= 5*24*60*60:
 					database[id[0]][5].remove(date)
 		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
-			await file.write(f'{database}')
+			await file.write(f'{orjson.dumps(database).decode()}')
 		await asyncio.sleep((24*60*60) + 10)
 
 	async def _check_week(self):
@@ -175,7 +192,7 @@ class Dispatch:
 				if (time() - date >= 7*24*60*60) and (strftime('%A', gmtime()).lower() == 'sunday'):
 					database[id[0]]['week'].remove(date)
 		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
-			await file.write(f'{database}')
+			await file.write(f'{orjson.dumps(database).decode()}')
 		await asyncio.sleep((24*60*60) + 20)
 
 	async def _check_month(self):
@@ -185,7 +202,7 @@ class Dispatch:
 				if time() - date >= 30*24*60*60:
 					database[id[0]]['month'].remove(date)
 		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
-			await file.write(f'{database}')
+			await file.write(f'{orjson.dumps(database).decode()}')
 		await asyncio.sleep((24*60*60) + 30)
 
 	async def debug_spec_checker(self):
@@ -204,4 +221,4 @@ class Dispatch:
 				if time() - date >= 30*24*60*60:
 					database[id[0]]['month'].remove(date)
 		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
-			await file.write(f'{database}')
+			await file.write(f'{orjson.dumps(database).decode()}')

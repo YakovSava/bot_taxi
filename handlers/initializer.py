@@ -14,10 +14,10 @@ ddt = DadataAsync(ddt_token) # Инициализируем объект сер�
 binder = Binder() # Инициализируем объект связыввателя
 db = Database() # Инициализируем базу данных
 plot = Plotter() # Инициализируем статиста
-forms = Forms() # Инициализируем формы
+forms = Forms(api=API(vk_token))
 qiwi = AioQiwiP2P(auth_key=qiwi_token)
 csv = Csveer()
-timer = Timer() # На будущее)
+timer = Timer()
 dispatcher = Dispatch(
 	timer=timer,
 	database=db,
