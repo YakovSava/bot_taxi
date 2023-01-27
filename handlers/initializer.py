@@ -10,16 +10,17 @@ from plugins.forms import Forms
 from plugins.csveer import Csveer
 from config import *
 
+api = API(vk_token)
 ddt = DadataAsync(ddt_token) # Инициализируем объект сервиса
 binder = Binder() # Инициализируем объект связыввателя
 db = Database() # Инициализируем базу данных
 plot = Plotter() # Инициализируем статиста
-forms = Forms(api=API(vk_token))
+forms = Forms(api=api)
 qiwi = AioQiwiP2P(auth_key=qiwi_token)
 csv = Csveer()
 timer = Timer()
 dispatcher = Dispatch(
 	timer=timer,
 	database=db,
-	api=API(vk_token)
+	api=api
 )

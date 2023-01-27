@@ -2,7 +2,7 @@ from vkbottle import CtxStorage
 from vkbottle.bot import BotLabeler, Message
 from plugins.states import PassangerRegState, DriverRegState
 from plugins.keyboards import keyboards
-from .initializer import ddt, db, dispatcher, binder
+from .initializer import ddt, db, dispatcher, binder, api
 
 vk = BotLabeler()
 vk.vbml_ignore_case = True
@@ -48,7 +48,7 @@ async def reg_passanger_3(message:Message):
 			return 'Возможно вы неверно написали город!\nПопробуйте снова'
 	phone = storage.get(f'phone_{message.from_id}')
 	storage.delete(f'phone_{message.from_id}')
-	user_data = await vk.api.users.get(
+	user_data = await api.users.get(
 		user_ids = message.from_id,
 		fields = 'sex'
 	)
@@ -116,7 +116,7 @@ async def reg_driver_5(message:Message):
 	await vk.state_dispenser.delete(message.from_id)
 	phone, auto, color, location = storage.get(f'phone_{message.from_id}'), storage.get(f'auto_{message.from_id}'), storage.get(f'color_{message.from_id}'), storage.get(f'location_{message.from_id}')
 	storage.delete(f'phone_{message.from_id}'); storage.delete(f'auto_{message.from_id}'); storage.delete(f'color_{message.from_id}'); storage.delete(f'location_{message.from_id}')
-	user_data = await vk.api.users.get(
+	user_data = await api.users.get(
 		user_ids = message.from_id,
 		fields = 'sex'
 	)

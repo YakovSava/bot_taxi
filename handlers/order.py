@@ -1,7 +1,7 @@
 from time import time
 from vkbottle import CtxStorage, VKAPIError
 from vkbottle.bot import BotLabeler, Message
-from .initializer import db, dispatcher, forms
+from .initializer import db, dispatcher, forms, api
 from plugins.keyboards import keyboards
 from plugins.states import TaxiState, DeliveryState
 from plugins.rules import *
@@ -12,7 +12,7 @@ storage = CtxStorage()
 @vk.private_message(PassangerCancelOrder())
 async def user_cancelling_order(message:Message):
 	payload = eval(f'{message.payload}')
-	await vk.api.messages.send(
+	await api.messages.send(
 		user_id = forms.all_forms[payload['key']]['driver_id'],
 		peer_id = forms.all_forms[payload['key']]['driver_id'],
 		random_id = 0,
@@ -28,7 +28,7 @@ async def user_cancelling_order(message:Message):
 async def passanger_success_order(message:Message):
 	payload = eval(f'{message.payload}')
 	await message.answer('Вы успешно доехали!', keyboard = keyboards.choose_service)
-	await vk.api.messages.send(
+	await api.messages.send(
 		user_id = forms.all_forms[payload['key']]['driver_id'],
 		peer_id = forms.all_forms[payload['key']]['driver_id'],
 		random_id = 0,
@@ -48,7 +48,7 @@ async def passanger_cancelling_order(message:Message):
 async def driver_cancel_order(message:Message):
 	payload = eval(f'{message.payload}')
 	await db.driver.set_activity(message.from_id)
-	await vk.api.messages.send(
+	await api.messages.send(
 		user_id = payload['other']['from_id'],
 		peer_id = payload['other']['from_id'],
 		random_id = 0,
@@ -64,7 +64,7 @@ async def driver_success_order(message:Message):
 	payload = eval(f'{message.payload}')
 	await db.driver.set_activity(message.from_id)
 	await message.answer('&#9989; Заявка выполнена! &#9989;\nВы успешно довезли пассажира!', keyboard = keyboards.driver_registartion_success)
-	await vk.api.messages.send(
+	await api.messages.send(
 		user_id = payload['other']['from_id'],
 		peer_id = payload['other']['from_id'],
 		random_id = 0,
@@ -80,7 +80,7 @@ async def will_arived_with_minutes_with_minute(message:Message):
 	await db.driver.set_activity(message.from_id)
 	payload = eval(f'{message.payload}')
 	await message.answer('Сообщение отправлено пассажиру!', keyboard = keyboards.driver_order_complete_will_arrive(payload['other']))
-	await vk.api.messages.send(
+	await api.messages.send(
 		user_id = payload['other']['from_id'],
 		peer_id = payload['other']['from_id'],
 		random_id = 0,
@@ -92,7 +92,7 @@ async def will_arrived(message:Message):
 	payload = eval(f'{message.payload}')
 	await db.driver.set_activity(message.from_id)
 	await message.answer('Сообщение отправлено пассажиру!')
-	await vk.api.messages.send(
+	await api.messages.send(
 		user_id = payload['other']['from_id'],
 		peer_id = payload['other']['from_id'],
 		random_id = 0,
@@ -105,7 +105,7 @@ async def passanger_exit(message:Message):
 	payload = eval(f'{message.payload}')
 	driver_id = (await forms.get(payload['key']))['driver_id']
 	await message.answer('Сообщение отправлено водителю', keyboard = keyboards.inline.passanger_get_taxi(payload['key']))
-	await vk.api.messages.send(
+	await api.messages.send(
 		user_id = driver_id,
 		peer_id = driver_id,
 		random_id = 0,
@@ -145,7 +145,7 @@ async def taxi_tax(message:Message):
 				await db.driver.set_balance(message.from_id, -parameters['count'])
 				from_id, driver_id = payload['other']['from_id'], payload['other']['driver_id']
 				passanger = await db.passanger.get(from_id)
-				await vk.api.messages.send(
+				await api.messages.send(
 					user_id = from_id,
 					peer_id = from_id,
 					random_id = 0,
@@ -202,7 +202,7 @@ async def driver_delivery(message:Message):
 				await db.driver.set_balance(message.from_id, -parameters['count'])
 				from_id, driver_id = payload['other']['from_id'], payload['other']['driver_id']
 				passanger = await db.passanger.get(from_id)
-				await vk.api.messages.send(
+				await api.messages.send(
 					user_id = from_id,
 					peer_id = from_id,
 					random_id = 0,
@@ -244,7 +244,7 @@ async def delivery_tax(message:Message):
 	driver_ids.extend(driver_no_registred_ids)
 	for driver_id in driver_ids:
 		try:
-			await vk.api.messages.send(
+			await api.messages.send(
 				user_id = driver_id,
 				from_id = driver_id,
 				random_id = 0,
@@ -271,7 +271,7 @@ async def taxi_call(message:Message):
 	driver_ids.extend(await dispatcher.get_no_registred_drivers())
 	for driver_id in driver_ids: # Шлём всем им оповещение
 		try:
-			await vk.api.messages.send(
+			await api.messages.send(
 				user_id = driver_id,
 				from_id = driver_id,
 				random_id = 0,

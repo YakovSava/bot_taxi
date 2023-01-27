@@ -5,12 +5,12 @@ from vkbottle.bot import Bot, BotLabeler, Message
 from handlers import *
 from config import vk_token
 
-try:
-	from loguru import logger
-except ImportError:
-	pass
-else:
-	logger.disable("vkbottle")
+# try:
+# 	from loguru import logger
+# except ImportError:
+# 	pass
+# else:
+# 	logger.disable("vkbottle")
 
 try:
 	import logging
@@ -81,12 +81,16 @@ async def no_command(message:Message):
 if __name__ == '__main__':
 	print('Начало работы!')
 	loop = asyncio.new_event_loop()
-	loop.run_until_complete(
-		asyncio.wait([
-			loop.create_task(preset()),
-			loop.create_task(dispatcher.checker()),
-			loop.create_task(vk.run_polling()),
-			loop.create_task(forms.cache_cleaner()),
-			loop.create_task(dispatcher.date_checker())
-		])
-	)
+	try:
+		loop.run_until_complete(
+			asyncio.wait([
+				loop.create_task(preset()),
+				loop.create_task(dispatcher.checker()),
+				loop.create_task(vk.run_polling()),
+				loop.create_task(forms.cache_cleaner()),
+				loop.create_task(dispatcher.date_checker())
+			])
+		)
+	except KeyboardInterrupt:
+		loop.close()
+	del loop

@@ -176,8 +176,8 @@ class Dispatch:
 
 	async def _get_database(self) -> dict:
 		async with aiopen('cache/time_database.json', 'r', encoding='utf-8') as file:
-			lines = await file.read()
-		return orjson.loads(f'{lines}')
+			lines = await file.readlines()
+		return orjson.loads(f'{lines[0]}')
 
 	async def _check3(self):
 		database = await self._get_database()

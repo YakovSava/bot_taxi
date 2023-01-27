@@ -14,7 +14,7 @@ class Binder:
 			with open(self.parameters_file, 'w', encoding = 'utf-8') as file:
 				file.write(dumps({"admin": "", "count": 0, "group_id": 1, "city": "Няндома"}))
 
-	def preset(self, city_name:str) -> None:
+	async def preset(self, city_name:str) -> None:
 		toml_file = await self.get_parameters()
 		toml_file['city'] = city_name
 		async with aiopen(self.parameters_file, 'w', encoding = 'utf-8') as file:

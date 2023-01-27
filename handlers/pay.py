@@ -1,5 +1,5 @@
 from vkbottle.bot import BotLabeler, Message
-from .initializer import db, qiwi, binder
+from .initializer import db, qiwi, binder, api
 from plugins.keyboards import keyboards
 from plugins.states import *
 from plugins.rules import *
@@ -29,7 +29,7 @@ async def pay_handler(message:Message):
 	parameters = await binder.get_parameters()
 	await db.driver.set_balance(message.from_id, payload['amount'])
 	await message.answer(f'Вы успешно пополнили свой баланс на {payload["amount"]} руб.')
-	await vk.api.messages.send(
+	await api.messages.send(
 		user_id = parameters['admin'],
 		peer_id = parameters['admin'],
 		random_id = 0,

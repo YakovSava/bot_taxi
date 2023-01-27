@@ -1,14 +1,14 @@
 from vkbottle.bot import BotLabeler, Message
 from plugins.keyboards import keyboards
-from plugins.states import DriverRegState, PassangerRegState
+from plugins.states import DriverRegState
 from plugins.rules import OffAccountRule, DeleteAccount
-from .initializer import db, dispatcher, binder
+from .initializer import db, dispatcher, binder, api
 
 vk = BotLabeler()
 
 @vk.private_message(text = 'начать')
 async def start_handler(message:Message):
-	user = await vk.api.users.get(message.from_id)
+	user = await api.users.get(message.from_id)
 	if (await db.passanger.exists(message.from_id)):
 		await message.answer('Вы уже зарегестрированы как пассажир!', keyboard = keyboards.choose_service)
 	elif (await db.driver.exists(message.from_id)):
@@ -49,7 +49,7 @@ async def back(message:Message):
 			keyboard = keyboards.empty
 		await message.answer(f'Твоя анкета водителя заполнена не до конца!\n\nЗаверши создание анкеты чтобы брать заявки.\nНапиши свой {resume}', keyboard=keyboard)
 	else:
-		user = await vk.api.users.get(message.from_id)
+		user = await api.users.get(message.from_id)
 		await message.answer(f'Привет {user[0].first_name}!\nЯ бот-такси, помогаю пассажирам найти такси, а водителю пассажира!\n\nСоздай анкету!&#128071;&#128071;&#128071;', keyboard=keyboards.start)
 
 @vk.private_message(payload = {'driver': 0, 'profie': 0})

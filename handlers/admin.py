@@ -34,7 +34,7 @@ async def admin_com(message:Message, commands:str):
 				asyncio.create_task(plot.get_histogram_passanger(csv_for_histogram_passangers))
 			)
 			for photo in all_photo:
-				document = await PhotoMessageUploader(vk.api).upload(photo, peer_id = message.from_id)
+				document = await PhotoMessageUploader(api).upload(photo, peer_id = message.from_id)
 				await message.answer(attachment = document)
 		elif command[0] == 'get':
 			names = [
@@ -45,7 +45,7 @@ async def admin_com(message:Message, commands:str):
 			csv_files = await csv.get_csv(names)
 			async with ClientSession(trust_env=True) as session:
 				for file in csv_files:
-					url = await vk.api.docs.get_messages_upload_server(
+					url = await api.docs.get_messages_upload_server(
 						peer_id=message.from_id,
 						type='doc'
 					)
@@ -53,7 +53,7 @@ async def admin_com(message:Message, commands:str):
 						if resp.status == 200:
 							response = await resp.json()
 							try:
-								data = await vk.api.docs.save(file=response['file'], title='CSV')
+								data = await api.docs.save(file=response['file'], title='CSV')
 								await message.answer('Файл:', attachment=data.doc.url.split('?')[0])
 							except KeyError:
 								await message.answer(f'Что-то пошлоне так {response["error"]}')
@@ -62,7 +62,7 @@ async def admin_com(message:Message, commands:str):
 							await message.answer(f'Прозошла неизвестная ошибка!\nСтатус: {resp.status}\nОшибка: {page.decode()}')
 		elif command[0] == 'answer':
 			if command[1].isdigit():
-				message_id = await vk.api.messages.send(
+				message_id = await api.messages.send(
 					user_id = command[1],
 					peer_id = command[1],
 					random_id = 1,
@@ -72,7 +72,7 @@ async def admin_com(message:Message, commands:str):
 			else:
 				await message.answer('ID должен быть цифровой!')
 		elif command[0] == 'delanswer':
-			await vk.api.messages.delete(
+			await api.messages.delete(
 				peer_id=command[1],
 				delete_for_all=1,
 				message_id=command[2]
@@ -85,13 +85,13 @@ async def admin_com(message:Message, commands:str):
 			else:
 				await message.answer('ID должен быть числом!')
 		elif command[0] == 'mailing':
-			all_chats = await vk.api.messages.get_conversations(
+			all_chats = await api.messages.get_conversations(
 				offset=0,
 				count=200,
 				filter='all'
 			)
 			for chat in all_chats.items:
-				await vk.api.messages.send(
+				await api.messages.send(
 					user_id=chat.conversation.peer.id,
 					peer_id=chat.conversation.peer.id,
 					random_id=0,
@@ -229,7 +229,7 @@ async def helper_support(message:Message):
 	await vk.state_dispenser.delete(message.from_id)
 	await message.answer('Ваш запрос отправлен в техподдержку')
 	for admin_id in parameters['admin']:
-		await vk.api.messages.send(
+		await api.messages.send(
 			user_id = admin_id,
 			peer_id = admin_id,
 			random_id = 0,

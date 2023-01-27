@@ -5,7 +5,7 @@ Actually, this is a freelance project and it should not be publicly available so
 This bot is extremely easy to use. Initially, you need to run the program itself (the main file), and then insert your data into the created files. For example:
 
 parameters.toml
-```Toml
+```
 admin=[your_vk_id]
 group_id=yout_group_vk_id
 count=0
