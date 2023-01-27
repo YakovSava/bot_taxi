@@ -4,5 +4,5 @@ TEMP
 __pycache__
 plugins/__pycache__
 cache
-parameters.json
+parameters.toml
 config.py

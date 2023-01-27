@@ -1,12 +1,33 @@
 ## Preface
 Actually, this is a freelance project and it should not be publicly available so that all sorts of "advanced programmers" (*beginners*) do not make their corrections, and then ask what is wrong.
 
-## How to use it ~~shit~~ program?
-It's simple:
-- Insert it into *config.py* tokens from *VK group*, *Dadata* and *QiwiP2P*
-- Prescribe in the terminal ```python main.py```
-- Using the admin set *cost* command where *cost* is a number (!!!) waiting for someone to poy ("pay" with an error) you
-- Oh, yes, I almost forgot, I still need to go to *parameters.json* insert the *ID of the grou*p and *admin user ID*, otherwise the bot will send you far and for a long time
+## How to use this (**not shit**)
+This bot is extremely easy to use. Initially, you need to run the program itself (the main file), and then insert your data into the created files. For example:
 
-## IMPORTANT
-I don't mind someone using this library, if you use the code from here somewhere, PLEASE mention me, I tried :3
+parameters.toml
+```Toml
+admin=[your_vk_id]
+group_id=yout_group_vk_id
+count=0
+city="Your city (for example: Moscow)"
+```
+
+config.py
+```Python
+vk_token = 'Your VK token'
+ddt_token = 'Your Dadata token'
+qiwi_token = 'Your Qiwi token'
+```
+
+## Making money!
+There are 2 payment methods in the bot (one of them is temporarily unavailable):
+- Via VK Pay
+- Via Qiwi P2P
+
+In the first case, we only need to log in via the passport in VKPay, in the second case, in addition to authorization, you will also need to get a p2p qiwi token to continue working and, accordingly, insert it into ```config.py ```
+
+### Links!
+[Get Dadata token](https://dadata.ru/api/)
+[Get Qiwi P2P (**!!!**) token](https://qiwi.com/p2p-admin/api)
+
+<blockquote> In addition to the P2P token, Qiwi also has a regular API access token, I pointed to the right link (sometimes it does not respond) </blockquote>

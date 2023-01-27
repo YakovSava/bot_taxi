@@ -137,6 +137,8 @@ async def taxi_tax(message:Message):
 	else:
 		await db.driver.set_activity(message.from_id)
 		if (await forms.get(payload['other']['key']))['active']: # Проверяем активна ли до сих пор форма
+			number_of_order = await dispatcher.get_order_names()
+			await dispatcher.set_order_names()
 			parameters = await binder.get_parameters() # Получаем параметры
 			driver_info = await db.driver.get(payload['other']['driver_id']) # Получаем информацию о водителе
 			if int(parameters['count']) <= int(driver_info[1]['balance']): # ПРоверяем есть ли у водителя деньги
@@ -156,7 +158,7 @@ async def taxi_tax(message:Message):
 					keyboard = keyboards.inline.passanger_get_taxi(payload['other']['key'])
 				)
 				await forms.start_drive(payload['other']['key'], driver_id)
-				await message.answer(f'&#9989; Заявка принята! &#9989;\n\nТелефон пассажира: {"vk.me/"+passanger["phone"][1:] if passanger["phone"][:3] == "@id" else passanger["phone"]}\nАДРЕС: {payload["other"]["text"]}', keyboard = keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}))
+				await message.answer(f'&#9989; Заявка {number_of_order} принята! &#9989;\n\nТелефон пассажира: {"vk.me/"+passanger["phone"][1:] if passanger["phone"][:3] == "@id" else passanger["phone"]}\nАДРЕС: {payload["other"]["text"]}', keyboard = keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}))
 				# await asyncio.sleep(1)
 				# await message.answer('Мы отправили ваши контакты пассажиру!\nСкоро он свяжется с вами!')
 				if payload['other']['location'] is not None:
@@ -195,6 +197,8 @@ async def driver_delivery(message:Message):
 			parameters = await binder.get_parameters()
 			driver_info = await db.driver.get(payload['other']['driver_id'])
 			if int(parameters['count']) <= int(driver_info[1]['balance']):
+				number_of_order = await dispatcher.get_order_names()
+				await dispatcher.set_order_names()
 				await db.driver.set_balance(message.from_id, -parameters['count'])
 				from_id, driver_id = payload['other']['from_id'], payload['other']['driver_id']
 				passanger = await db.passanger.get(from_id)
@@ -211,7 +215,7 @@ async def driver_delivery(message:Message):
 					keyboard = keyboards.inline.passanger_get_taxi(payload['other']['key'])
 				)
 				await forms.start_drive(payload['other']['key'], driver_id)
-				await message.answer(f'&#9989; Заявка на доставку принята! &#9989;\n\
+				await message.answer(f'&#9989; Заявка на доставку {number_of_order} принята! &#9989;\n\
 АДРЕС: {payload["other"]["text"]}\n\
 Телефон пассажира: {"vk.me/"+passanger["phone"][1:] if passanger["phone"][:3] == "@id" else passanger["phone"]}', keyboard = keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}))
 				# await asyncio.sleep(1)

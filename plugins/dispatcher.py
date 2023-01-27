@@ -2,6 +2,7 @@ import asyncio
 import orjson
 
 from time import time, strftime, gmtime
+from os.path import exists
 from typing import Literal
 from aiofiles import open as aiopen
 from vkbottle import API
@@ -24,6 +25,19 @@ class Dispatch:
 		self.timer = timer
 		self.database = database
 		self.api = api
+		
+		if not exists('cache/orders.pyint'):
+			with open('cache/orders.pyint', 'w', encoding='utf-8') as newFile:
+				newFile.write('100')
+		if not exists('cache/off.pylist'):
+			with open('cache/off.pylist', 'w', encoding='utf-8') as newFile:
+				newFile.write('[]')
+		if not exists('cache/no_registred.pylist'):
+			with open('cache/no_registred.pylist', 'w', encoding='utf-8') as newFile:
+				newFile.write('[]')
+		if not exists('cache/time_database.json'):
+			with open('cache/time_database.json', 'w', encoding='utf-8') as newFile:
+				newFile.write('{}')
 
 	async def checker(self) -> None:
 		# await asyncio.sleep(20) # Debug mode
@@ -48,20 +62,20 @@ class Dispatch:
 					continue
 			await asyncio.sleep(24*60*60)
 
-	async def _get_order_names(self) -> int:
+	async def get_order_names(self) -> int:
 		async with aiopen('cache/orders.pyint', 'r', encoding='utf-8') as file:
 			line = await file.readline()
 		return int(line)
 
 	async def set_order_names(self) -> None:
-		so = await self._get_order_names()
+		so = await self.get_order_names()
 		async with aiopen('cache/orders.pyint', 'r', encoding='utf-8') as file:
 			await file.write(f'{so + 1}')
 
 	async def run_order_setter(self):
 		while True:
 			async with aiopen('cache/orders.pyint', 'r', encoding='utf-8') as file:
-				await file.write(f'{100}')
+				await file.write('100')
 			await asyncio.sleep(24*60*60)
 
 	async def get_service_file(self) -> list:

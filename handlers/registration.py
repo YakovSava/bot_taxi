@@ -2,7 +2,7 @@ from vkbottle import CtxStorage
 from vkbottle.bot import BotLabeler, Message
 from plugins.states import PassangerRegState, DriverRegState
 from plugins.keyboards import keyboards
-from .initializer import ddt, db, dispatcher
+from .initializer import ddt, db, dispatcher, binder
 
 vk = BotLabeler()
 vk.vbml_ignore_case = True
@@ -10,10 +10,11 @@ storage = CtxStorage()
 
 @vk.private_message(payload={'driver': 0, 'reg': 0})
 async def registartion_driver(message:Message):
+	parameters = await binder.get_parameters()
 	await dispatcher.update_no_registred_driver(message.from_id)
 	storage.set(f'{message.from_id}_balance', 0)
 	await vk.state_dispenser.set(message.from_id, DriverRegState.location)
-	await message.answer('Регистрация!\nТекущий город: Няндома\n\nЕсли вы из другого города, то напишите город или отправьте геолокацию', keyboard = keyboards.inline.pass_this_step)
+	await message.answer(f'Регистрация!\nТекущий город: {parameters["city"]}\n\nЕсли вы из другого города, то напишите город или отправьте геолокацию', keyboard = keyboards.inline.pass_this_step)
 
 # Редактирование профиля пассажира
 @vk.private_message(payload = {'user': 0, 'edit': 0})
@@ -25,19 +26,21 @@ async def passanger_edit_profile(message:Message):
 	
 @vk.private_message(state = PassangerRegState.phone)
 async def reg_passanger_2(message:Message):
+	parameters = await binder.get_parameters()
 	if message.text.lower() == 'пропустить шаг':
 		storage.set(f'phone_{message.from_id}', f'@id{message.from_id}')
 	else:
 		storage.set(f'phone_{message.from_id}', message.text)
 	await vk.state_dispenser.set(message.from_id, PassangerRegState.location)
-	await message.answer('Текущий город: Няндома\n\nЕсли вы хотите сменить город то напишите его название или пришлите геолокацию', keyboard = keyboards.inline.pass_this_step)
+	await message.answer(f'Текущий город: {parameters["city"]}\n\nЕсли вы хотите сменить город то напишите его название или пришлите геолокацию', keyboard = keyboards.inline.pass_this_step)
 
 @vk.private_message(state = PassangerRegState.location)
 async def reg_passanger_3(message:Message):
+	parameters = await binder.get_parameters()
 	if message.geo is not None: # Если геолокация отправлена
 		location = message.geo.place.city
 	elif message.text.lower() == 'пропустить шаг':
-		location = 'няндома'
+		location = f'{parameters["city"]}'
 	else:
 		if (await ddt.suggest('address', message.text)) != []:
 			location = message.text
@@ -62,10 +65,11 @@ async def reg_passanger_3(message:Message):
 # Регистрация водителя (шаг 1) 
 @vk.private_message(state = DriverRegState.location)
 async def reg_driver_loc(message:Message):
+	parameters = await binder.get_parameters()
 	if message.geo is not None:
 		location = message.geo.place.city
 	elif message.text.lower() == 'пропустить шаг':
-		location = 'няндома'
+		location = f'{parameters["city"]}'
 	else:
 		if (await ddt.suggest('address', message.text)) != []:
 			location = message.text

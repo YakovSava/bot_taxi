@@ -52,6 +52,15 @@ elif platform in ['win32', 'cygwin', 'msys']:
 		labeler=label
 	)
 
+async def preset():
+	parameters = await binder.get_parameters()
+	group_info = await vk.api.groups.get_by_id(
+		group_id=parameters['group_id'],
+		fields='city'
+	)
+	if group_info[0].city is not None:
+		await binder.preset(group_info[0].city.title)
+
 null = None # Not debug!
 
 @vk.on.private_message()
@@ -74,6 +83,7 @@ if __name__ == '__main__':
 	loop = asyncio.new_event_loop()
 	loop.run_until_complete(
 		asyncio.wait([
+			loop.create_task(preset()),
 			loop.create_task(dispatcher.checker()),
 			loop.create_task(vk.run_polling()),
 			loop.create_task(forms.cache_cleaner()),
