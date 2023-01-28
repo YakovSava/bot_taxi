@@ -116,3 +116,8 @@ async def user_profile(message:Message):
 @vk.on.private_message(payload = {'user': 0, 'back': 0})
 async def passanger_back(message:Message):
 	await message.answer('Готово!\nВыбери услугу:', keyboard = keyboards.choose_service)
+
+@vk.on.private_message(text='тариф')
+async def rate_on_city(message:Message):
+	ratetext = await dispatcher.get_rate()
+	await message.answer(f'Текущие тарифы:\n{ratetext}')

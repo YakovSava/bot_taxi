@@ -1,8 +1,5 @@
-tmp
-temp
-TEMP
 __pycache__
 plugins/__pycache__
-cache
+handlers/__pycache__
 parameters.toml
 config.py

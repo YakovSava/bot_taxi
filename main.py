@@ -53,10 +53,9 @@ if __name__ == '__main__':
 				loop.create_task(preset()),
 				loop.create_task(dispatcher.checker()),
 				loop.create_task(vk.run_polling()),
-				loop.create_task(forms.cache_cleaner()),
+				loop.create_task(dispatcher.cache_cleaner()),
 				loop.create_task(dispatcher.date_checker())
 			])
 		)
-	except KeyboardInterrupt:
+	except:
 		loop.close()
-	del loop

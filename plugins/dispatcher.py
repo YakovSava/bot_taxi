@@ -1,11 +1,15 @@
 import asyncio
 import toml
 
-from time import time, strftime, gmtime
 from os.path import exists
+from threading import Thread
+from time import time, strftime, gmtime
 from typing import Literal
+from random import randint, choice
+from string import ascii_letters
+from orjson import dumps, loads
+from vkbottle import API, VKAPIError
 from aiofiles import open as aiopen
-from vkbottle import API
 from plugins.database import Database # For annotation
 from plugins.timer import Timer # For annotation
 from plugins.keyboards import keyboards
@@ -25,6 +29,12 @@ class Dispatch:
 		self.timer = timer
 		self.database = database
 		self.api = api
+		self.all_forms = {}
+		if not exists('cache/forms.json'):
+			with open('cache/forms.json', 'w', encoding='utf-8') as file:
+				file.write('{}')
+		loop = asyncio.new_event_loop()
+		loop.run_until_complete(self._downoload_forms())
 		
 		if not exists('cache/orders.pyint'):
 			with open('cache/orders.pyint', 'w', encoding='utf-8') as newFile:
@@ -38,6 +48,91 @@ class Dispatch:
 		if not exists('cache/time_database.toml'):
 			with open('cache/time_database.toml', 'w', encoding='utf-8') as newFile:
 				newFile.write('[test]\n3=[]\n5=[]\nweek=[]\nmonth=[]\n')
+		if not exists('cache/rates.txt'):
+			with open('cache/rates.txt', 'w', encoding='utf-8') as newFile:
+				newFile.write('') 
+
+	async def _downoload_forms(self):
+		async with aiopen('cache/forms.json', 'r', encoding='utf-8') as form_getter:
+			forms = await form_getter.read()
+		self.all_forms = loads(f'{forms}')
+
+	async def _backup(self):
+		async with aiopen('cache/forms.json', 'w', encoding='utf-8') as backup_file:
+			await backup_file.write(f'{dumps(self.all_forms).decode()}')
+
+	async def _get_key(self) -> str:
+		key = ''
+		for _ in range(randint(10, 100)):
+			key += choice(ascii_letters)
+		return key
+
+	async def new_form(self, from_id:str) -> None:
+		key = await self._get_key()
+		self.all_forms[key] = {'from_id': from_id, 'driver_id': 0, 'active': True, 'in_drive': False}
+		thread = Thread(target=self._form_timer_starter, args=(key,))
+		thread.start()
+		return key
+
+	async def start_drive(self, key:str, driver_id:int) -> None:
+		try:
+			self.all_forms[key]['active'] = False
+			self.all_forms[key]['in_drive'] = True
+			self.all_forms[key]['driver_id'] = driver_id
+		except:
+			pass
+		await self._backup()
+
+	async def stop_drive(self, key:str):
+		try:
+			self.all_forms[key]['active'] = False
+			self.all_forms[key]['in_drive'] = False
+		except:
+			pass
+		await self._backup()
+
+	async def stop_form(self, key:str) -> None:
+		try:
+			self.all_forms[key]['active'] = False
+		except:
+			pass
+		await self._backup()
+
+	async def delete_all_form(self) -> None:
+		for key in list(self.all_forms.keys()):
+			if not self.all_forms[key]['active'] and not self.all_forms[key]['in_drive']:
+				self.all_forms.remove(key)
+		await self._backup()
+
+	async def get(self, key:str) -> dict:
+		await self._backup()
+		return self.all_forms[key]
+
+	def _form_timer_starter(self, *args) -> None:
+		asyncio.run(self._form_timer(*args))
+
+	async def _form_timer(self, key:str) -> None:
+		form = self.all_forms[key]; counter = 0
+		while (counter != ((10*60) // 15)) and (form['in_drive'] and not form['active']):
+			await asyncio.sleep(15)
+			await self.api.messages.send(
+				user_id=form['from_id'],
+				peer_id=form['from_id'],
+				random_id=0,
+				message='Идёт поиск водителя'
+			)
+			counter += 1
+		if (form['in_drive'] and not form['active']):
+			await self.stop_form(key)
+
+	async def cache_cleaner(self) -> None:
+		while True:
+			await asyncio.sleep(24*60*60)
+			await self._backup()
+			await self._delete_all_form()
+
+	def __del__(self):
+		asyncio.run(self._backup())
 
 	async def checker(self) -> None:
 		# await asyncio.sleep(20) # Debug mode
@@ -57,8 +152,7 @@ class Dispatch:
 							message='Привет!\nТы целый месяц не пользовался нашим ботом &#128532;\nНажми на кнопку что бы снова начать',
 							keyboard=keyboards.month_no_activity
 						)
-				except Exception as err:
-					print(err)
+				except VKAPIError:
 					continue
 			await asyncio.sleep(24*60*60)
 
@@ -236,3 +330,11 @@ class Dispatch:
 					database[id[0]]['month'].remove(date)
 		async with aiopen('cache/time_database.toml', 'w', encoding='utf-8') as file:
 			await file.write(f'{toml.dumps(database)}')
+
+	async def get_rate(self) -> str:
+		async with aiopen('cache/rates.txt', 'r', encoding='utf-8') as rate:
+			return await rate.read()
+
+	async def set_rate_file(self, text:str='') -> None:
+		async with aiopen('cache/rates.txt', 'w', encoding='utf-8') as rate:
+			await rate.write(f'{text}')

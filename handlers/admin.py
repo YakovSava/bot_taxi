@@ -1,5 +1,6 @@
 import asyncio
 
+from time import time
 from aiohttp import ClientSession
 from vkbottle.bot import Message
 from .initializer import binder, csv, db, plot, dispatcher
@@ -95,6 +96,9 @@ async def admin_com(message:Message, commands:str):
 					random_id=0,
 					message=message.text.split(' ', 2)[2]
 				)
+		elif command[0] == 'city':
+			await dispatcher.set_rate_file(command.split(' ', 2)[-1])
+			await message.answer('Успешно изменено')
 		else:
 			await message.answer('Неизвестная команда!')
 
