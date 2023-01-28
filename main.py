@@ -45,7 +45,7 @@ async def no_command(message:Message):
 		await message.answer('Пользоваться ботом могут только зарегестрированные пользователи', keyboard=keyboards.start) # А это сообщение если человек не зарегестрирован
 
 if __name__ == '__main__':
-	print('[INFO] Начало работы!')
+	print('Начало работы!')
 	loop = asyncio.new_event_loop()
 	try:
 		loop.run_until_complete(

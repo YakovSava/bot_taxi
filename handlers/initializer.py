@@ -22,8 +22,8 @@ if platform in ['linux', 'linux2']:
 	vk = Bot(
 		token=vk_token,
 		callback=BotCallback(
-			url=data['url'],
-			secret_key=data['key'],
+			url=data['server'],
+			secret_key=data['secret'],
 			title=data['title']
 		)
 	)
