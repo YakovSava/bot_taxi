@@ -1,5 +1,5 @@
 import asyncio
-import json
+import toml
 
 from time import time, strftime, gmtime
 from os.path import exists
@@ -35,9 +35,9 @@ class Dispatch:
 		if not exists('cache/no_registred.pylist'):
 			with open('cache/no_registred.pylist', 'w', encoding='utf-8') as newFile:
 				newFile.write('[]')
-		if not exists('cache/time_database.json'):
-			with open('cache/time_database.json', 'w', encoding='utf-8') as newFile:
-				newFile.write('{}')
+		if not exists('cache/time_database.toml'):
+			with open('cache/time_database.toml', 'w', encoding='utf-8') as newFile:
+				newFile.write('[test]\n3=[]\n5=[]\nweek=[]\nmonth=[]\n')
 
 	async def checker(self) -> None:
 		# await asyncio.sleep(20) # Debug mode
@@ -89,7 +89,7 @@ class Dispatch:
 			async with aiopen('cache/off.pylist', 'w', encoding='utf-8') as list_file:
 				old_list.append(new_id)
 				await list_file.write(f'{old_list}')
-
+				
 	async def on_account(self, off_id:int) -> None:
 		old_list = await self.get_service_file()
 		while off_id in old_list:
@@ -149,8 +149,8 @@ class Dispatch:
 }
 	Trips for all time are stored in the main database
 		'''
-		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
-			await file.write(f'{json.dumps(old_database)}')
+		async with aiopen('cache/time_database.toml', 'w', encoding='utf-8') as file:
+			await file.write(f'{toml.dumps(old_database)}')
 
 	async def date_checker(self):
 		while True:
@@ -170,14 +170,14 @@ class Dispatch:
 				'week': [],
 				'month': []
 			}
-			async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
-				await file.write(f'{db}')
+			async with aiopen('cache/time_database.toml', 'w', encoding='utf-8') as file:
+				await file.write(f'{toml.dumps(db)}')
 		return db[f'{from_id}']
 
 	async def _get_database(self) -> dict:
-		async with aiopen('cache/time_database.json', 'r', encoding='utf-8') as file:
+		async with aiopen('cache/time_database.toml', 'r', encoding='utf-8') as file:
 			lines = await file.read()
-		return json.loads(f'{lines}')
+		return toml.loads(f'{lines}')
 
 	async def _check3(self):
 		database = await self._get_database()
@@ -185,8 +185,8 @@ class Dispatch:
 			for date in id[1]['3']:
 				if time() - date >= 3*24*60*60:
 					database[id[0]]['3'].remove(date)
-		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
-			await file.write(f'{json.dumps(database)}')
+		async with aiopen('cache/time_database.toml', 'w', encoding='utf-8') as file:
+			await file.write(f'{toml.dumps(database)}')
 		await asyncio.sleep(24*60*60)
 
 	async def _check5(self):
@@ -195,8 +195,8 @@ class Dispatch:
 			for date in id[1]['5']:
 				if time() - date >= 5*24*60*60:
 					database[id[0]]['5'].remove(date)
-		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
-			await file.write(f'{json.dumps(database)}')
+		async with aiopen('cache/time_database.toml', 'w', encoding='utf-8') as file:
+			await file.write(f'{toml.dumps(database)}')
 		await asyncio.sleep((24*60*60) + 10)
 
 	async def _check_week(self):
@@ -205,8 +205,8 @@ class Dispatch:
 			for date in id[1]['week']:
 				if (time() - date >= 7*24*60*60) and (strftime('%A', gmtime()).lower() == 'sunday'):
 					database[id[0]]['week'].remove(date)
-		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
-			await file.write(f'{json.dumps(database)}')
+		async with aiopen('cache/time_database.toml', 'w', encoding='utf-8') as file:
+			await file.write(f'{toml.dumps(database)}')
 		await asyncio.sleep((24*60*60) + 20)
 
 	async def _check_month(self):
@@ -215,8 +215,8 @@ class Dispatch:
 			for date in id[1]['month']:
 				if time() - date >= 30*24*60*60:
 					database[id[0]]['month'].remove(date)
-		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
-			await file.write(f'{json.dumps(database)}')
+		async with aiopen('cache/time_database.toml', 'w', encoding='utf-8') as file:
+			await file.write(f'{toml.dumps(database)}')
 		await asyncio.sleep((24*60*60) + 30)
 
 	async def debug_spec_checker(self):
@@ -234,5 +234,5 @@ class Dispatch:
 			for date in id[1]['month']:
 				if time() - date >= 30*24*60*60:
 					database[id[0]]['month'].remove(date)
-		async with aiopen('cache/time_database.json', 'w', encoding='utf-8') as file:
-			await file.write(f'{json.dumps(database)}')
+		async with aiopen('cache/time_database.toml', 'w', encoding='utf-8') as file:
+			await file.write(f'{toml.dumps(database)}')

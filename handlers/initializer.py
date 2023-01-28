@@ -36,6 +36,7 @@ elif platform in ['win32', 'cygwin', 'msys']:
 	vk = Bot(
 		token=vk_token
 	)
+vk.on.vbml_ignore_case = True
 
 ddt = DadataAsync(ddt_token) # Инициализируем объект сервиса
 binder = Binder() # Инициализируем объект связыввателя

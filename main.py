@@ -27,7 +27,6 @@ async def preset():
 	if group_info[0].city is not None:
 		await binder.preset(group_info[0].city.title)
 
-vk.vbml_ignore_case = True
 null = None # Not debug!
 
 @vk.on.private_message()
