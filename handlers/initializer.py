@@ -1,7 +1,5 @@
-from sys import platform
 from pyqiwip2p import AioQiwiP2P
 from dadata import DadataAsync
-from vkbottle.bot import Bot
 from plugins.binder import Binder
 from plugins.database import Database
 from plugins.plotter import Plotter
@@ -9,33 +7,7 @@ from plugins.dispatcher import Dispatch
 from plugins.timer import Timer
 from plugins.csveer import Csveer
 from config import *
-
-if platform in ['linux', 'linux2']:
-	from multiprocessing import Process
-	from vkbottle.callback import BotCallback
-	from aiohttp.web import run_app 
-	from .server import app, data
-
-	pr = Process(target=run_app, args=(app,))
-	pr.start()
-
-	vk = Bot(
-		token=vk_token,
-		callback=BotCallback(
-			url=data['server'],
-			secret_key=data['secret'],
-			title=data['title']
-		)
-	)
-elif platform in ['win32', 'cygwin', 'msys']:
-	try:
-		asyncio.set_event_loop(asyncio.WindowsSelectorEventLoopPolicy())
-	except:
-		pass
-	vk = Bot(
-		token=vk_token
-	)
-vk.on.vbml_ignore_case = True
+from .server import vk
 
 ddt = DadataAsync(ddt_token) # Инициализируем объект сервиса
 binder = Binder() # Инициализируем объект связыввателя

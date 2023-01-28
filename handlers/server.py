@@ -1,32 +1,63 @@
-from sys import argv
-from aiohttp.web import Application, RouteTableDef, Response
-from .initializer import vk
+import asyncio
 
-app = Application()
-routes = RouteTableDef()
+from vkbottle.bot import Bot
+from sys import argv, platform
+from config import vk_token
 
-data = {
-	'secret': 'ThisISAVerySecretKey',
-	'server': 'http://45.8.230.39/callback',
-	'title': 'Test taxi call bot group'
-}
+if platform in ['linux', 'linux2']:
+	from multiprocessing import Process
+	from vkbottle.callback import BotCallback
+	from aiohttp.web import Application, RouteTableDef, Response, run_app
 
-@routes.get('/')
-async def main_page(request):
-	return 'Server run!'
+	app = Application()
+	routes = RouteTableDef()
 
-@routes.get('/callback')
-async def callback_api(request):
+	data = {
+		'secret': 'ThisISAVerySecretKey',
+		'server': 'http://45.8.230.39/callback',
+		'title': 'Test taxi call bot group'
+	}
+
+	@routes.get('/')
+	async def main_page(request):
+		return 'Server run!'
+
+	@routes.get('/callback')
+	async def callback_api(request):
+		try:
+			reqdata = await request.json()
+		except:
+			return Response(status=503)
+
+		if reqdata['type'] == 'confirmation':
+			return Response(text='243a8c8e')
+
+		if reqdata['secret'] == 'ThisISAVerySecretKey':
+			await vk.proccess_event(reqdata)
+		return Response(text='ok')
+
+	app.add_routes(routes)
+
+	pr = Process(target=run_app, args=(app,))
+	pr.start()
+
+	vk = Bot(
+		token=vk_token,
+		callback=BotCallback(
+			url=data['server'],
+			secret_key=data['secret'],
+			title=data['title']
+		)
+	)
+
+
+elif platform in ['win32', 'cygwin', 'msys']:
 	try:
-		reqdata = await request.json()
+		asyncio.set_event_loop(asyncio.WindowsSelectorEventLoopPolicy())
 	except:
-		return Response(status=503)
+		pass
+	vk = Bot(
+		token=vk_token
+	)
 
-	if reqdata['type'] == 'confirmation':
-		return Response(text=f'{argv[0]}')
-
-	if reqdata['secret'] == 'ThisISAVerySecretKey':
-		await vk.proccess_event(reqdata)
-	return Response(text='ok')
-
-app.add_routes(routes)
+vk.on.vbml_ignore_case = True
