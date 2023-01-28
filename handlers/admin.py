@@ -1,14 +1,12 @@
 import asyncio
 
 from aiohttp import ClientSession
-from vkbottle.bot import BotLabeler, Message
-from .initializer import *
+from vkbottle.bot import Message
+from .initializer import binder, csv, db, plot, dispatcher
 from plugins.states import Helper
+from .order import vk
 
-vk = BotLabeler()
-vk.vbml_ignore_case = True
-
-@vk.private_message(text = 'admin <commands>')
+@vk.on.private_message(text = 'admin <commands>')
 async def admin_com(message:Message, commands:str):
 	parameters = await binder.get_parameters()
 	if message.from_id in parameters['admin']:
@@ -33,9 +31,9 @@ async def admin_com(message:Message, commands:str):
 				asyncio.create_task(plot.get_histogram(csv_for_histogram)),
 				asyncio.create_task(plot.get_histogram_passanger(csv_for_histogram_passangers))
 			)
-			for photo in all_photo:
-				document = await PhotoMessageUploader(api).upload(photo, peer_id = message.from_id)
-				await message.answer(attachment = document)
+			# for photo in all_photo:
+				# document = await PhotoMessageUploader(vk.api).upload(photo, peer_id = message.from_id)
+				# await message.answer(attachment = document)
 		elif command[0] == 'get':
 			names = [
 				[info async for info in db.passanger.admin_get_all()],
@@ -45,7 +43,7 @@ async def admin_com(message:Message, commands:str):
 			csv_files = await csv.get_csv(names)
 			async with ClientSession(trust_env=True) as session:
 				for file in csv_files:
-					url = await api.docs.get_messages_upload_server(
+					url = await vk.api.docs.get_messages_upload_server(
 						peer_id=message.from_id,
 						type='doc'
 					)
@@ -53,7 +51,7 @@ async def admin_com(message:Message, commands:str):
 						if resp.status == 200:
 							response = await resp.json()
 							try:
-								data = await api.docs.save(file=response['file'], title='CSV')
+								data = await vk.api.docs.save(file=response['file'], title='CSV')
 								await message.answer('Файл:', attachment=data.doc.url.split('?')[0])
 							except KeyError:
 								await message.answer(f'Что-то пошлоне так {response["error"]}')
@@ -62,7 +60,7 @@ async def admin_com(message:Message, commands:str):
 							await message.answer(f'Прозошла неизвестная ошибка!\nСтатус: {resp.status}\nОшибка: {page.decode()}')
 		elif command[0] == 'answer':
 			if command[1].isdigit():
-				message_id = await api.messages.send(
+				message_id = await vk.api.messages.send(
 					user_id = command[1],
 					peer_id = command[1],
 					random_id = 1,
@@ -72,7 +70,7 @@ async def admin_com(message:Message, commands:str):
 			else:
 				await message.answer('ID должен быть цифровой!')
 		elif command[0] == 'delanswer':
-			await api.messages.delete(
+			await vk.api.messages.delete(
 				peer_id=command[1],
 				delete_for_all=1,
 				message_id=command[2]
@@ -85,13 +83,13 @@ async def admin_com(message:Message, commands:str):
 			else:
 				await message.answer('ID должен быть числом!')
 		elif command[0] == 'mailing':
-			all_chats = await api.messages.get_conversations(
+			all_chats = await vk.api.messages.get_conversations(
 				offset=0,
 				count=200,
 				filter='all'
 			)
 			for chat in all_chats.items:
-				await api.messages.send(
+				await vk.api.messages.send(
 					user_id=chat.conversation.peer.id,
 					peer_id=chat.conversation.peer.id,
 					random_id=0,
@@ -100,7 +98,7 @@ async def admin_com(message:Message, commands:str):
 		else:
 			await message.answer('Неизвестная команда!')
 
-@vk.private_message(text='update <passer>')
+@vk.on.private_message(text='update <passer>')
 async def admin_update_database(message:Message, passer:str):
 	parameters = await binder.get_parameters()
 	if message.from_id in parameters['admin']:
@@ -208,7 +206,7 @@ async def admin_update_database(message:Message, passer:str):
 			else:
 				await message.answer('Неверный оператор')
 
-@vk.private_message(text='debug <param>')
+@vk.on.private_message(text='debug <param>')
 async def debug_handler(message:Message, param:str):
 	parameters = await binder.get_parameters()
 	if message.from_id in parameters['admin']:
@@ -218,18 +216,18 @@ async def debug_handler(message:Message, param:str):
 		elif options[0] == 'force':
 			await dispatcher.debug_spec_checker()
 			
-@vk.private_message(payload={'help': 0})
+@vk.on.private_message(payload={'help': 0})
 async def helper(message:Message):
 	await vk.state_dispenser.set(message.from_id, Helper.question)
 	await message.answer('Опишите здесь то что вас интересует и вам ответят в ближайшее время')
 
-@vk.private_message(state = Helper.question)
+@vk.on.private_message(state = Helper.question)
 async def helper_support(message:Message):
 	parameters = await binder.get_parameters()
 	await vk.state_dispenser.delete(message.from_id)
 	await message.answer('Ваш запрос отправлен в техподдержку')
 	for admin_id in parameters['admin']:
-		await api.messages.send(
+		await vk.api.messages.send(
 			user_id = admin_id,
 			peer_id = admin_id,
 			random_id = 0,

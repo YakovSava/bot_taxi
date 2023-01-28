@@ -1,14 +1,13 @@
-from vkbottle.bot import BotLabeler, Message
+from vkbottle.bot import Message
 from plugins.keyboards import keyboards
 from plugins.states import DriverRegState
 from plugins.rules import OffAccountRule, DeleteAccount
-from .initializer import db, dispatcher, binder, api
+from .initializer import db, dispatcher, binder
+from .registration import vk
 
-vk = BotLabeler()
-
-@vk.private_message(text = 'начать')
+@vk.on.private_message(text = 'начать')
 async def start_handler(message:Message):
-	user = await api.users.get(message.from_id)
+	user = await vk.api.users.get(message.from_id)
 	if (await db.passanger.exists(message.from_id)):
 		await message.answer('Вы уже зарегестрированы как пассажир!', keyboard = keyboards.choose_service)
 	elif (await db.driver.exists(message.from_id)):
@@ -19,12 +18,12 @@ async def start_handler(message:Message):
 	else:
 		await message.answer(f'Привет {user[0].first_name}!\nЯ бот-такси, помогаю пассажирам найти такси, а водителю пассажира!\n\nСоздай анкету!&#128071;&#128071;&#128071;', keyboard=keyboards.start) # А это сообщение если чеовек не зарегестрирован
 
-@vk.private_message(payload = {'driver': 0, 'post_reg': 0})
+@vk.on.private_message(payload = {'driver': 0, 'post_reg': 0})
 async def driver_post_edit(message:Message):
 	await db.driver.set_activity(message.from_id)
 	await message.answer('Ожидайте новых заявок', keyboard = keyboards.driver_registartion_success)
 
-@vk.private_message(payload={'back': 0, 'not user': 0})
+@vk.on.private_message(payload={'back': 0, 'not user': 0})
 async def back(message:Message):
 	if (await db.passanger.exists(message.from_id)):
 		await message.answer('Что бы продолжить нажмите на кнопку ниже', keyboard = keyboards.choose_service)
@@ -49,10 +48,10 @@ async def back(message:Message):
 			keyboard = keyboards.empty
 		await message.answer(f'Твоя анкета водителя заполнена не до конца!\n\nЗаверши создание анкеты чтобы брать заявки.\nНапиши свой {resume}', keyboard=keyboard)
 	else:
-		user = await api.users.get(message.from_id)
+		user = await vk.api.users.get(message.from_id)
 		await message.answer(f'Привет {user[0].first_name}!\nЯ бот-такси, помогаю пассажирам найти такси, а водителю пассажира!\n\nСоздай анкету!&#128071;&#128071;&#128071;', keyboard=keyboards.start)
 
-@vk.private_message(payload = {'driver': 0, 'profie': 0})
+@vk.on.private_message(payload = {'driver': 0, 'profie': 0})
 async def driver_profile(message:Message):
 	info = await db.driver.get(message.from_id)
 	parameters = await binder.get_parameters()
@@ -66,15 +65,15 @@ async def driver_profile(message:Message):
 Машина: {info[0]["auto"]}\n\
 Цвет: {info[0]["color"]}\n\
 Госномер: {info[0]["state_number"]}\n\
-Кол-во поездок за 3 дня: {len(time_record[3])}\n\
-Кол-во поездок за 5 дней: {len(time_record[5])}\n\
+Кол-во поездок за 3 дня: {len(time_record["3"])}\n\
+Кол-во поездок за 5 дней: {len(time_record["5"])}\n\
 Кол-во поездок с ПН по ПТ: {len(time_record["week"])}\n\
 Кол-во поездок за 30 дней: {len(time_record["month"])}\n\
 Кол-во поездок: {info[1]["quantity"]}\n\
 Баланс: {info[1]["balance"]} руб.\n\
 Одна заявка стоит: {parameters["count"]}', keyboard = keyboards.driver_profile)
 
-@vk.private_message(OffAccountRule())
+@vk.on.private_message(OffAccountRule())
 async def off_driver(message:Message):
 	# await dispatcher.off_account(message.from_id)
 	await message.answer('Ваш аккаунт был отключён, больше вам не будут присылать некоторые сообщения', keyboard=keyboards.account_is_off)
@@ -84,7 +83,7 @@ async def off_driver(message:Message):
 		await db.passanger.delete(message.from_id)
 
 # Удаление
-@vk.private_message(DeleteAccount())
+@vk.on.private_message(DeleteAccount())
 async def driver_profile_delete(message:Message):
 	if (await db.passanger.get(message.from_id)) is None:
 		driver_info = await db.driver.get(message.from_id)
@@ -99,7 +98,7 @@ async def driver_profile_delete(message:Message):
 		await message.answer('Ваш профиль был удалён!\nСоздай свою анкету, жми кнопку "Начать" &#128071;&#128071;&#128071;', keyboard = keyboards.starter)
 
 # профиль пассажира
-@vk.private_message(payload = {'user': 0, 'profile': 0})
+@vk.on.private_message(payload = {'user': 0, 'profile': 0})
 async def user_profile(message:Message):
 	name = await db.passanger.get(message.from_id)
 	if name is not None:
@@ -107,13 +106,13 @@ async def user_profile(message:Message):
 		await message.answer(f'Анкета пассажира!\n\n\
 Имя: {name["name"]}\n\
 Телефон: {name["phone"]}\n\
-Кол-во поездок за 3 дня: {len(time_record[3])}\n\
-Кол-во поездок за 5 дней: {len(time_record[5])}\n\
+Кол-во поездок за 3 дня: {len(time_record["3"])}\n\
+Кол-во поездок за 5 дней: {len(time_record["5"])}\n\
 Кол-во поездок с ПН по ПТ: {len(time_record["week"])}\n\
 Кол-во поездок за 30 дней: {len(time_record["month"])}\n\
 Кол-во поездок: {name["quantity"]}\n', keyboard = keyboards.user_profile)
 
 # Волшебная кнопка "назад"
-@vk.private_message(payload = {'user': 0, 'back': 0})
+@vk.on.private_message(payload = {'user': 0, 'back': 0})
 async def passanger_back(message:Message):
 	await message.answer('Готово!\nВыбери услугу:', keyboard = keyboards.choose_service)

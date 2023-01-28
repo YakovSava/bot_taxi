@@ -1,18 +1,17 @@
-from vkbottle.bot import BotLabeler, Message
-from .initializer import db, qiwi, binder, api
+from vkbottle.bot import Message
+from .initializer import db, qiwi, binder
 from plugins.keyboards import keyboards
 from plugins.states import *
 from plugins.rules import *
+from .admin import vk
 
-vk = BotLabeler()
-
-@vk.private_message(payload = {'driver': 0, 'money': 'vk pay'})
+@vk.on.private_message(payload = {'driver': 0, 'money': 'vk pay'})
 async def vkpay_pay(message:Message):
 	await db.driver.set_activity(message.from_id)
 	await vk.state_dispenser.set(message.from_id, VkPayPay.pay)
 	return 'Введите сумму (только число!) которую хотите занести на ваш баланс'
 
-@vk.private_message(state = VkPayPay.pay)
+@vk.on.private_message(state = VkPayPay.pay)
 async def vk_pay(message:Message):
 	await db.driver.set_activity(message.from_id)
 	if message.text.isdigit():
@@ -22,27 +21,27 @@ async def vk_pay(message:Message):
 	else:
 		return 'Это не число. Введите сообщение снова'
 
-@vk.private_message(VkPayRule())
+@vk.on.private_message(VkPayRule())
 async def pay_handler(message:Message):
 	payload = eval(f'{message.payload}')
 	await db.driver.set_activity(message.from_id)
 	parameters = await binder.get_parameters()
 	await db.driver.set_balance(message.from_id, payload['amount'])
 	await message.answer(f'Вы успешно пополнили свой баланс на {payload["amount"]} руб.')
-	await api.messages.send(
+	await vk.api.messages.send(
 		user_id = parameters['admin'],
 		peer_id = parameters['admin'],
 		random_id = 0,
 		message = f'Человек @id{message.from_id} пополнил баланс на {payload["amount"]}!'
 	)
 
-@vk.private_message(payload = {'driver': 0, 'money': 'qiwi'})
+@vk.on.private_message(payload = {'driver': 0, 'money': 'qiwi'})
 async def qiwi_pay(message:Message):
 	await db.driver.set_activity(message.from_id)
 	await vk.state_dispenser.set(message.from_id, QiwiPay.pay)
 	return 'Введите сумму которую хотите внести на баланс'
 
-@vk.private_message(state = QiwiPay.pay)
+@vk.on.private_message(state = QiwiPay.pay)
 async def qiwi_get_pay(message:Message):
 	await db.driver.set_activity(message.from_id)
 	if message.text.isdigit():
@@ -56,7 +55,7 @@ async def qiwi_get_pay(message:Message):
 	else:
 		return 'Введите число!'
 
-@vk.private_message(QiwiPayRule())
+@vk.on.private_message(QiwiPayRule())
 async def qiwi_get_pay_before_pay(message:Message):
 	await db.driver.set_activity(message.from_id)
 	payload = eval(f'dict({message.payload})')

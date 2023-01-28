@@ -1,9 +1,8 @@
 import asyncio # Импортируем асинхронность
 
-from sys import platform
-from vkbottle.bot import Bot, BotLabeler, Message
+from vkbottle.bot import Message
 from handlers import *
-from config import vk_token
+from plugins.keyboards import keyboards
 
 # try:
 # 	from loguru import logger
@@ -19,39 +18,6 @@ except ImportError:
 else:
 	logging.getLogger("vkbottle").setLevel(logging.INFO)
 
-
-label = BotLabeler()
-for handlers_labeler in DOWNOLOADER:
-	label.load(handlers_labeler)
-
-if platform in ['linux', 'linux2']:
-	from multiprocessing import Process
-	from vkbottle.callback import BotCallback
-	from aiohttp.web import run_app 
-	from server import app, data
-
-	pr = Process(target=run_app, args=(app,))
-	pr.start()
-
-	vk = Bot(
-		token=vk_token,
-		labeler=label,
-		callback=BotCallback(
-			url=data['url'],
-			secret_key=data['key'],
-			title=data['title']
-		)
-	)
-elif platform in ['win32', 'cygwin', 'msys']:
-	try:
-		asyncio.set_event_loop(asyncio.WindowsSelectorEventLoopPolicy())
-	except:
-		pass
-	vk = Bot(
-		token=vk_token,
-		labeler=label
-	)
-
 async def preset():
 	parameters = await binder.get_parameters()
 	group_info = await vk.api.groups.get_by_id(
@@ -61,6 +27,7 @@ async def preset():
 	if group_info[0].city is not None:
 		await binder.preset(group_info[0].city.title)
 
+vk.vbml_ignore_case = True
 null = None # Not debug!
 
 @vk.on.private_message()
@@ -79,7 +46,7 @@ async def no_command(message:Message):
 		await message.answer('Пользоваться ботом могут только зарегестрированные пользователи', keyboard=keyboards.start) # А это сообщение если человек не зарегестрирован
 
 if __name__ == '__main__':
-	print('Начало работы!')
+	print('[INFO] Начало работы!')
 	loop = asyncio.new_event_loop()
 	try:
 		loop.run_until_complete(

@@ -1,5 +1,6 @@
 import asyncio
 
+from os.path import exists
 from orjson import dumps, loads
 from threading import Thread
 from random import randint, choice
@@ -12,6 +13,9 @@ class Forms:
 	def __init__(self, api:API=None):
 		self.api = api
 		self.all_forms = {}
+		if not exists('cache/forms.json'):
+			with open('cache/forms.json', 'w', encoding='utf-8') as file:
+				file.write('{}')
 		loop = asyncio.new_event_loop()
 		loop.run_until_complete(self._downoload_forms())
 
