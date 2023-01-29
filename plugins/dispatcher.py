@@ -91,7 +91,14 @@ class Dispatch:
 			pass
 		await self._backup()
 
-	async def stop_form(self, key:str) -> None:
+	async def stop_form(self, key:str, cancel:bool=False) -> None:
+		if not cancel:
+			await self.api.messages.send(
+				user_id=self.all_forms[key]['from_id'],
+				peer_id=self.all_forms[key]['from_id'],
+				random_id=0,
+				message='Не один водитель не принял твою заявку\nТы можешь заказать акси снова!'
+			)
 		try:
 			self.all_forms[key]['active'] = False
 		except:
@@ -122,6 +129,8 @@ class Dispatch:
 				message='Идёт поиск водителя'
 			)
 			counter += 1
+			if (form['in_drive'] and not form['active']):
+				break
 		if (form['in_drive'] and not form['active']):
 			await self.stop_form(key)
 
@@ -290,6 +299,14 @@ class Dispatch:
 		database = await self._get_database()
 		for id in list(database.items()):
 			for date in id[1]['5']:
+				if len(database[id]['5']) > 100 and (await self.database.driver.exists(int(id))):
+					await self.api.messages.send(
+						user_id=int(id),
+						peer_id=int(id),
+						random_id=0,
+						message='Ты сделал(а) уже более 100 поездок за 5 днейn\n\
+Теперь ты учавствуешь в розыгрыше 100 руб. на баланс!'
+					)
 				if time() - date >= 5*24*60*60:
 					database[id[0]]['5'].remove(date)
 		async with aiopen('cache/time_database.toml', 'w', encoding='utf-8') as file:
@@ -323,9 +340,18 @@ class Dispatch:
 				if time() - date >= 3*24*60*60:
 					database[id[0]]['3'].remove(date)
 			for date in id[1][5]:
+				if len(database[id]['5']) > 100 and (await self.database.driver.exists(int(id))):
+					await self.api.messages.send(
+						user_id=int(id),
+						peer_id=int(id),
+						random_id=0,
+						message='Ты сделал(а) уже более 100 поездок за 5 днейn\n\
+Теперь ты учавствуешь в розыгрыше 100 руб. на баланс!'
+					)
 				if time() - date >= 5*24*60*60:
 					database[id[0]]['5'].remove(date)
 			for date in id[1]['week']:
+				if (len(database[id]['week']) > 5)
 				if (time() - date >= 7*24*60*60):
 					database[id[0]]['week'].remove(date)
 			for date in id[1]['month']:
