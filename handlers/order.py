@@ -166,7 +166,7 @@ async def taxi_tax(message:Message):
 			else:
 				await message.answer(f'На вашем балансе недостаточно средств\nСтоимость одной заявки: {parameters["count"]} руб.\nНа вашем балансе: {driver_info[1]["balance"]} руб.', keyboard = keyboards.inline.payments)
 		else:
-			await message.answer('Другой водитель уже принял эту заявку!')
+			await message.answer('Другой водитель уже принял эту заявку!', keyboard=keyboards.driver_registartion_success)
 
 # Принимаем доставку
 @vk.on.private_message(Delivery())
@@ -224,7 +224,7 @@ async def driver_delivery(message:Message):
 			else:
 				await message.answer(f'На вашем балансе недостаточно средств\nСтоимость одной заявки: {parameters["count"]} руб.\nНа вашем балансе: {driver_info[1]["balance"]} руб.', keyboard = keyboards.inline.payments)
 		else:
-			await message.answer('Другой водитель уже принял эту заявку!')
+			await message.answer('Другой водитель уже принял эту заявку!', keyboard=keyboards.driver_registartion_success)
 
 @vk.on.private_message(state = DeliveryState.location)
 async def delivery_tax(message:Message):

@@ -1,5 +1,6 @@
 import asyncio # Импортируем асинхронность
 
+from sys import platform
 from vkbottle.bot import Message
 from handlers import *
 from plugins.keyboards import keyboards
@@ -47,15 +48,23 @@ async def no_command(message:Message):
 if __name__ == '__main__':
 	print('Начало работы!')
 	loop = asyncio.new_event_loop()
-	try:
-		loop.run_until_complete(
-			asyncio.wait([
+
+	if platform in ['linux', 'linux2']:
+		runner_list = asyncio.wait([
+				loop.create_task(preset()),
+				loop.create_task(dispatcher.checker()),
+				loop.create_task(dispatcher.cache_cleaner()),
+				loop.create_task(dispatcher.date_checker())
+			])
+	elif platform in ['win32', 'cygwin', 'msys']:
+		runner_list = asyncio.wait([
 				loop.create_task(preset()),
 				loop.create_task(dispatcher.checker()),
 				loop.create_task(vk.run_polling()),
 				loop.create_task(dispatcher.cache_cleaner()),
 				loop.create_task(dispatcher.date_checker())
 			])
-		)
+	try:
+		loop.run_until_complete(runner_list)
 	except:
 		loop.close()

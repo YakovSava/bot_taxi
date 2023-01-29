@@ -2,6 +2,7 @@ import asyncio
 
 from time import time
 from aiohttp import ClientSession
+from vkbottle import PhotoMessageUploader
 from vkbottle.bot import Message
 from .initializer import binder, csv, db, plot, dispatcher
 from plugins.states import Helper
@@ -23,7 +24,7 @@ async def admin_com(message:Message, commands:str):
 			drivers = await db.driver.admin_get_all()
 			passangers = [info async for info in db.passanger.admin_get_all()]
 			csv_for_sort_histogramm, csv_for_histogram, csv_for_histogram_passangers = await asyncio.gather(
-				asyncio.create_task(csv.get_csv_for_sort_histogramm([[one['name'], one['VK'], two['quntity']] for one, two in drivers])),
+				asyncio.create_task(csv.get_csv_for_sort_histogramm([[one['name'], one['VK'], two['quantity']] for one, two in drivers])),
 				asyncio.create_task(csv.get_csv_for_histogram([[one['city'], one['name']] for one, two in drivers])),
 				asyncio.create_task(csv.get_csv_for_histogram_passanger([[passanger['city'], passanger['name']] for passanger in passangers]))
 			)
@@ -32,9 +33,9 @@ async def admin_com(message:Message, commands:str):
 				asyncio.create_task(plot.get_histogram(csv_for_histogram)),
 				asyncio.create_task(plot.get_histogram_passanger(csv_for_histogram_passangers))
 			)
-			# for photo in all_photo:
-				# document = await PhotoMessageUploader(vk.api).upload(photo, peer_id = message.from_id)
-				# await message.answer(attachment = document)
+			for photo in all_photo:
+				document = await PhotoMessageUploader(vk.api).upload(photo, peer_id = message.from_id)
+				await message.answer(attachment = document)
 		elif command[0] == 'get':
 			names = [
 				[info async for info in db.passanger.admin_get_all()],
@@ -62,10 +63,10 @@ async def admin_com(message:Message, commands:str):
 		elif command[0] == 'answer':
 			if command[1].isdigit():
 				message_id = await vk.api.messages.send(
-					user_id = command[1],
-					peer_id = command[1],
-					random_id = 1,
-					message = command[2]
+					user_id=command[1],
+					peer_id=command[1],
+					random_id=0,
+					message=message.text.split(' ', 2)[-1]
 				)
 				await message.answer(f'Вы успешно ответили на вопрос {command[0]}\nЕсли вам не нравится ответ, то пропишите "admin delanswer {command[1]} {message_id}"')
 			else:

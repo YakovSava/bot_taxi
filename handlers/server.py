@@ -1,7 +1,7 @@
 import asyncio
 
 from vkbottle.bot import Bot
-from sys import argv, platform
+from sys import platform
 from config import vk_token
 
 if platform in ['linux', 'linux2']:
@@ -15,31 +15,8 @@ if platform in ['linux', 'linux2']:
 	data = {
 		'secret': 'ThisISAVerySecretKey',
 		'server': 'http://45.8.230.39/callback',
-		'title': 'Test taxi call bot group'
+		'title': 'Test taxi call'
 	}
-
-	@routes.get('/')
-	async def main_page(request):
-		return 'Server run!'
-
-	@routes.get('/callback')
-	async def callback_api(request):
-		try:
-			reqdata = await request.json()
-		except:
-			return Response(status=503)
-
-		if reqdata['type'] == 'confirmation':
-			return Response(text='243a8c8e')
-
-		if reqdata['secret'] == 'ThisISAVerySecretKey':
-			await vk.proccess_event(reqdata)
-		return Response(text='ok')
-
-	app.add_routes(routes)
-
-	pr = Process(target=run_app, args=(app,))
-	pr.start()
 
 	vk = Bot(
 		token=vk_token,
@@ -49,6 +26,33 @@ if platform in ['linux', 'linux2']:
 			title=data['title']
 		)
 	)
+
+	@routes.get('/')
+	async def main_page(request):
+		global confirmation_code, secret_key
+		confirmation_code, secret_key = await vk.setup_webhook()
+		return Response(text='Server run!')
+
+	@routes.post('/callback')
+	async def callback_api(request):
+		global confirmation_code, secret_key
+
+		try:
+			reqdata = await request.json()
+		except:
+			return Response(status=503)
+
+		if reqdata['type'] == 'confirmation':
+			return Response(text=confirmation_code)
+
+		elif reqdata['secret'] == secret_key:
+			await vk.process_event(reqdata)
+		return Response(text='ok')
+
+	app.add_routes(routes)
+
+	pr = Process(target=run_app, args=(app,), kwargs={'host': '45.8.230.39', 'port': '80'})
+	pr.start()
 
 
 elif platform in ['win32', 'cygwin', 'msys']:

@@ -11,6 +11,7 @@ import seaborn as sns
 
 from os.path import join
 from typing import Optional, Union
+from aiofiles import open as aiopen
 
 warnings.filterwarnings('ignore')
 
@@ -34,7 +35,16 @@ class Plotter:
 	async def _get_name(self):
 		return join('cache', f'{random.randint(10000, 99999)}.png')
 
-	async def get_area_diagramm(self, csv:Union[list, dict], time:Optional[str]) -> str:
+	async def _get_csv_name(self) -> str:
+		return join('cache', f'{random.randint(10000, 99999)}.csv')
+
+	async def _save_csv(self, csv:str) -> str:
+		filename = await self._get_csv_name()
+		async with aiopen(filename, 'w', encoding='utf-8') as file:
+			await file.write(f'{csv}')
+		return filename
+
+	async def get_area_diagramm(self, csv:str, time:Optional[str]) -> str:
 		'''
 	A hint to future developers
 	The table should look like this:
@@ -48,7 +58,8 @@ class Plotter:
 6   26-12-2022  2
 7   27-12-2022  0
 		'''
-		df = pd.DataFrame(csv)
+		filename = await self._save_csv(csv)
+		df = pd.read_csv(filename)
 		x = np.arange(df.shape[0])
 		plt.figure(figsize=(16,10), dpi= 80)
 		plt.fill_between(x[1:], df.trips[1:], 0, where=df.trips[1:] > 0, facecolor='green', interpolate=True, alpha=0.7)
@@ -65,7 +76,7 @@ class Plotter:
 		plt.savefig(name)
 		return name
 
-	async def get_sort_histogramm(self, csv:Union[list, dict]) -> str:
+	async def get_sort_histogramm(self, csv:str) -> str:
 		'''
 	Table:
 	name	vk		trips
@@ -75,8 +86,9 @@ class Plotter:
 3 	Abdul	444		5
 4 	Rahman	555		2
 		'''
-		df = pd.DataFrame(csv)
-		df.sort_values('trips', inplace=True)
+		filename = await self._save_csv(csv)
+		df = pd.read_csv(filename)
+		df.sort_values('trips')
 		df.reset_index(inplace=True)
 		fig, ax = plt.subplots(figsize=(16,10), facecolor='white', dpi= 80)
 		ax.vlines(x=df.index, ymin=0, ymax=df.trips, color='firebrick', alpha=0.7, linewidth=20)
@@ -104,7 +116,8 @@ class Plotter:
 4 		2022-13	 	female  	12
 5 		2022-14 	female  	4
 		'''
-		df = pd.DataFrame(csv)
+		filename = await self._save_csv(csv)
+		df = pd.read_csv(filename)
 		plt.figure(figsize=(13,10), dpi= 80)
 		group_col = 'gender'
 		order_of_bars = df.stage.unique()[::-1]
@@ -121,7 +134,7 @@ class Plotter:
 		plt.savefig(name)
 		return name
 
-	async def get_tree_diagram(self, csv:Union[list, dict]) -> str:
+	async def get_tree_diagram(self, csv:str) -> str:
 		'''
 	Table:
 	city	    	drivers		passangers
@@ -129,7 +142,8 @@ class Plotter:
 1 	Moscow			76 			97
 2 	S.Pitershburg	34			12
 		'''
-		df = pd.DataFrame(csv)
+		filename = await self._save_csv(csv)
+		df = pd.read_csv(filename)
 		labels = df.apply(lambda x: f'{x[0]}\n({x[1]} - {x[2]})', axis=1)
 		sizes = [a + b for a, b in zip(df['drivers'].values.tolist(), df['passangers'].values.tolist())]
 		colors = [plt.cm.Spectral(i/float(len(labels))) for i in range(len(labels))]
@@ -141,7 +155,7 @@ class Plotter:
 		plt.savefig(name)
 		return name
 	
-	async def get_histogram(self, csv:Union[list, dict]) -> str:
+	async def get_histogram(self, csv:str) -> str:
 		'''
 	Table
 	city		 driver
@@ -149,8 +163,9 @@ class Plotter:
 1 	moscow		 22
 3	S.Pitersburg 11
 		'''
-		df = dp.DataFrame(csv)
-		n = df['city'].unique().__len__()+1
+		filename = await self._save_csv(csv)
+		df = pd.read_csv(filename)
+		n = df.city.unique().__len__()+1
 		all_colors = list(plt.cm.colors.cnames.keys())
 		random.seed(100)
 		c = random.choices(all_colors, k=n)
@@ -166,7 +181,7 @@ class Plotter:
 		plt.savefig(name)
 		return name
 
-	async def get_calendar_map(self, csv:Union[list, dict]) -> str:
+	async def get_calendar_map(self, csv:str) -> str:
 		'''
 	Table
 		trips	date
@@ -174,7 +189,8 @@ class Plotter:
 1 		13 		13-12-2022
 2 		8		14-12-2022
 		'''
-		df = pd.DataFrame(csv)
+		filename = await self._save_csv(csv)
+		df = pd.read_csv(filename)
 		df.set_index('date', inplace=True)
 		plt.figure(figsize=(16,10), dpi= 80)
 		calmap.calendarplot(df['trips'], fig_kws={'figsize': (16,10)}, yearlabel_kws={'color':'black', 'fontsize':14}, subplot_kws={'title': 'Your stats'})
@@ -182,7 +198,7 @@ class Plotter:
 		plt.savefig(name)
 		return name
 
-	async def get_histogram_passanger(self, csv:Union[list, dict]) -> str:
+	async def get_histogram_passanger(self, csv:str) -> str:
 		'''
 	Table
 	city		 passanger
@@ -190,7 +206,8 @@ class Plotter:
 1 	moscow		 22
 3	S.Pitersburg 11
 		'''
-		df = pd.DataFrame(csv)
+		filename = await self._save_csv(csv)
+		df = pd.read_csv(filename)
 		n = df['city'].unique().__len__()+1
 		all_colors = list(plt.cm.colors.cnames.keys())
 		random.seed(100)

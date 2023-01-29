@@ -149,7 +149,10 @@ class Dispatch:
 							user_id=chat.last_message.peer_id,
 							peer_id=chat.last_message.peer_id,
 							random_id=0,
-							message='Привет!\nТы целый месяц не пользовался нашим ботом &#128532;\nНажми на кнопку что бы снова начать',
+							message='Привет!\n\
+Ты давно не пользовался ботом,\n\
+поэтому напоминаю, через нашего бота ты можешь вызвать такси, если ты пассажир. Или принять заявку, если ты водитель.\n\
+Нажми на кнопку, чтобы начать.',
 							keyboard=keyboards.month_no_activity
 						)
 				except VKAPIError:
