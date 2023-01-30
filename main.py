@@ -54,6 +54,7 @@ if __name__ == '__main__':
 				loop.create_task(preset()),
 				loop.create_task(dispatcher.checker()),
 				loop.create_task(dispatcher.cache_cleaner()),
+				loop.create_task(vk.run_polling()),
 				loop.create_task(dispatcher.date_checker())
 			])
 	elif platform in ['win32', 'cygwin', 'msys']:
