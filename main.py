@@ -47,11 +47,10 @@ async def no_command(message:Message):
 
 if __name__ == '__main__':
 	print('Начало работы!')
-	loop = asyncio.new_event_loop()
+	loop = asyncio.get_event_loop()
 
 	if platform in ['linux', 'linux2']:
-		from multiprocessing import Process
-		from aiohttp.web import Application, RouteTableDef, Response, run_app
+		from aiohttp.web import Application, RouteTableDef, Response, AppRunner, TCPSite
 
 		app = Application()
 		routes = RouteTableDef()
@@ -74,10 +73,14 @@ if __name__ == '__main__':
 
 		app.add_routes(routes)
 
-		pr = Process(target=run_app, args=(app,), kwargs={'host': '45.8.230.39', 'port': '80'})
-		pr.start()
+		async def app_runner():
+			runner = AppRunner(app)
+			await runner.setup()
+			site = TCPSite(runner)
+			await site.start()
 
 		runner_list = asyncio.wait([
+				loop.create_task(app_runner()),
 				loop.create_task(preset()),
 				loop.create_task(dispatcher.checker()),
 				loop.create_task(dispatcher.cache_cleaner()),
@@ -92,6 +95,8 @@ if __name__ == '__main__':
 				loop.create_task(dispatcher.date_checker())
 			])
 	try:
+		if loop.is_closed():
+			loop = asyncio.get_event_loop()	
 		loop.run_until_complete(runner_list)
 	except:
 		loop.close()
