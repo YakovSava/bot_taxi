@@ -50,7 +50,7 @@ if __name__ == '__main__':
 	loop = asyncio.get_event_loop()
 
 	if platform in ['linux', 'linux2']:
-		from aiohttp.web import Application, RouteTableDef, Response, AppRunner, TCPSite
+		from aiohttp.web import Application, RouteTableDef, Response, _run_app
 
 		app = Application()
 		routes = RouteTableDef()
@@ -73,14 +73,8 @@ if __name__ == '__main__':
 
 		app.add_routes(routes)
 
-		async def app_runner():
-			runner = AppRunner(app)
-			await runner.setup()
-			site = TCPSite(runner)
-			await site.start()
-
 		runner_list = asyncio.wait([
-				loop.create_task(app_runner()),
+				loop.create_task(_run_app(app, host='45.8.230.39', port='80')),
 				loop.create_task(preset()),
 				loop.create_task(dispatcher.checker()),
 				loop.create_task(dispatcher.cache_cleaner()),
