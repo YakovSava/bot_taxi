@@ -336,7 +336,14 @@ class Dispatch:
 				if time() - date >= 5*24*60*60:
 					database[id[0]]['5'].remove(date)
 			for date in id[1]['week']:
-				if (len(database[id]['week']) > 5)
+				if (len(database[id]['week']) > 5):
+					await self.api.messages.send(
+						user_id=int(id),
+						peer_id=int(id),
+						random_id=0,
+						message='Ты сделал(а) уже более 5 поездок за неделю\n\
+Теперь ты учавствуешь в розыгрыше 100 руб. на баланс!'
+					)
 				if (time() - date >= 7*24*60*60):
 					database[id[0]]['week'].remove(date)
 			for date in id[1]['month']:
