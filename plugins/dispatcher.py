@@ -33,7 +33,7 @@ class Dispatch:
 		if not exists('cache/forms.json'):
 			with open('cache/forms.json', 'w', encoding='utf-8') as file:
 				file.write('{}')
-		loop = asyncio.get_event_loop()
+		loop = asyncio.new_event_loop()
 		loop.run_until_complete(self._downoload_forms())
 		
 		if not exists('cache/orders.pyint'):
