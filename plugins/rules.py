@@ -150,3 +150,13 @@ class PassangerArrived(ABCRule[Message]):
 			return False
 		else:
 			return True
+
+class Repeater(ABCRule[Message]):
+	async def check(self, message:Message):
+		payload = eval(f'{message.payload}')
+		try:
+			payload['repeat']
+		except:
+			return False
+		else:
+			return True

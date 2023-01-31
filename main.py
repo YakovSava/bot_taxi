@@ -5,12 +5,12 @@ from vkbottle.bot import Message
 from handlers import *
 from plugins.keyboards import keyboards
 
-# try:
-# 	from loguru import logger
-# except ImportError:
-# 	pass
-# else:
-# 	logger.disable("vkbottle")
+#try:
+#	from loguru import logger
+#except ImportError:
+#	pass
+#else:
+#	logger.disable("vkbottle")
 
 try:
 	import logging
@@ -50,11 +50,37 @@ if __name__ == '__main__':
 	loop = asyncio.new_event_loop()
 
 	if platform in ['linux', 'linux2']:
+		from multiprocessing import Process
+		from aiohttp.web import Application, RouteTableDef, Response, run_app
+
+		app = Application()
+		routes = RouteTableDef()
+
+		confirmation_code, secret_key = asyncio.run(vk.setup_webhook())
+
+		@routes.post('/callback')
+		async def callback_api(request):
+			try:
+				reqdata = await request.json()
+			except:
+				return Response(status=503)
+
+			if reqdata['type'] == 'confirmation':
+				return Response(text=confirmation_code)
+
+			elif reqdata['secret'] == secret_key:
+				await vk.process_event(reqdata)
+			return Response(text='ok')
+
+		app.add_routes(routes)
+
+		pr = Process(target=run_app, args=(app,), kwargs={'host': '45.8.230.39', 'port': '80'})
+		pr.start()
+
 		runner_list = asyncio.wait([
 				loop.create_task(preset()),
 				loop.create_task(dispatcher.checker()),
 				loop.create_task(dispatcher.cache_cleaner()),
-				loop.create_task(vk.run_polling()),
 				loop.create_task(dispatcher.date_checker())
 			])
 	elif platform in ['win32', 'cygwin', 'msys']:

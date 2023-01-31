@@ -69,7 +69,7 @@ class Dispatch:
 
 	async def new_form(self, from_id:str) -> None:
 		key = await self._get_key()
-		self.all_forms[key] = {'from_id': from_id, 'driver_id': 0, 'active': True, 'in_drive': False}
+		self.all_forms[key] = {'from_id': from_id, 'driver_id': 0, 'active': True, 'in_drive': False, 'data': 0}
 		thread = Thread(target=self._form_timer_starter, args=(key,))
 		thread.start()
 		return key
@@ -91,13 +91,14 @@ class Dispatch:
 			pass
 		await self._backup()
 
-	async def stop_form(self, key:str, cancel:bool=False) -> None:
+	async def stop_form(self, key:str, data:dict, cancel:bool=False) -> None:
 		if not cancel:
 			await self.api.messages.send(
 				user_id=self.all_forms[key]['from_id'],
 				peer_id=self.all_forms[key]['from_id'],
 				random_id=0,
-				message='Не один водитель не принял твою заявку\nТы можешь заказать акси снова!'
+				message='Не один водитель не принял твою заявку\nТы можешь повторить заказ снова!',
+				keyboard=keyboards.repeat_order(self.all_forms[key]['data'])
 			)
 		try:
 			self.all_forms[key]['active'] = False
@@ -166,22 +167,6 @@ class Dispatch:
 						)
 				except VKAPIError:
 					continue
-			await asyncio.sleep(24*60*60)
-
-	async def get_order_names(self) -> int:
-		async with aiopen('cache/orders.pyint', 'r', encoding='utf-8') as file:
-			line = await file.readline()
-		return int(line)
-
-	async def set_order_names(self) -> None:
-		so = await self.get_order_names()
-		async with aiopen('cache/orders.pyint', 'r', encoding='utf-8') as file:
-			await file.write(f'{so + 1}')
-
-	async def run_order_setter(self):
-		while True:
-			async with aiopen('cache/orders.pyint', 'r', encoding='utf-8') as file:
-				await file.write('100')
 			await asyncio.sleep(24*60*60)
 
 	async def get_service_file(self) -> list:

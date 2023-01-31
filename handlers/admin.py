@@ -1,11 +1,11 @@
 import asyncio
 
-from time import time
+from time import time, strftime, gmtime
 from aiohttp import ClientSession
 from vkbottle import PhotoMessageUploader
 from vkbottle.bot import Message
-from .initializer import binder, csv, db, plot, dispatcher
 from plugins.states import Helper
+from .initializer import binder, csv, db, plot, dispatcher
 from .order import vk
 
 @vk.on.private_message(text = 'admin <commands>')
@@ -100,6 +100,16 @@ async def admin_com(message:Message, commands:str):
 		elif command[0] == 'city':
 			await dispatcher.set_rate_file(command.split(' ', 2)[-1])
 			await message.answer('Успешно изменено')
+		elif command[0] == 'stat':
+			await message.answer('В разработке...')
+		elif command[0] == 'time':
+			await message.answer(f'Текущее время: {strftime("%H:%M:%S", gmtime())}')
+		elif command[0] == 'add':
+			await dispatcher.add_and_update_drive(time() - (int(command[2])*24*60*60), int(command[1]))
+			await message.answer(f'Поездка водителя {command[1]} прошла {command[2]} дней назад')
+		elif command[0] == 'force':
+			await dispatcher.debug_spec_checker()
+			await message.answer('Принуительная проверка завершена')
 		else:
 			await message.answer('Неизвестная команда!')
 
@@ -210,16 +220,6 @@ async def admin_update_database(message:Message, passer:str):
 					await message.answer('Успешно зарегестрировано!')
 			else:
 				await message.answer('Неверный оператор')
-
-@vk.on.private_message(text='debug <param>')
-async def debug_handler(message:Message, param:str):
-	parameters = await binder.get_parameters()
-	if message.from_id in parameters['admin']:
-		options = param.lower().split()
-		if options[0] == 'add':
-			await dispatcher.add_and_update_drive(time() - (int(options[2])*24*60*60), int(options[1]))
-		elif options[0] == 'force':
-			await dispatcher.debug_spec_checker()
 			
 @vk.on.private_message(payload={'help': 0})
 async def helper(message:Message):
