@@ -3,8 +3,7 @@ from os.path import join
 
 class Csveer:
 
-	def __init__(self):
-		pass
+	def __init__(self): pass
 
 	async def get_csv_for_sort_histogramm(self, data:list) -> str:
 		string = 'name;vk;trips\n'

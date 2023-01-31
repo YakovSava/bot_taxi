@@ -6,8 +6,7 @@ from typing import Callable, Coroutine
 
 class Timer:
 
-	def __init__(self):
-		pass
+	def __init__(self): pass
 
 	def new_sync_task(self, function:Callable, *args, **kwargs):
 		thread = Thread(target=function, args=args, kwargs=kwargs)
