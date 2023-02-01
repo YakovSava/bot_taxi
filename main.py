@@ -1,9 +1,11 @@
 import asyncio # Импортируем асинхронность
 
 from sys import platform
+from multiprocessing import Process
 from vkbottle.bot import Message
 from handlers import *
 from plugins.keyboards import keyboards
+from server import run_app, Response, routes
 
 #try:
 #	from loguru import logger
@@ -50,12 +52,6 @@ if __name__ == '__main__':
 	loop = asyncio.new_event_loop()
 
 	if platform in ['linux', 'linux2']:
-		from multiprocessing import Process
-		from aiohttp.web import Application, RouteTableDef, Response, run_app
-
-		app = Application()
-		routes = RouteTableDef()
-
 		# confirmation_code, secret_key = loop.run_until_complete(vk.setup_webhook())
 
 		@routes.post('/callback')
@@ -72,11 +68,6 @@ if __name__ == '__main__':
 				await vk.process_event(reqdata)
 			return Response(text='ok')
 
-		app.add_routes(routes)
-
-		pr = Process(target=run_app, args=(app,), kwargs={'host': '45.8.230.39', 'port': '80', 'loop': loop})
-		pr.start()
-
 		runner_list = asyncio.wait([
 				loop.create_task(preset()),
 				loop.create_task(dispatcher.checker()),
@@ -92,4 +83,10 @@ if __name__ == '__main__':
 				loop.create_task(dispatcher.cache_cleaner()),
 				loop.create_task(dispatcher.date_checker())
 			])
+
+	app.add_routes(routes)
+
+	pr = Process(target=run_app, args=(app,), kwargs={'host': '45.8.230.39', 'port': '80', 'loop': loop})
+	pr.start()
+
 	loop.run_until_complete(runner_list)

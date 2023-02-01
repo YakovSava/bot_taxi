@@ -146,7 +146,7 @@ class Database:
 			await self.cursor.execute(f"UPDATE driver2 SET quantity = {last + 1} WHERE VK = '{vk}'")
 			await self.db.commit()
 
-		async def get_all(self) -> tuple:
+		async def get_all(self) -> aiosqlite.Row:
 			await self.cursor.execute('SELECT * FROM driver')
 			for info in (await self.cursor.fetchall()):
 				if info is not None:
