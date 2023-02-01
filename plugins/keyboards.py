@@ -1,4 +1,4 @@
-from vkbottle import Keyboard, KeyboardButtonColor, Text, VKPay, Location, EMPTY_KEYBOARD
+from vkbottle import Keyboard, KeyboardButtonColor, Text, VKPay, Location, EMPTY_KEYBOARD, OpenLink
 
 class keyboards:
 	empty = EMPTY_KEYBOARD
@@ -35,6 +35,15 @@ class keyboards:
 		resume_reg = (Keyboard(one_time=False, inline=True)
 			.add(Text('Продолжить регистрацию', payload={'resume': 0}), color=KeyboardButtonColor.POSITIVE)
 		).get_json()
+		call = lambda from_id, driver: (Keyboard(inline=True)
+			.add(OpenLink(f'https://vk.com/call?id={from_id}', f'Звонок {"водителю" if driver else "пассажиру"}'), color=KeyboardButtonColor.PRIMARY)
+		)
+
+	repeat_order_before_driver_cancel_order = lambda data: (Keyboard()
+		.add(Text('Повторить вызов', payload={'repeat': 0, 'data': data}), color=KeyboardButtonColor.POSITIVE)
+		.row()
+		.add(Text('Назад', payload={'user': 0, 'back': 0}), color=KeyboardButtonColor.PRIMARY)
+	).get_json()
 	passanger_get_taxi = lambda key: (Keyboard(one_time = False, inline=False)
 		.add(Text('Отменить вызов', payload = {'user': 0, 'cancel': 0, 'key': key}), color = KeyboardButtonColor.NEGATIVE)
 		.row()
@@ -47,7 +56,6 @@ class keyboards:
 		.row()
 		.add(Text('Успешно доехал', payload = {'user': 0, 'success': 0, 'key': key}), color = KeyboardButtonColor.POSITIVE)
 	).get_json()
-
 	cancel = lambda key: (Keyboard(one_time=False, inline=False)
 		.add(Text('Отменить заказ', payload = {'passager': 0, 'cancel': 0, 'taxi': 0, 'key': key}), color=KeyboardButtonColor.NEGATIVE)
 	).get_json()
@@ -135,7 +143,9 @@ class keyboards:
 		.add(Text('Выйти и удалить анкету', payload={'driver': 0, 'delete': 0}), color=KeyboardButtonColor.NEGATIVE)
 	)
 	repeat_order = lambda data: (Keyboard()
-		.add(Text('Повторить вызов', payload={'repeat': 0, 'data': data}))
+		.add(Text('Повторить вызов', payload={'repeat': 0, 'data': data}), color=KeyboardButtonColor.POSITIVE)
+		.row()
+		.add(Text('Назад', payload={'user': 0, 'back': 0}), color=KeyboardButtonColor.PRIMARY)
 	).get_json()
 
 	def construct(keyboard_texts:list, keyboard_action:list, payload:list, **kwargs): # Это конструктор клавиатур для людей которые не ссильно разбираются в vkbottle, но которые будт поддерживать этот проект в будущем

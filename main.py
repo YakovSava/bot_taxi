@@ -50,12 +50,13 @@ if __name__ == '__main__':
 	loop = asyncio.new_event_loop()
 
 	if platform in ['linux', 'linux2']:
+		from multiprocessing import Process
 		from aiohttp.web import Application, RouteTableDef, Response, run_app
 
 		app = Application()
 		routes = RouteTableDef()
 
-		confirmation_code, secret_key = asyncio.run(vk.setup_webhook())
+		confirmation_code, secret_key = loop.run_until_complete(vk.setup_webhook())
 
 		@routes.post('/callback')
 		async def callback_api(request):
