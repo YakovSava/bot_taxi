@@ -1,11 +1,11 @@
 import asyncio # Импортируем асинхронность
 
 from sys import platform
-from multiprocessing import Process
+from threading import Thread
 from vkbottle.bot import Message
 from handlers import *
 from plugins.keyboards import keyboards
-from server import run_app, Response, routes
+from server import run_app, Response, routes, app
 
 #try:
 #	from loguru import logger
@@ -65,7 +65,7 @@ if __name__ == '__main__':
 				return Response(text=confirmation_code)
 
 			elif reqdata['secret'] == secret_key:
-				await vk.process_event(reqdata)
+				await vk.Thread_event(reqdata)
 			return Response(text='ok')
 
 		runner_list = asyncio.wait([
@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
 	app.add_routes(routes)
 
-	pr = Process(target=run_app, args=(app,), kwargs={'host': '45.8.230.39', 'port': '80', 'loop': loop})
+	pr = Thread(target=run_app, args=(app,), kwargs={'host': '45.8.230.39', 'port': '80', 'loop': loop})
 	pr.start()
 
 	loop.run_until_complete(runner_list)

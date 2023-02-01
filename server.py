@@ -31,7 +31,7 @@ async def set_database():
 			counter += 1
 	return html_text
 
-@routes.get('styles/style.css')
+@routes.get('/styles/style.css')
 async def server_get_style(request):
 	async with aiopen('table/styles/style.css') as css:
 		css_text = await css.read()
@@ -40,7 +40,7 @@ async def server_get_style(request):
 		content_type='text/css'
 	)
 
-@routes.get('styles/reset.css')
+@routes.get('/styles/reset.css')
 async def server_get_reset(request):
 	async with aiopen('table/styles/reset.css') as css:
 		css_text = await css.read()
