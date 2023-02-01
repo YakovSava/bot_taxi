@@ -56,7 +56,7 @@ if __name__ == '__main__':
 		app = Application()
 		routes = RouteTableDef()
 
-		confirmation_code, secret_key = loop.run_until_complete(vk.setup_webhook())
+		# confirmation_code, secret_key = loop.run_until_complete(vk.setup_webhook())
 
 		@routes.post('/callback')
 		async def callback_api(request):
@@ -80,6 +80,7 @@ if __name__ == '__main__':
 		runner_list = asyncio.wait([
 				loop.create_task(preset()),
 				loop.create_task(dispatcher.checker()),
+				loop.create_task(vk.run_polling()),
 				loop.create_task(dispatcher.cache_cleaner()),
 				loop.create_task(dispatcher.date_checker())
 			])
