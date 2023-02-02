@@ -154,10 +154,10 @@ class keyboards:
 		.row()
 		.add(Text('Мой промокод', payload={'promo': 0, 'add': 0}), color=KeyboardButtonColor.PRIMARY)
 		.row()
-		.add('Назад', payload=({'driver': 0, 'profie': 0} if driver else {'user': 0, 'back': 0}), color=KeyboardButtonColor.NEGATIVE)
+		.add(Text('Назад', payload=({'driver': 0, 'profie': 0} if driver else {'user': 0, 'back': 0})), color=KeyboardButtonColor.NEGATIVE)
 	).get_json()
 	promo_back = lambda driver: (Keyboard()
-		.add('Назад', payload=({'driver': 0, 'profie': 0} if driver else {'user': 0, 'back': 0}), color=KeyboardButtonColor.PRIMARY)
+		.add(Text('Назад', payload=({'driver': 0, 'profie': 0} if driver else {'user': 0, 'back': 0})), color=KeyboardButtonColor.PRIMARY)
 	).get_json()
 
 	def construct(keyboard_texts:list, keyboard_action:list, payload:list, **kwargs): # Это конструктор клавиатур для людей которые не ссильно разбираются в vkbottle, но которые будт поддерживать этот проект в будущем

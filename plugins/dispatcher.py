@@ -363,11 +363,14 @@ class Dispatch:
 		async with aiopen('cache/rates.txt', 'w', encoding='utf-8') as rate:
 			await rate.write(f'{text}')
 
-	def _find(self, promos:list, from_id:int) -> int or bool:
+	def _find(self, promos:list, from_id:int) -> int:
 		for promo in promos:
 			if from_id in promo:
-				return promos.index(promo)
-		return False
+				i = promos.index(promo)
+				break
+		else:
+			i = -1
+		return i
 
 	async def get_from_promo(self, promo:str) -> int:
 		db = await self.get_promo_db()
@@ -393,11 +396,26 @@ class Dispatch:
 	async def add_new_promo(self, from_id:int) -> int:
 		promos = await self.get_promo_db()
 		index = self._find(promos, from_id)
-		if index:
+		if index != -1:
 			return promos[index]
-		new_promo = await self._gen_promo()
-		await self._save_promo(new_promo, from_id)
-		return [from_id, new_promo]
+		else:
+			new_promo = await self._gen_promo()
+			await self._save_promo(new_promo, from_id)
+			return [from_id, new_promo]
 
 	async def exists_promo(self, promo:str) -> bool:
 		return bool(await self.get_from_promo(promo))
+
+	async def check_aipu(self, from_id:int) -> bool:
+		return from_id in (await self._already_insert_promo_users())
+
+	async def _already_insert_promo_users(self) -> list:
+		async with aiopen('cache/aipu.pylist', 'r', encoding='utf-8') as file:
+			lines = await file.read()
+		return eval(f'{lines}')
+
+	async def add_insert_promo_user(self, new_id:int) -> None:
+		aipu = await self._already_insert_promo_users()
+		async with aiopen('cache/aipu.pylist', 'r', encoding='utf-8') as file:
+			aipu.append(new_id)
+			await file.write(f'{aipu}')

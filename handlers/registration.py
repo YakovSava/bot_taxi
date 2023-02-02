@@ -36,16 +36,40 @@ async def reg_passanger_2(message:Message):
 async def reg_passanger_3(message:Message):
 	parameters = await binder.get_parameters()
 	if message.geo is not None: # Если геолокация отправлена
-		location = message.geo.place.city
+		storage.set(f'{message.from_id}_location', message.geo.place.city)
 	elif message.text.lower() == 'пропустить шаг':
-		location = f'{parameters["city"]}'
+		storage.set(f'{message.from_id}_location', f'{parameters["city"]}')
 	else:
 		if (await ddt.suggest('address', message.text)) != []:
-			location = message.text
+			storage.set(f'{message.from_id}_location', message.text.lower())
 		else:
 			return 'Возможно вы неверно написали город!\nПопробуйте снова'
+	await vk.state_dispenser.set(message.from_id, PassangerRegState.promo)
+	await message.answer('Введите пригласительный реферальный код.\nЕсли его нет - пропустите', keyboard=keyboards.inline.phone_pass_this_step)
+
+@vk.on.private_message(state=PassangerRegState.promo)
+async def insert_promo(message:Message):
+	if message.text.lower() != 'пропустить шаг':
+		if (await dispatcher.exists_promo(message.from_id)):
+			if (await dispatcher.check_aipu(message.from_id)):
+				await message.answer('У вас не получиться зарегестрироваться второй раз, извините')
+			else:
+				promo = await dispatcher.get_from_promo(message.text)
+				await vk.state_dispenser.delete(message.from_id)
+				await message.answer(f'Реферальный код от @id{promo} введён. Добро пожаловать!')
+				await db.driver.set_balance(promo, 10)
+				await vk.api.messages.send(
+					user_id=promo,
+					peer_id=promo,
+					random_id=0,
+					message=f'По вашему реферальному коду успешно зарегестрировался пользователь @id{message.from_id}'
+				)
+				await dispatcher.add_insert_promo_user(message.from_id)
+		else:
+			await message.answer('Такого промокода нет. Попробуйте снова или пропустите шаг!')
+	location = storage.get(f'{message.from_id}_location')
 	phone = storage.get(f'phone_{message.from_id}')
-	storage.delete(f'phone_{message.from_id}')
+	storage.delete(f'phone_{message.from_id}'); storage.delete(f'{message.from_id}_location')
 	user_data = await vk.api.users.get(
 		user_ids = message.from_id,
 		fields = 'sex'
@@ -144,4 +168,4 @@ async def driver_edit_profile(message:Message):
 @vk.on.private_message(payload = {'passanger': 1})
 async def reg_passanger_1(message:Message):
 	await vk.state_dispenser.set(message.from_id, PassangerRegState.phone)
-	await message.answer('Отправьте ваш телефон для связи с водителем!\n\nТелефон можно не указывать, однако тогда водитель не сможет связаться с Вами, когда подъедет к месту вызова!', keyboard=keyboards.inline.phone_pass_this_step)
+	await message.answer('Отправьте ваш телефон для связи с водителем!\n\nТелефон можно не указывать, однако тогда водитель не сможет связаться с Вами, когда подъедет к месту вызова!', keyboard=keyboards.inline.phone_pass_this_step)\

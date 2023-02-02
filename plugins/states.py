@@ -4,6 +4,7 @@ from vkbottle import BaseStateGroup
 class PassangerRegState(BaseStateGroup):
 	phone = 0
 	location = 1
+	promo = 2
 
 
 class TaxiState(BaseStateGroup):
