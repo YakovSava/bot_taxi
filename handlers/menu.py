@@ -1,6 +1,6 @@
 from vkbottle.bot import Message
 from plugins.keyboards import keyboards
-from plugins.states import DriverRegState
+from plugins.states import DriverRegState, PromoState
 from plugins.rules import OffAccountRule, DeleteAccount
 from .initializer import db, dispatcher, binder
 from .registration import vk
@@ -121,3 +121,27 @@ async def passanger_back(message:Message):
 async def rate_on_city(message:Message):
 	ratetext = await dispatcher.get_rate()
 	await message.answer(f'Текущие тарифы:\n{ratetext}')
+
+@vk.on.private_message(payload={'promo': 0})
+async def promos(message:Message):
+	await message.answer('Выберите действие:', keyboard=keyboards.promo(await db.driver.exists(message.from_id)))
+
+@vk.on.private_message(payload={'promo': 0, 'add': 0})
+async def get_promo(message:Message):
+	promo = await dispatcher.add_new_promo(message.from_id)
+	await message.answer(f'Ваш персональный промо-код реферальной программы: {promo[0]}\n\
+За 1 приглашённого друга - 10 рублей на баланс!\n')
+
+@vk.on.private_message(payload={'promo': 0, 'insert': 0})
+async def insert_promo_step1(message:Message):
+	await vk.state_dispenser.set(message.from_id, PromoState.promo)
+	await message.answer('Напишите ваш промокод', keyboard=keyboards.promo_back)
+
+@vk.on.private_message(state=PromoState.promo)
+async def insert_promo_step2(message:Message):
+	if (await dispatcher.exists_promo(message.from_id)):
+		promo = await dispatcher.get_from_promo(message.text)
+		await vk.state_dispenser.delete(message.from_id)
+		await message.answer(f'Промокод от @id{promo} введён. Добро пожаловать!')
+	else:
+		await message.answer('Такого промокода нет. Попробуйте снова!', keyboard=keyboards.promo_back)

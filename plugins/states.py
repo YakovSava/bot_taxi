@@ -34,3 +34,7 @@ class QiwiPay(BaseStateGroup):
 
 class Helper(BaseStateGroup):
 	question = 0
+
+
+class PromoState(BaseStateGroup):
+	promo = 0

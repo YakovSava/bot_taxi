@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
 	app.add_routes(routes)
 
-	pr = Thread(target=run_app, args=(app,), kwargs={'host': '45.8.230.39', 'port': '80', 'loop': loop})
+	pr = Thread(target=run_app, args=(app,), kwargs={'host': '127.0.0.1', 'port': '80', 'loop': loop})
 	pr.start()
 
 	loop.run_until_complete(runner_list)

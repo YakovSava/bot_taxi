@@ -8,7 +8,7 @@ routes = RouteTableDef()
 async def set_database():
 	async with aiopen('table/index.html') as html:
 		html_text = await html.read()
-	all_drivers = [info for info in db.driver.get_all_inform()]
+	all_drivers = [info async for info in db.driver.get_all_inform()]
 	html_text = html_text.replace('{table}', '<tr>\n\
 					{VK}\n\
 					{status}\n\
@@ -26,6 +26,7 @@ async def set_database():
 				</tr>\n'*len(all_drivers))
 	for driver in zip(zip(*all_drivers), ['VK', 'status', 'gender', 'city', 'name', 'phone', 'auto', 'color', 'state_number', 'first_activity', 'last_activity', 'quantity', 'balance']):
 		counter = 0
+		print(driver)
 		for info in driver[0]:
 			html_text = html_text.replace('{'+f'{driver[1].replace("_", " ")}'+'}', f'<td class="{"tg-pvec" if counter % 2 == 0 else "tg-ku2z"}">{info}</td>', 1)
 			counter += 1

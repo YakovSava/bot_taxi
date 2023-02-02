@@ -23,7 +23,7 @@ class Dispatch:
 		database:Database=None,
 		api:API=None
 	):
-		if (timer is None) or (database is None) and (api is None):
+		if (timer is None) and (database is None) and (api is None):
 			raise self.DispatchNotGetOneParameterError(f'The dispatcher did not receive one of the items (something from the following list is "None", however it should not be "None"): \n\
 {timer = }\n{database = }\n{api = }')
 		self.timer = timer
@@ -50,7 +50,10 @@ class Dispatch:
 				newFile.write('[test]\n3=[]\n5=[]\nweek=[]\nmonth=[]\n')
 		if not exists('cache/rates.txt'):
 			with open('cache/rates.txt', 'w', encoding='utf-8') as newFile:
-				newFile.write('') 
+				newFile.write('')
+		if not exists('cache/promo.pylist'):
+			with open('cache/promo.pylist', 'w', encoding='utf-8') as newFile:
+				newFile.write('[]')
 
 	async def _downoload_forms(self):
 		async with aiopen('cache/forms.json', 'r', encoding='utf-8') as form_getter:
@@ -359,3 +362,42 @@ class Dispatch:
 	async def set_rate_file(self, text:str='') -> None:
 		async with aiopen('cache/rates.txt', 'w', encoding='utf-8') as rate:
 			await rate.write(f'{text}')
+
+	def _find(self, promos:list, from_id:int) -> int or bool:
+		for promo in promos:
+			if from_id in promo:
+				return promos.index(promo)
+		return False
+
+	async def get_from_promo(self, promo:str) -> int:
+		db = await self.get_promo_db()
+		for rec in db:
+			if promo in rec:
+				return rec[0]
+		return 0
+
+	async def _gen_promo(self) -> str:
+		return "".join([choice(ascii_letters) for _ in range(5)])
+
+	async def get_promo_db(self):
+		async with aiopen('cache/promo.pylist', 'r', encoding='utf-8') as file:
+			lines = await file.read()
+		return eval(f'{lines}')
+
+	async def _save_promo(self, new:str, from_id:int) -> None:
+		promos = await self.get_promo_db()
+		async with aiopen('cache/promo.pylist', 'w', encoding='utf-8') as file:
+			promos.append([from_id, new])
+			await file.write(f'{promos}')
+
+	async def add_new_promo(self, from_id:int) -> int:
+		promos = await self.get_promo_db()
+		index = self._find(promos, from_id)
+		if index:
+			return promos[index]
+		new_promo = await self._gen_promo()
+		await self._save_promo(new_promo, from_id)
+		return [from_id, new_promo]
+
+	async def exists_promo(self, promo:str) -> bool:
+		return bool(await self.get_from_promo(promo))
