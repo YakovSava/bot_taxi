@@ -159,12 +159,15 @@ class Database:
 
 		async def admin_get_all(self):
 			await self.cursor.execute('SELECT * FROM driver')
-			all1 = await self.cursor.fetchall()
+			all1 = list(await self.cursor.fetchall())
 			await self.cursor.execute('SELECT * FROM driver2')
 			return list(zip(all1, await self.cursor.fetchall()))
 
 		async def get_all_inform(self):
+			await self.cursor.execute('SELECT * FROM driver')
+			one = await self.cursor.fetchall()
 			await self.cursor.execute('SELECT * FROM driver2')
-			for info in (await self.cursor.fetchall()):
+			one.extend(await self.cursor.fetchall())
+			for info in one:
 				if info is not None:
 					yield info

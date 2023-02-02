@@ -1,7 +1,6 @@
 import asyncio # Импортируем асинхронность
 
-from sys import platform
-from threading import Thread
+# from sys import platform
 from vkbottle.bot import Message
 from handlers import *
 from plugins.keyboards import keyboards
@@ -51,42 +50,40 @@ if __name__ == '__main__':
 	print('Начало работы!')
 	loop = asyncio.new_event_loop()
 
-	if platform in ['linux', 'linux2']:
-		# confirmation_code, secret_key = loop.run_until_complete(vk.setup_webhook())
+	# if platform in ['linux', 'linux2']:
+	# 	# confirmation_code, secret_key = loop.run_until_complete(vk.setup_webhook())
 
-		@routes.post('/callback')
-		async def callback_api(request):
-			try:
-				reqdata = await request.json()
-			except:
-				return Response(status=503)
+	# 	@routes.post('/callback')
+	# 	async def callback_api(request):
+	# 		try:
+	# 			reqdata = await request.json()
+	# 		except:
+	# 			return Response(status=503)
 
-			if reqdata['type'] == 'confirmation':
-				return Response(text=confirmation_code)
+	# 		if reqdata['type'] == 'confirmation':
+	# 			return Response(text=confirmation_code)
 
-			elif reqdata['secret'] == secret_key:
-				await vk.Thread_event(reqdata)
-			return Response(text='ok')
+	# 		elif reqdata['secret'] == secret_key:
+	# 			await vk.process_event(reqdata)
+	# 		return Response(text='ok')
 
-		runner_list = asyncio.wait([
-				loop.create_task(preset()),
-				loop.create_task(dispatcher.checker()),
-				loop.create_task(vk.run_polling()),
-				loop.create_task(dispatcher.cache_cleaner()),
-				loop.create_task(dispatcher.date_checker())
-			])
-	elif platform in ['win32', 'cygwin', 'msys']:
-		runner_list = asyncio.wait([
-				loop.create_task(preset()),
-				loop.create_task(dispatcher.checker()),
-				loop.create_task(vk.run_polling()),
-				loop.create_task(dispatcher.cache_cleaner()),
-				loop.create_task(dispatcher.date_checker())
-			])
+		# runner_list = asyncio.wait([
+		# 		loop.create_task(preset()),
+		# 		loop.create_task(dispatcher.checker()),
+		# 		loop.create_task(vk.run_polling()),
+		# 		loop.create_task(dispatcher.cache_cleaner()),
+		# 		loop.create_task(dispatcher.date_checker())
+		# 	])
+	runner_list = asyncio.wait([
+			loop.create_task(preset()),
+			loop.create_task(dispatcher.checker()),
+			loop.create_task(vk.run_polling()),
+			loop.create_task(dispatcher.cache_cleaner()),
+			loop.create_task(dispatcher.date_checker())
+		])
 
 	app.add_routes(routes)
 
-	pr = Thread(target=run_app, args=(app,), kwargs={'host': '127.0.0.1', 'port': '80', 'loop': loop})
-	pr.start()
+	timer.new_sync_task(run_app, app, host='127.0.0.1', port=80, loop=loop)
 
 	loop.run_until_complete(runner_list)

@@ -1,3 +1,7 @@
+import asyncio
+
+from sys import platform
+from vkbottle.bot import Bot
 from pyqiwip2p import AioQiwiP2P
 from dadata import DadataAsync
 from plugins.binder import Binder
@@ -7,7 +11,35 @@ from plugins.dispatcher import Dispatch
 from plugins.timer import Timer
 from plugins.csveer import Csveer
 from config import *
-from .server import vk
+
+# if platform in ['linux', 'linux2']:
+# 	from vkbottle.callback import BotCallback
+
+# 	data = {
+# 		'secret': 'ThisISAVerySecretKey',
+# 		'server': 'http://45.8.230.39/callback',
+# 		'title': 'Test taxi call'
+# 	}
+
+# 	vk = Bot(
+# 		token=vk_token,
+# 		callback=BotCallback(
+# 			url=data['server'],
+# 			secret_key=data['secret'],
+# 			title=data['title']
+# 		)
+# 	)
+# el
+if platform in ['win32', 'cygwin', 'msys']:
+	try:
+		asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+	except:
+		pass
+vk = Bot(
+	token=vk_token
+)
+
+vk.on.vbml_ignore_case = True
 
 ddt = DadataAsync(ddt_token) # Инициализируем объект сервиса
 binder = Binder() # Инициализируем объект связыввателя
