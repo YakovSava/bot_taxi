@@ -159,9 +159,36 @@ class Database:
 
 		async def admin_get_all(self):
 			await self.cursor.execute('SELECT * FROM driver')
-			all1 = list(await self.cursor.fetchall())
+			all_data1 = [
+				{
+					'VK': record['VK'],
+					'status': record['status'],
+					'gender': record['gender'],
+					'city': record['city'],
+					'name': record['name'],
+					'phone': record['phone'],
+					'auto': record['auto'],
+					'color': record['color'],
+					'state_number': record['state_number'],
+					'first_activity': record['first_activity']
+				}
+				for record in (await self.cursor.fetchall())
+			]
 			await self.cursor.execute('SELECT * FROM driver2')
-			return list(zip(all1, await self.cursor.fetchall()))
+			all_data2 = [
+				{
+					'last_activity': record['last_activity'],
+					'quantity': record['quantity'],
+					'balance': record['balance']
+				}
+				for record in (await self.cursor.fetchall())
+			]
+			return list(
+				map(
+					lambda x: x[0] | x[1],
+					zip(all_data1, all_data2)
+				)
+			)
 
 		async def get_all_inform(self):
 			await self.cursor.execute('SELECT * FROM driver')

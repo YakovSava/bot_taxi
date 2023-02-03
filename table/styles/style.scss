@@ -1,0 +1,59 @@
+body {
+    display: grid;
+    justify-content: center;
+}
+
+.tg {
+    border-collapse:collapse;
+    border-color:#93a1a1;
+    border-spacing:0;
+    & td {
+        background-color:#fff;
+        border-color:#93a1a1;
+        border-style:solid;
+        border-width:1px 0;
+        color:#002b36;
+        font-family:'Roboto', sans-serif;
+        font-size:14px;
+        overflow:hidden;
+        padding:13px 10px;
+        word-break:normal;
+    }
+    & th {
+        background-color:rgb(69, 69, 69);
+        border-color:#93a1a1;
+        border-style:solid;
+        border-width:1px;
+        color:#fdf6e3;
+        font-family:'Roboto', sans-serif;
+        font-size:14px;
+        font-weight:normal;
+        overflow:hidden;
+        padding:4px 4px;
+        word-break:normal;
+    }
+    &-pvec {
+        background-color:#efefef;
+        border-color:#656565;
+        color:#343434;
+        font-family:'Roboto', sans-serif !important;
+        text-align:left;
+        vertical-align:top
+    }
+    &-5mmk {
+        background-color:#343434;
+        border-color:#656565;
+        color:#efefef;
+        font-family:'Roboto', sans-serif !important;;
+        text-align:left;
+        vertical-align:top
+    }
+    &-ku2z {
+        background-color:#c0c0c0;
+        border-color:#656565;
+        color:#343434;
+        font-family:'Roboto', sans-serif !important;;
+        text-align:left;
+        vertical-align:top
+    }
+}

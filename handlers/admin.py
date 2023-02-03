@@ -21,7 +21,7 @@ async def admin_com(message:Message, commands:str):
 				await message.answer('Нужно ввести число!') 
 		elif command[0] == 'histogram':
 			await message.answer('Идёт получение данных (надолго!)')
-			drivers = await db.driver.admin_get_all()
+			drivers = [info async for info in db.passanger.get_all_inform()]
 			passangers = [info async for info in db.passanger.admin_get_all()]
 			csv_for_sort_histogramm, csv_for_histogram, csv_for_histogram_passangers = await asyncio.gather(
 				asyncio.create_task(csv.get_csv_for_sort_histogramm([[one['name'], one['VK'], two['quantity']] for one, two in drivers])),
@@ -39,7 +39,7 @@ async def admin_com(message:Message, commands:str):
 		elif command[0] == 'get':
 			names = [
 				[info async for info in db.passanger.admin_get_all()],
-				await db.driver.admin_get_all()
+				[info async for info in db.passanger.get_all_inform()]
 			]
 
 			csv_files = await csv.get_csv(names)
