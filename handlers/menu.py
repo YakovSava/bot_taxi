@@ -139,7 +139,7 @@ async def insert_promo_step1(message:Message):
 
 @vk.on.private_message(state=PromoState.promo)
 async def insert_promo_step2(message:Message):
-	if (await dispatcher.exists_promo(message.from_id)):
+	if (await dispatcher.exists_promo(message.text)):
 		if (await dispatcher.check_aipu(message.from_id)):
 			await message.answer('У вас не получиться зарегестрироваться второй раз, извините')
 		else:

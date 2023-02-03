@@ -50,12 +50,11 @@ async def reg_passanger_3(message:Message):
 @vk.on.private_message(state=PassangerRegState.promo)
 async def insert_promo(message:Message):
 	if message.text.lower() != 'пропустить шаг':
-		if (await dispatcher.exists_promo(message.from_id)):
+		if (await dispatcher.exists_promo(message.text)):
 			if (await dispatcher.check_aipu(message.from_id)):
 				await message.answer('У вас не получиться зарегестрироваться второй раз, извините')
 			else:
 				promo = await dispatcher.get_from_promo(message.text)
-				await vk.state_dispenser.delete(message.from_id)
 				await message.answer(f'Реферальный код от @id{promo} введён. Добро пожаловать!')
 				await db.driver.set_balance(promo, 10)
 				await vk.api.messages.send(
@@ -66,7 +65,9 @@ async def insert_promo(message:Message):
 				)
 				await dispatcher.add_insert_promo_user(message.from_id)
 		else:
-			await message.answer('Такого промокода нет. Попробуйте снова или пропустите шаг!')
+			return 'Такого промокода нет. Попробуйте снова или пропустите шаг!'
+	if (await vk.state_dispenser.get(message.from_id)) is not None:
+		await vk.state_dispenser.delete(message.from_id)
 	location = storage.get(f'{message.from_id}_location')
 	phone = storage.get(f'phone_{message.from_id}')
 	storage.delete(f'phone_{message.from_id}'); storage.delete(f'{message.from_id}_location')
@@ -74,7 +75,6 @@ async def insert_promo(message:Message):
 		user_ids = message.from_id,
 		fields = 'sex'
 	)
-	await vk.state_dispenser.delete(message.from_id)
 	await message.answer('Ваша анкета успешно создана!', keyboard = keyboards.choose_service)
 	await db.passanger.reg({ # Непосредственно регистрация
 		'vk': message.from_id,
@@ -168,4 +168,4 @@ async def driver_edit_profile(message:Message):
 @vk.on.private_message(payload = {'passanger': 1})
 async def reg_passanger_1(message:Message):
 	await vk.state_dispenser.set(message.from_id, PassangerRegState.phone)
-	await message.answer('Отправьте ваш телефон для связи с водителем!\n\nТелефон можно не указывать, однако тогда водитель не сможет связаться с Вами, когда подъедет к месту вызова!', keyboard=keyboards.inline.phone_pass_this_step)\
+	await message.answer('Отправьте ваш телефон для связи с водителем!\n\nТелефон можно не указывать, однако тогда водитель не сможет связаться с Вами, когда подъедет к месту вызова!', keyboard=keyboards.inline.phone_pass_this_step)

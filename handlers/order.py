@@ -1,10 +1,12 @@
+import asyncio
+
 from time import time, strftime, gmtime
 from vkbottle import CtxStorage, VKAPIError
 from vkbottle.bot import Message
 from plugins.keyboards import keyboards
 from plugins.states import TaxiState, DeliveryState
 from plugins.rules import *
-from .initializer import db, dispatcher
+from .initializer import db, dispatcher, binder
 from .menu import vk
 
 storage = CtxStorage()
@@ -48,12 +50,13 @@ async def passanger_cancelling_order(message:Message):
 async def driver_cancel_order(message:Message):
 	payload = eval(f'{message.payload}')
 	await db.driver.set_activity(message.from_id)
+	print(dispatcher.all_forms[payload['other']['key']]['data'])
 	await vk.api.messages.send(
 		user_id = payload['other']['from_id'],
 		peer_id = payload['other']['from_id'],
 		random_id = 0,
 		message = 'К сожалению водитель отменил заказ &#128542;\nВы можете заказать такси снова',
-		keyboard = keyboards.choose_service
+		keyboard = keyboards.repeat_order(dispatcher.all_forms[payload['other']['key']]['data'])
 	)
 	await dispatcher.stop_drive(payload['other']['key'])
 	await message.answer('&#9940; ВЫ ОТМЕНИЛИ ЗАКАЗ &#9940;\n\
@@ -137,7 +140,6 @@ async def taxi_tax(message:Message):
 	else:
 		await db.driver.set_activity(message.from_id)
 		if (await dispatcher.get(payload['other']['key']))['active']:
-			await dispatcher.set_order_names()
 			parameters = await binder.get_parameters() # Получаем параметры
 			driver_info = await db.driver.get(payload['other']['driver_id']) # Получаем информацию о водителе
 			if int(parameters['count']) <= int(driver_info[1]['balance']): # ПРоверяем есть ли у водителя деньги
@@ -174,7 +176,7 @@ async def taxi_tax(message:Message):
 				dispatcher.all_forms[payload['other']['key']]['data']['driver'] = driver_id
 				await asyncio.sleep(1)
 				call_driver = await message.answer('Звонок пассажиру (если звонки пассажиру разрешены)', keyboard=keyboards.inline.call(from_id, False))
-				dispatcher.all_forms[payload['other']['key']]['data']['call'] = [call_passanger, call_driver.message_id.as_integer_ratio]
+				dispatcher.all_forms[payload['other']['key']]['data']['call'] = [call_passanger, call_driver.message_id]
 			else:
 				await message.answer(f'На вашем балансе недостаточно средств\nСтоимость одной заявки: {parameters["count"]} руб.\nНа вашем балансе: {driver_info[1]["balance"]} руб.', keyboard = keyboards.inline.payments)
 		else:
@@ -208,7 +210,6 @@ async def driver_delivery(message:Message):
 			parameters = await binder.get_parameters()
 			driver_info = await db.driver.get(payload['other']['driver_id'])
 			if int(parameters['count']) <= int(driver_info[1]['balance']):
-				await dispatcher.set_order_names()
 				await db.driver.set_balance(message.from_id, -parameters['count'])
 				from_id, driver_id = payload['other']['from_id'], payload['other']['driver_id']
 				passanger = await db.passanger.get(from_id)
@@ -245,7 +246,7 @@ async def driver_delivery(message:Message):
 				dispatcher.all_forms[payload['other']['key']]['data']['driver'] = driver_id
 				await asyncio.sleep(1)
 				call_driver = await message.answer('Звонок пассажиру (если звонки пассажиру разрешены)', keyboard=keyboards.inline.call(from_id, False))
-				dispatcher.all_forms[payload['other']['key']]['data']['call'] = [call_passanger, call_driver.message_id.as_integer_ratio]
+				dispatcher.all_forms[payload['other']['key']]['data']['call'] = [call_passanger, call_driver.message_id]
 			else:
 				await message.answer(f'На вашем балансе недостаточно средств\nСтоимость одной заявки: {parameters["count"]} руб.\nНа вашем балансе: {driver_info[1]["balance"]} руб.', keyboard = keyboards.inline.payments)
 		else:
@@ -278,7 +279,8 @@ async def delivery_tax(message:Message):
 		except VKAPIError[901]:
 			pass
 	await message.answer(f'Твой запрос на доставку был доставлен {len(driver_ids)} водителям', keyboard = keyboards.cancel(key))
-	dispatcher.all_forms[key]['data'] = {'time': number_of_order, 'text': text, 'from_id': message.from_id, 'location': loc, 'driver': 0, 'call': None}
+	dispatcher.all_forms[key]['data'] = {'time': number_of_order, 'text': text, 'from_id': message.from_id, 'location': loc, 'driver': 0}
+	await vk.state_dispenser.delete(message.from_id)
 
 # Непосредственно заказ такси
 @vk.on.private_message(state = TaxiState.location)
@@ -307,7 +309,8 @@ async def taxi_call(message:Message):
 		except VKAPIError[901]:
 			pass
 	await message.answer(f'Ваш запрос был доставлен {len(driver_ids)} водителям\nОжидайте!', keyboard = keyboards.cancel(key)) # Активных было бы считать труднее
-	dispatcher.all_forms[key]['data'] = {'time': number_of_order, 'text': text, 'from_id': message.from_id, 'location': loc, 'driver': 0, 'call': None}
+	dispatcher.all_forms[key]['data'] = {'time': number_of_order, 'text': text, 'from_id': message.from_id, 'location': loc, 'driver': 0}
+	await vk.state_dispenser.delete(message.from_id)
 
 @vk.on.private_message(state = DeliveryState.three_quest)
 async def delivery_loc(message:Message):
@@ -349,6 +352,8 @@ async def repeat_order(message:Message):
 	off_driver_ids = await dispatcher.get_service_file()
 	driver_ids = [driver_id async for driver_id, driver_city in db.driver.get_all() if ((info['city'].lower() == driver_city.lower()) and (driver_id not in off_driver_ids))]
 	driver_ids.extend(await dispatcher.get_no_registred_drivers())
+	try: driver_ids.remove(payload['data']['driver'])
+	except ValueError: pass
 	for driver_id in driver_ids: # Шлём всем им оповещение
 		try:
 			await vk.api.messages.send(
@@ -361,4 +366,4 @@ async def repeat_order(message:Message):
 		except VKAPIError[901]:
 			pass
 	await message.answer(f'Ваш запрос был доставлен {len(driver_ids)} водителям\nОжидайте!', keyboard = keyboards.cancel(key)) # Активных было бы считать труднее
-	dispatcher.all_forms[key]['data'] = {'time': number_of_order, 'text': text, 'from_id': message.from_id, 'location': loc}
+	dispatcher.all_forms[key]['data'] = {'time': number_of_order, 'text': text, 'from_id': message.from_id, 'location': loc, 'driver': 0}

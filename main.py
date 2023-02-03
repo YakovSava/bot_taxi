@@ -40,9 +40,9 @@ async def no_command(message:Message):
 	passanger_is_exists = await db.passanger.exists(message.from_id) # проверка на регистрацию... Да, сделать синхронно -  не судьба
 	driver_is_exists = await db.driver.exists(message.from_id)
 	if passanger_is_exists:
-		await message.answer('Неизвестная команда', keyboard = keyboards.choose_service)
+		await message.answer('Неизвестная команда', keyboard=keyboards.choose_service)
 	elif driver_is_exists:
-		await message.answer('Неизвестная команда', keyboard = keyboards.driver_registartion_success)
+		await message.answer('Неизвестная команда', keyboard=keyboards.driver_registartion_success)
 	else:
 		await message.answer('Пользоваться ботом могут только зарегестрированные пользователи', keyboard=keyboards.start) # А это сообщение если человек не зарегестрирован
 

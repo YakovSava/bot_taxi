@@ -7,7 +7,6 @@ from time import time, strftime, gmtime
 from typing import Literal
 from random import randint, choice
 from string import ascii_letters
-from orjson import dumps, loads
 from vkbottle import API, VKAPIError
 from aiofiles import open as aiopen
 from plugins.database import Database # For annotation
@@ -54,15 +53,18 @@ class Dispatch:
 		if not exists('cache/promo.pylist'):
 			with open('cache/promo.pylist', 'w', encoding='utf-8') as newFile:
 				newFile.write('[]')
+		if not exists('cache/aipu.pylist'):
+			with open('cache/aipu.pylist', 'w', encoding='utf-8') as newFile:
+				newFile.write('[]')
 
 	async def _downoload_forms(self):
 		async with aiopen('cache/forms.json', 'r', encoding='utf-8') as form_getter:
-			forms = await form_getter.read()
-		self.all_forms = loads(f'{forms}')
+			forms = await form_getter.readline()
+		self.all_forms = eval(f'{forms}')
 
 	async def _backup(self):
 		async with aiopen('cache/forms.json', 'w', encoding='utf-8') as backup_file:
-			await backup_file.write(f'{dumps(self.all_forms).decode()}')
+			await backup_file.write(f'{self.all_forms}')
 
 	async def _get_key(self) -> str:
 		key = ''
@@ -416,6 +418,6 @@ class Dispatch:
 
 	async def add_insert_promo_user(self, new_id:int) -> None:
 		aipu = await self._already_insert_promo_users()
-		async with aiopen('cache/aipu.pylist', 'r', encoding='utf-8') as file:
+		async with aiopen('cache/aipu.pylist', 'w', encoding='utf-8') as file:
 			aipu.append(new_id)
 			await file.write(f'{aipu}')
