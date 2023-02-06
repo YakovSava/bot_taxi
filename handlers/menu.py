@@ -53,6 +53,8 @@ async def back(message:Message):
 
 @vk.on.private_message(payload = {'driver': 0, 'profie': 0})
 async def driver_profile(message:Message):
+	if (await vk.state_dispenser.get(message.from_id)) is not None:
+		await vk.state_dispenser.delete(message.from_id)
 	info = await db.driver.get(message.from_id)
 	parameters = await binder.get_parameters()
 	if info != [None, None]:

@@ -421,3 +421,15 @@ class Dispatch:
 		async with aiopen('cache/aipu.pylist', 'w', encoding='utf-8') as file:
 			aipu.append(new_id)
 			await file.write(f'{aipu}')
+
+	async def get_time(self):
+		hours, minutes = list(
+			map(
+				int,
+				strftime(
+					'%H:%M',
+					gmtime()
+				).split(':')
+			)
+		)
+		return f'{hours + 2}:{minutes}'
