@@ -1,6 +1,6 @@
 import asyncio
 
-from time import time, strftime, gmtime
+from time import time
 from vkbottle import CtxStorage, VKAPIError
 from vkbottle.bot import Message
 from plugins.keyboards import keyboards

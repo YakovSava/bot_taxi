@@ -185,7 +185,7 @@ class Database:
 			]
 			return list(
 				map(
-					lambda x: x[0] | x[1],
+					lambda x: dict(list(x[0].items()) + list(x[1].items())),
 					zip(all_data1, all_data2)
 				)
 			)

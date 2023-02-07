@@ -97,19 +97,31 @@ async def admin_com(message:Message, commands:str):
 					random_id=0,
 					message=message.text.split(' ', 2)[2]
 				)
-		elif command[0] == 'city':
+		elif command[0] == 'rate':
 			await dispatcher.set_rate_file(command.split(' ', 2)[-1])
 			await message.answer('Успешно изменено')
-		elif command[0] == 'stat':
-			await message.answer('В разработке...')
 		elif command[0] == 'time':
-			await message.answer(f'Текущее время: {strftime("%H:%M:%S", gmtime())}')
+			await message.answer(f'Серверное время: {strftime("%H:%M:%S", gmtime())}')
 		elif command[0] == 'add':
 			await dispatcher.add_and_update_drive(time() - (int(command[2])*24*60*60), int(command[1]))
 			await message.answer(f'Поездка водителя {command[1]} прошла {command[2]} дней назад')
 		elif command[0] == 'force':
 			await dispatcher.debug_spec_checker()
 			await message.answer('Принуительная проверка завершена')
+		elif command[0] == 'stat':
+			passangers, drivers = [rec async for rec in db.passanger.admin_get_all()], await db.driver.admin_get_all()
+			aipu = await dispatcher.already_insert_promo_users()
+			orders = list(map(
+				lambda x: max(list(x.items())[1]['3']),
+				(await dispatcher.get_database_of_times())
+			))
+			await message.answer(f'''Статистика
+Таблица водителей: http://45.8.230.39/drivers
+Таблица пассажиров: http://45.8.230.39/passangers
+Количество водителей: {len(drivers)}
+Количество водителей: {len(passangers)}
+Количество людей получивших промокоды: {len(aipu)} из {len(drivers) + len(passangers)} возможных
+Последний заказ был: {strftime('%m.%d %H:%M:%S', gmtime(max(orders)))}''')
 		else:
 			await message.answer('Неизвестная команда!')
 

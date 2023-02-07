@@ -66,7 +66,7 @@ async def get_drivers(request):
 async def get_passangers(request):
 	async with aiopen('table/passangers.html') as html:
 		html_text = await html.read()
-	all_drivers = await db.driver.admin_get_all()
+	all_drivers = [record async for record in db.passanger.admin_get_all()]
 	html_text = html_text.replace('{table}', '''<tr>
 					{VK}
 					{gender}

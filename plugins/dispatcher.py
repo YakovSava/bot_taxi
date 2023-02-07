@@ -221,7 +221,7 @@ class Dispatch:
 			await self.database.driver.set_qunatity(from_id)
 		else:
 			await self.database.passanger.set_qunatity(from_id)
-		old_database = await self._get_database()
+		old_database = await self.get_database_of_times()
 		if f'{from_id}' not in old_database:
 			old_database[f'{from_id}'] = {
 				'3': [],
@@ -254,11 +254,11 @@ class Dispatch:
 				asyncio.create_task(self._check3()),
 				asyncio.create_task(self._check5()),
 				asyncio.create_task(self._check_week()),
-				asyncio.create_task(self._check_monnth())
+				asyncio.create_task(self._check_month())
 			)
 
 	async def get_time_database(self, from_id:int) -> dict:
-		db = await self._get_database()
+		db = await self.get_database_of_times()
 		if f'{from_id}' not in db:
 			db[f'{from_id}'] = {
 				'3': [],
@@ -270,13 +270,13 @@ class Dispatch:
 				await file.write(f'{toml.dumps(db)}')
 		return db[f'{from_id}']
 
-	async def _get_database(self) -> dict:
+	async def get_database_of_times(self) -> dict:
 		async with aiopen('cache/time_database.toml', 'r', encoding='utf-8') as file:
 			lines = await file.read()
 		return toml.loads(f'{lines}')
 
 	async def _check3(self):
-		database = await self._get_database()
+		database = await self.get_database_of_times()
 		for id in list(database.items()):
 			for date in id[1]['3']:
 				if time() - date >= 3*24*60*60:
@@ -286,7 +286,7 @@ class Dispatch:
 		await asyncio.sleep(24*60*60)
 
 	async def _check5(self):
-		database = await self._get_database()
+		database = await self.get_database_of_times()
 		for id in list(database.items()):
 			for date in id[1]['5']:
 				if len(database[id]['5']) > 100 and (await self.database.driver.exists(int(id))):
@@ -304,7 +304,7 @@ class Dispatch:
 		await asyncio.sleep((24*60*60) + 10)
 
 	async def _check_week(self):
-		database = await self._get_database()
+		database = await self.get_database_of_times()
 		for id in list(database.items()):
 			for date in id[1]['week']:
 				if (time() - date >= 7*24*60*60) and (strftime('%A', gmtime()).lower() == 'sunday'):
@@ -314,7 +314,7 @@ class Dispatch:
 		await asyncio.sleep((24*60*60) + 20)
 
 	async def _check_month(self):
-		database = await self._get_database()
+		database = await self.get_database_of_times()
 		for id in list(database.items()):
 			for date in id[1]['month']:
 				if time() - date >= 30*24*60*60:
@@ -324,7 +324,7 @@ class Dispatch:
 		await asyncio.sleep((24*60*60) + 30)
 
 	async def debug_spec_checker(self):
-		database = await self._get_database()
+		database = await self.get_database_of_times()
 		for id in list(database.items()):
 			for date in id[1]['3']:
 				if time() - date >= 3*24*60*60:
@@ -409,15 +409,15 @@ class Dispatch:
 		return bool(await self.get_from_promo(promo))
 
 	async def check_aipu(self, from_id:int) -> bool:
-		return from_id in (await self._already_insert_promo_users())
+		return from_id in (await self.already_insert_promo_users())
 
-	async def _already_insert_promo_users(self) -> list:
+	async def already_insert_promo_users(self) -> list:
 		async with aiopen('cache/aipu.pylist', 'r', encoding='utf-8') as file:
 			lines = await file.read()
 		return eval(f'{lines}')
 
 	async def add_insert_promo_user(self, new_id:int) -> None:
-		aipu = await self._already_insert_promo_users()
+		aipu = await self.already_insert_promo_users()
 		async with aiopen('cache/aipu.pylist', 'w', encoding='utf-8') as file:
 			aipu.append(new_id)
 			await file.write(f'{aipu}')
