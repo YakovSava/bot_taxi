@@ -422,7 +422,7 @@ class Dispatch:
 			aipu.append(new_id)
 			await file.write(f'{aipu}')
 
-	async def get_time(self):
+	async def time(self):
 		hours, minutes = list(
 			map(
 				int,

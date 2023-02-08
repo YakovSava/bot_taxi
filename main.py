@@ -6,12 +6,12 @@ from handlers import *
 from plugins.keyboards import keyboards
 from server import run_app, Response, routes, app
 
-try:
-	from loguru import logger
-except ImportError:
-	pass
-else:
-	logger.disable("vkbottle")
+# try:
+# 	from loguru import logger
+# except ImportError:
+# 	pass
+# else:
+# 	logger.disable("vkbottle")
 
 try:
 	import logging
@@ -83,6 +83,6 @@ if __name__ == '__main__':
 
 	app.add_routes(routes)
 
-	timer.new_sync_task(run_app, app, host='45.8.230.39', port='80', loop=loop)
+	timer.new_sync_task(run_app, app, host='127.0.0.1', port='80', loop=loop)
 
 	loop.run_until_complete(runner_list)
