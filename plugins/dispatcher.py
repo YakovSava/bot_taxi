@@ -126,7 +126,7 @@ class Dispatch:
 
 	async def _form_timer(self, key:str) -> None:
 		form = self.all_forms[key]; counter = 0
-		while (counter != ((10*60) // 15)) and (form['in_drive'] and not form['active']):
+		while (counter != ((10*60) // 15)) and (not form['in_drive'] and form['active']):
 			await asyncio.sleep(15)
 			await self.api.messages.send(
 				user_id=form['from_id'],
@@ -135,9 +135,9 @@ class Dispatch:
 				message='Идёт поиск водителя'
 			)
 			counter += 1
-			if (form['in_drive'] and not form['active']):
+			if (not form['in_drive'] and form['active']):
 				break
-		if (form['in_drive'] and not form['active']):
+		if (not form['in_drive'] and form['active']):
 			await self.stop_form(key)
 
 	async def cache_cleaner(self) -> None:
@@ -150,7 +150,7 @@ class Dispatch:
 		asyncio.run(self._backup())
 
 	async def checker(self) -> None:
-		# await asyncio.sleep(20) # Debug mode
+		await asyncio.sleep(20)
 		while True:
 			service_file = await self.get_service_file()
 			all_chats = await self.api.messages.get_conversations(
@@ -432,4 +432,4 @@ class Dispatch:
 				).split(':')
 			)
 		)
-		return f'{hours + 2}:{minutes}'
+		return f'{hours + 3}:{minutes}'

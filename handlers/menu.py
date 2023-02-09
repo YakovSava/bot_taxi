@@ -7,6 +7,8 @@ from .registration import vk
 
 @vk.on.private_message(text = 'начать')
 async def start_handler(message:Message):
+	if (await vk.state_dispenser.get(message.from_id)) is not None:
+		await vk.state_dispenser.delete(message.from_id)
 	user = await vk.api.users.get(message.from_id)
 	if (await db.passanger.exists(message.from_id)):
 		await message.answer('Вы уже зарегестрированы как пассажир!', keyboard = keyboards.choose_service)
@@ -20,11 +22,15 @@ async def start_handler(message:Message):
 
 @vk.on.private_message(payload = {'driver': 0, 'post_reg': 0})
 async def driver_post_edit(message:Message):
+	if (await vk.state_dispenser.get(message.from_id)) is not None:
+		await vk.state_dispenser.delete(message.from_id)
 	await db.driver.set_activity(message.from_id)
 	await message.answer('Ожидайте новых заявок', keyboard = keyboards.driver_registartion_success)
 
 @vk.on.private_message(payload={'back': 0, 'not user': 0})
 async def back(message:Message):
+	if (await vk.state_dispenser.get(message.from_id)) is not None:
+		await vk.state_dispenser.delete(message.from_id)
 	if (await db.passanger.exists(message.from_id)):
 		await message.answer('Что бы продолжить нажмите на кнопку ниже', keyboard = keyboards.choose_service)
 	elif (await db.driver.exists(message.from_id)):
@@ -77,6 +83,8 @@ async def driver_profile(message:Message):
 
 @vk.on.private_message(OffAccountRule())
 async def off_driver(message:Message):
+	if (await vk.state_dispenser.get(message.from_id)) is not None:
+		await vk.state_dispenser.delete(message.from_id)
 	# await dispatcher.off_account(message.from_id)
 	await message.answer('Ваш аккаунт был отключён, больше вам не будут присылать некоторые сообщения', keyboard=keyboards.account_is_off)
 	if (await db.passanger.get(message.from_id)) is None:

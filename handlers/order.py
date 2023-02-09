@@ -62,6 +62,37 @@ async def driver_cancel_order(message:Message):
 	await message.answer('&#9940; ВЫ ОТМЕНИЛИ ЗАКАЗ &#9940;\n\
 За возвратом средств за заявку, обратись к администратору группы.', keyboard = keyboards.driver_registartion_success)
 
+@vk.on.private_message(payload = {'delivery': 0})
+async def get_delivery(message:Message):
+	if (await vk.state_dispenser.get(message.from_id)) is not None:
+		await vk.state_dispenser.delete(message.from_id)
+	await vk.state_dispenser.set(message.from_id, DeliveryState.three_quest)
+	await message.answer('Для заказа, в одном сообщении, напиши:\n\
+1 - Что и в каком магазине купить.\n\
+2 - Куда нужно отвезти.\n\
+3- Сколько ты готов заплатить за доставку.\n\n\
+Учти, чем меньше цену доставки ты предложишь, тем дольше будешь искать курьера.')
+
+@vk.on.private_message(payload = {'taxi': 0})
+async def passanger_get_taxi_def(message:Message):
+	if (await vk.state_dispenser.get(message.from_id)) is not None:
+		await vk.state_dispenser.delete(message.from_id)
+	await vk.state_dispenser.set(message.from_id, TaxiState.four_quest)
+	await message.answer('Ставь заявку так, чтобы водителям было максимально понятно твоё сообщение!\n\
+\n\
+1 - Напиши откуда и куда планируешь ехать.\n\
+2 - Сколько человек поедет, будут ли дети.\n\
+3 - Напиши подъезд.\n\
+4 - Добавь комментарий к вызову.\n\
+5 - Если нужно, напиши время, к которому нужно подать такси.\n\
+\n\
+ПРИМЕР ЗАЯВКИ:\n\
+От ул. Ленина 8\n\
+До ул. Мира 12\n\
+Подъезд 1\n\
+Поедет 2 взрослых и 1 ребёнок\n\
+Подать машину к 12.30')
+
 @vk.on.private_message(DriverSuccess())
 async def driver_success_order(message:Message):
 	payload = eval(f'{message.payload}')
@@ -206,7 +237,7 @@ async def taxi_tax(message:Message):
 			else:
 				await message.answer(f'На вашем балансе недостаточно средств\nСтоимость одной заявки: {parameters["count"]} руб.\nНа вашем балансе: {driver_info[1]["balance"]} руб.', keyboard = keyboards.inline.payments)
 		else:
-			await message.answer(f'Заявку №{payload["data"]["time"]} уже принял другой водитель!', keyboard=keyboards.driver_registartion_success)
+			await message.answer(f'Заявку уже принял другой водитель!', keyboard=keyboards.driver_registartion_success)
 
 # Принимаем доставку
 @vk.on.private_message(Delivery())
@@ -300,7 +331,7 @@ async def driver_delivery(message:Message):
 			else:
 				await message.answer(f'На вашем балансе недостаточно средств\nСтоимость одной заявки: {parameters["count"]} руб.\nНа вашем балансе: {driver_info[1]["balance"]} руб.', keyboard = keyboards.inline.payments)
 		else:
-			await message.answer(f'Заявку №{payload["data"]["time"]} уже принял другой водитель!', keyboard=keyboards.driver_registartion_success)
+			await message.answer(f'Заявку уже принял другой водитель!', keyboard=keyboards.driver_registartion_success)
 
 @vk.on.private_message(state = DeliveryState.location)
 async def delivery_tax(message:Message):
@@ -372,33 +403,6 @@ async def taxi_geo(message:Message):
 	storage.set(f'{message.from_id}_taxi_get_question', message.text)
 	await vk.state_dispenser.set(message.from_id, TaxiState.location)
 	await message.answer('Теперь пришлите вашу геолокацию', keyboard = keyboards.inline.location)
-
-@vk.on.private_message(payload = {'delivery': 0})
-async def get_delivery(message:Message):
-	await vk.state_dispenser.set(message.from_id, DeliveryState.three_quest)
-	await message.answer('Для заказа, в одном сообщении, напиши:\n\
-1 - Что и в каком магазине купить.\n\
-2 - Куда нужно отвезти.\n\
-3- Сколько ты готов заплатить за доставку.\n\n\
-Учти, чем меньше цену доставки ты предложишь, тем дольше будешь искать курьера.')
-
-@vk.on.private_message(payload = {'taxi': 0})
-async def passanger_get_taxi_def(message:Message):
-	await vk.state_dispenser.set(message.from_id, TaxiState.four_quest)
-	await message.answer('Ставь заявку так, чтобы водителям было максимально понятно твоё сообщение!\n\
-\n\
-1 - Напиши откуда и куда планируешь ехать.\n\
-2 - Сколько человек поедет, будут ли дети.\n\
-3 - Напиши подъезд.\n\
-4 - Добавь комментарий к вызову.\n\
-5 - Если нужно, напиши время, к которому нужно подать такси.\n\
-\n\
-ПРИМЕР ЗАЯВКИ:\n\
-От ул. Ленина 8\n\
-До ул. Мира 12\n\
-Подъезд 1\n\
-Поедет 2 взрослых и 1 ребёнок\n\
-Подать машину к 12.30')
 
 @vk.on.private_message(Repeater())
 async def repeat_order(message:Message):
