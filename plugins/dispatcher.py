@@ -2,7 +2,7 @@ import asyncio
 import toml
 
 from os.path import exists
-from threading import Thread
+from  multiprocessing import Process
 from time import time, strftime, gmtime
 from typing import Literal
 from random import randint, choice
@@ -32,8 +32,8 @@ class Dispatch:
 		if not exists('cache/forms.json'):
 			with open('cache/forms.json', 'w', encoding='utf-8') as file:
 				file.write('{}')
-		loop = asyncio.new_event_loop()
-		loop.run_until_complete(self._downoload_forms())
+		self.loop = asyncio.new_event_loop()
+		self.loop.run_until_complete(self._downoload_forms())
 		
 		if not exists('cache/orders.pyint'):
 			with open('cache/orders.pyint', 'w', encoding='utf-8') as newFile:
@@ -75,8 +75,7 @@ class Dispatch:
 	async def new_form(self, from_id:str) -> None:
 		key = await self._get_key()
 		self.all_forms[key] = {'from_id': from_id, 'driver_id': 0, 'active': True, 'in_drive': False, 'data': 0}
-		thread = Thread(target=self._form_timer_starter, args=(key,))
-		thread.start()
+		asyncio.run_coroutine_threadsafe(self._form_timer(key), self.loop)
 		return key
 
 	async def start_drive(self, key:str, driver_id:int) -> None:
@@ -96,7 +95,7 @@ class Dispatch:
 			pass
 		await self._backup()
 
-	async def stop_form(self, key:str, data:dict, cancel:bool=False) -> None:
+	async def stop_form(self, key:str, cancel:bool=False) -> None:
 		if not cancel:
 			await self.api.messages.send(
 				user_id=self.all_forms[key]['from_id'],
@@ -121,11 +120,9 @@ class Dispatch:
 		await self._backup()
 		return self.all_forms[key]
 
-	def _form_timer_starter(self, *args) -> None:
-		asyncio.run(self._form_timer(*args))
-
 	async def _form_timer(self, key:str) -> None:
 		form = self.all_forms[key]; counter = 0
+		print(form['in_drive'], form['active']); print(counter, ((10*60) // 15)); print(counter != ((10*60) // 15))
 		while (counter != ((10*60) // 15)) and (not form['in_drive'] and form['active']):
 			await asyncio.sleep(15)
 			await self.api.messages.send(
@@ -135,7 +132,7 @@ class Dispatch:
 				message='Идёт поиск водителя'
 			)
 			counter += 1
-			if (not form['in_drive'] and form['active']):
+			if (form['in_drive']) and (form['active']):
 				break
 		if (not form['in_drive'] and form['active']):
 			await self.stop_form(key)
