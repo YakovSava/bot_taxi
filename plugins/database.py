@@ -24,12 +24,13 @@ class Database:
 
 		async def _create_table(self):
 			await self.cursor.execute('''CREATE TABLE if not exists passanger (
-				VK text,
-				gender text,
-				city text,
-				name text,
-				phone text,
-				quantity integer
+				VK TEXT,
+				gender TEXT,
+				city TEXT,
+				name TEXT,
+				phone TEXT,
+				quantity INTEGER,
+				balance INTEGER
 		)''')
 			await self.db.commit()
 
@@ -91,22 +92,22 @@ class Database:
 
 		async def _create_table(self):
 			await self.cursor.execute('''CREATE TABLE if not exists driver (
-				VK text,
-				status integer,
-				gender text,
-				city text,
-				name text,
-				phone text,
-				auto text,
-				color text,
-				state_number text,
-				first_activity text
+				VK TEXT,
+				status INTEGER,
+				gender TEXT,
+				city TEXT,
+				name TEXT,
+				phone TEXT,
+				auto TEXT,
+				color TEXT,
+				state_number TEXT,
+				first_activity TEXT
 	)''')
 			await self.cursor.execute('''CREATE TABLE if not exists driver2 (
-				VK text,
-				last_activity text,
-				quantity integer,
-				balance bigint
+				VK TEXT,
+				last_activity TEXT,
+				quantity INTEGER,
+				balance BIGINT
 	)''')
 			await self.db.commit()
 

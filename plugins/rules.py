@@ -160,3 +160,15 @@ class Repeater(ABCRule[Message]):
 			return False
 		else:
 			return True
+
+
+class QuantityRule(ABCRule[Message]):
+	async def check(self, message:Message):
+		return 'сколько' in message.text.lower()
+
+class BonusPay(ABCRule[Message]):
+	async def check(self, message:Message):
+		payload = eval(f'{message.payload}')
+		try: payload['user'], payload['pay'], payload['bonus']
+		except: return True
+		else: return True

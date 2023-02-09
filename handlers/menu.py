@@ -1,7 +1,7 @@
 from vkbottle.bot import Message
 from plugins.keyboards import keyboards
 from plugins.states import DriverRegState, PromoState
-from plugins.rules import OffAccountRule, DeleteAccount
+from plugins.rules import OffAccountRule, DeleteAccount, QuantityRule
 from .initializer import db, dispatcher, binder
 from .registration import vk
 
@@ -127,7 +127,7 @@ async def user_profile(message:Message):
 async def passanger_back(message:Message):
 	await message.answer('Готово!\nВыбери услугу:', keyboard = keyboards.choose_service)
 
-@vk.on.private_message(text='тариф')
+@vk.on.private_message(QuantityRule())
 async def rate_on_city(message:Message):
 	ratetext = await dispatcher.get_rate()
 	await message.answer(f'Текущие тарифы:\n{ratetext}')
