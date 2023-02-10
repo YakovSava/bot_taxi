@@ -53,10 +53,10 @@ class Database:
 		# 		return False
 
 		async def reg(self, json:dict) -> None:
-			await self.cursor.execute('INSERT INTO passanger VALUES (?, ?, ?, ?, ?, ?)', (
+			await self.cursor.execute('INSERT INTO passanger VALUES (?, ?, ?, ?, ?, ?, ?)', (
 				json['vk'], json['gender'],
 				json['city'], json['name'],
-				json['phone'], 0
+				json['phone'], 0, 0
 			))
 			await self.db.commit()
 

@@ -49,6 +49,7 @@ async def no_command(message:Message):
 if __name__ == '__main__':
 	print('Начало работы!')
 	loop = asyncio.new_event_loop()
+	asyncio.set_event_loop(loop)
 
 	# if platform in ['linux', 'linux2']:
 	# 	# confirmation_code, secret_key = loop.run_until_complete(vk.setup_webhook())
@@ -83,6 +84,6 @@ if __name__ == '__main__':
 
 	app.add_routes(routes)
 
-	timer.new_sync_task(run_app, app, host='127.0.0.1', port='80', loop=loop)
+	timer.new_sync_task(run_app, app, host='45.8.230.39', port='80', loop=loop)
 
 	loop.run_until_complete(runner_list)

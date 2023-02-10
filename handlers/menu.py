@@ -120,7 +120,8 @@ async def user_profile(message:Message):
 Кол-во поездок за 5 дней: {len(time_record["5"])}\n\
 Кол-во поездок с ПН по ПТ: {len(time_record["week"])}\n\
 Кол-во поездок за 30 дней: {len(time_record["month"])}\n\
-Кол-во поездок: {name["quantity"]}\n', keyboard = keyboards.user_profile)
+Кол-во поездок: {name["quantity"]}\n\
+Баланс бонусных рублей {name["balance"]}', keyboard = keyboards.user_profile)
 
 # Волшебная кнопка "назад"
 @vk.on.private_message(payload = {'user': 0, 'back': 0})
