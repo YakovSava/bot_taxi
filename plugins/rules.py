@@ -170,5 +170,12 @@ class BonusPay(ABCRule[Message]):
 	async def check(self, message:Message):
 		payload = eval(f'{message.payload}')
 		try: payload['user'], payload['pay'], payload['bonus']
-		except: return True
+		except: return False
+		else: return True
+
+class PassangerPayBonus(ABCRule[Message]):
+	async def check(self, message:Message):
+		payload = eval(f'{message.payload}')
+		try: payload['passanger'], payload['pay']
+		except: return False
 		else: return True

@@ -6,12 +6,12 @@ from handlers import *
 from plugins.keyboards import keyboards
 from server import run_app, Response, routes, app
 
-# try:
-# 	from loguru import logger
-# except ImportError:
-# 	pass
-# else:
-# 	logger.disable("vkbottle")
+try:
+	from loguru import logger
+except ImportError:
+	pass
+else:
+	logger.disable("vkbottle")
 
 try:
 	import logging

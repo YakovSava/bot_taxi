@@ -178,9 +178,8 @@ async def taxi_tax(message:Message):
 			driver_info = await db.driver.get(payload['other']['driver_id']) # Получаем информацию о водителе
 			if int(parameters['count']) <= int(driver_info[1]['balance']): # ПРоверяем есть ли у водителя деньги
 				await db.driver.set_balance(message.from_id, -parameters['count'])
-				from_id, driver_id=payload['other']['from_id'], payload['other']['driver_id']
+				from_id, driver_id = payload['other']['from_id'], payload['other']['driver_id']
 				passanger = await db.passanger.get(from_id)
-				passanger_info = await db.passanger.get(message.from_id)
 				if driver_info[0]["phone"][:3] == "@id":
 					await vk.api.messages.send(
 						user_id=from_id,
@@ -191,7 +190,7 @@ async def taxi_tax(message:Message):
 Цвет: {driver_info[0]["color"]}\n\
 Госномер: {driver_info[0]["state_number"]}\n\
 В конце поездки нажми "Успешно доехал"',
-						keyboard=keyboards.passanger_get_taxi(payload['other']['key'], passanger_info['balance'] >= 100)
+						keyboard=keyboards.passanger_get_taxi(payload['other']['key'], passanger['balance'] >= 100)
 					)
 					await asyncio.sleep(1)
 					call_passanger = await vk.api.messages.send(
@@ -212,7 +211,7 @@ async def taxi_tax(message:Message):
 Цвет: {driver_info[0]["color"]}\n\
 Госномер: {driver_info[0]["state_number"]}\n\
 В конце поездки нажми "Успешно доехал"',
-						keyboard=keyboards.passanger_get_taxi(payload['other']['key'], passanger_info['balance'] >= 100)
+						keyboard=keyboards.passanger_get_taxi(payload['other']['key'], passanger['balance'] >= 100)
 					)
 					await asyncio.sleep(1)
 					call_passanger = await vk.api.messages.send(
@@ -274,7 +273,6 @@ async def driver_delivery(message:Message):
 				await db.driver.set_balance(message.from_id, -parameters['count'])
 				from_id, driver_id=payload['other']['from_id'], payload['other']['driver_id']
 				passanger = await db.passanger.get(from_id)
-				passanger_info = await db.passanger.get(message.from_id)
 				if driver_info[0]["phone"][:3] == "@id":
 					await vk.api.messages.send(
 						user_id=from_id,
@@ -285,7 +283,7 @@ async def driver_delivery(message:Message):
 Цвет: {driver_info[0]["color"]}\n\
 Госномер: {driver_info[0]["state_number"]}\n\
 В конце поездки нажми "Успешно доехал"',
-						keyboard=keyboards.passanger_get_taxi(payload['other']['key'], passanger_info['balance'] >= 100)
+						keyboard=keyboards.passanger_get_taxi(payload['other']['key'], passanger['balance'] >= 100)
 					)
 					await asyncio.sleep(1)
 					call_passanger = await vk.api.messages.send(
@@ -306,7 +304,7 @@ async def driver_delivery(message:Message):
 Цвет: {driver_info[0]["color"]}\n\
 Госномер: {driver_info[0]["state_number"]}\n\
 В конце поездки нажми "Успешно доехал"',
-						keyboard=keyboards.passanger_get_taxi(payload['other']['key'], passanger_info['balance'] >= 100)
+						keyboard=keyboards.passanger_get_taxi(payload['other']['key'], passanger['balance'] >= 100)
 					)
 					await asyncio.sleep(1)
 					call_passanger = await vk.api.messages.send(
@@ -440,6 +438,21 @@ async def repeat_order(message:Message):
 async def passanger_pay_bonus(message:Message):
 	passanger_info = await db.passanger.get(message.from_id)
 	if passanger_info['balance'] >= 100:
-		await message.answer('У вас накопилось 100 и более бонусных рублей. Хотите ли вы ими оплатить проезд по городу?', keyboard=keyboards.pay_bonus(eval(f'{message.payload}')['key']))
+		await message.answer('У вас накопилось 100 и более бонусных рублей. Хотите ли вы ими оплатить проезд по городу?\n\nВНИМАНИЕ\nВодитель должен быть не против оплаты бонусами!', keyboard=keyboards.pay_bonus(eval(f'{message.payload}')['key']))
 	else:
 		await message.answer('Подтверждение действия...', keyboard=keyboards.passanger_get_taxi(eval(f'{message.payload}')['key'], False))
+
+@vk.on.private_message(PassangerPayBonus())
+async def pasanger_pays_bomuses(message:Message):
+	payload = eval(f'{message.payload}')
+	form = dispatcher.all_forms[payload['key']]
+	await db.driver.set_balance(form['driver_id'], 100)
+	await db.passanger.set_balance(message.from_id, -100)
+	await message.answer('Вы успешно оплатили поездку бонусными рублями!', keyboard=keyboards.choose_service)
+	await vk.api.messages.send(
+		user_id=form['driver_id'],
+		peer_id=form['driver_id'],
+		random_id=0,
+		message='Пассажир оплатил поездку бонусными рублями, которые зачислились вам на баланс.\nЕсли вы против подобного или пассажир оплатил наличкой в машине, обратитесь в техподдержку',
+		keyboard=keyboards.driver_registartion_success
+	)

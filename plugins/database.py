@@ -76,6 +76,12 @@ class Database:
 				if info is not None: 
 					yield info
 
+		async def set_balance(self, vk:str, set:int) -> None:
+			await self.cursor.execute(f'SELECT balance FROM passanger WHERE VK = "{vk}"')
+			last = int((await self.cursor.fetchone())['balance'])
+			await self.cursor.execute(f'UPDATE passanger SET balance = {last + set} WHERE VK = "{vk}"')
+			await self.db.commit()
+
 
 	class _driver:
 
