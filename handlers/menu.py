@@ -155,15 +155,18 @@ async def insert_promo_step2(message:Message):
 			await message.answer('У вас не получиться зарегестрироваться второй раз, извините')
 		else:
 			promo = await dispatcher.get_from_promo(message.text)
-			await vk.state_dispenser.delete(message.from_id)
-			await message.answer(f'Реферальный код от @id{promo} введён. Добро пожаловать!')
-			await db.driver.set_balance(promo, 10)
-			await vk.api.messages.send(
-				user_id=promo,
-				peer_id=promo,
-				random_id=0,
-				message=f'По вашему реферальному коду успешно зарегестрировался пользователь @id{message.from_id}'
-			)
-			await dispatcher.add_insert_promo_user(message.from_id)
+			if promo == message.from_id:
+				await message.answer('Нельзя регестрирвоаться, на свой же промокод')
+			else:
+				await vk.state_dispenser.delete(message.from_id)
+				await message.answer(f'Реферальный код от @id{promo} введён. Добро пожаловать!')
+				await db.driver.set_balance(promo, 10)
+				await vk.api.messages.send(
+					user_id=promo,
+					peer_id=promo,
+					random_id=0,
+					message=f'По вашему реферальному коду успешно зарегестрировался пользователь @id{message.from_id}'
+				)
+				await dispatcher.add_insert_promo_user(message.from_id)
 	else:
 		await message.answer('Такого промокода нет. Попробуйте снова!', keyboard=keyboards.promo_back(await db.driver.exists(message.from_id)))

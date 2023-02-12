@@ -124,7 +124,7 @@ async def will_arived_with_minutes_with_minute(message:Message):
 @vk.on.private_message(Arrived())
 async def will_arrived(message:Message):
 	payload = eval(f'{message.payload}')
-	passanger_info = await db.passanger.get(message.from_id)
+	passanger_info = await db.passanger.get(payload['other']['from_id'])
 	await db.driver.set_activity(message.from_id)
 	await message.answer('Сообщение отправлено пассажиру!')
 	await vk.api.messages.send(
@@ -240,7 +240,7 @@ async def taxi_tax(message:Message):
 			else:
 				await message.answer(f'На вашем балансе недостаточно средств\nСтоимость одной заявки: {parameters["count"]} руб.\nНа вашем балансе: {driver_info[1]["balance"]} руб.', keyboard=keyboards.inline.payments)
 		else:
-			await message.answer(f'Заявку уже принял другой водитель!', keyboard=keyboards.driver_registartion_success)
+			await message.answer(f'Пассажир отменил вызов или эту заявку уже принял другой водитель.', keyboard=keyboards.driver_registartion_success)
 
 # Принимаем доставку
 @vk.on.private_message(Delivery())
@@ -334,7 +334,7 @@ async def driver_delivery(message:Message):
 			else:
 				await message.answer(f'На вашем балансе недостаточно средств\nСтоимость одной заявки: {parameters["count"]} руб.\nНа вашем балансе: {driver_info[1]["balance"]} руб.', keyboard=keyboards.inline.payments)
 		else:
-			await message.answer(f'Заявку уже принял другой водитель!', keyboard=keyboards.driver_registartion_success)
+			await message.answer(f'Пассажир отменил вызов или эту заявку уже принял другой водитель.', keyboard=keyboards.driver_registartion_success)
 
 @vk.on.private_message(state = DeliveryState.location)
 async def delivery_tax(message:Message):
