@@ -132,7 +132,7 @@ class keyboards:
 	starter=Keyboard(one_time = True).add(Text('Начать'), color=KeyboardButtonColor.PRIMARY).get_json()
 	location = Keyboard(one_time = True).add(Location(), color=KeyboardButtonColor.PRIMARY).get_json()
 	driver_order_complete_will_arrive = lambda link: (Keyboard(one_time = False)
-		.add(Text('Выходите', payload={'driver': 0, 'arrived': 0, 'other': link}))
+		.add(Text('Выходите', payload={'driver': 0, 'arrived': 0, 'other': link}), color=KeyboardButtonColor.PRIMARY)
 		.row()
 		.add(Text('Заказ выполнен &#128526;', payload={'driver': 0, 'success': 0, 'other': link}), color=KeyboardButtonColor.POSITIVE)
 		.row()

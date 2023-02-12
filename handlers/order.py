@@ -55,12 +55,12 @@ async def driver_cancel_order(message:Message):
 		user_id=payload['other']['from_id'],
 		peer_id=payload['other']['from_id'],
 		random_id=0,
-		message = 'К сожалению водитель отменил заказ &#128542;\nВы можете заказать такси снова',
+		message = 'К сожалению водитель отменил заказ &#128542;\nВы можете заказать такси снова.\n\
+Вы можете заказать такси снова, для этого нажмите кнопку "повторить вызов"',
 		keyboard=keyboards.repeat_order(dispatcher.all_forms[payload['other']['key']]['data'])
 	)
 	await dispatcher.stop_drive(payload['other']['key'])
-	await message.answer('&#9940; ВЫ ОТМЕНИЛИ ЗАКАЗ &#9940;\n\
-За возвратом средств за заявку, обратись к администратору группы.', keyboard=keyboards.driver_registartion_success)
+	await message.answer('&#9940; ВЫ ОТМЕНИЛИ ЗАКАЗ &#9940;', keyboard=keyboards.driver_registartion_success)
 
 @vk.on.private_message(payload = {'delivery': 0})
 async def get_delivery(message:Message):
@@ -102,7 +102,7 @@ async def driver_success_order(message:Message):
 		user_id=payload['other']['from_id'],
 		peer_id=payload['other']['from_id'],
 		random_id=0,
-		message = 'Водитель заявил о том что вы доехали',
+		message = 'Водитель заявил, что вы успешно доехали',
 		keyboard=keyboards.choose_service
 	)
 	await dispatcher.stop_drive(payload['other']['from_id'])
@@ -118,7 +118,7 @@ async def will_arived_with_minutes_with_minute(message:Message):
 		user_id=payload['other']['from_id'],
 		peer_id=payload['other']['from_id'],
 		random_id=0,
-		message = f'Водитель прибудет через {payload["minute"]} минут!'
+		message=f'Водитель прибудет через {payload["minute"]} минут!'
 	)
 
 @vk.on.private_message(Arrived())
@@ -131,7 +131,7 @@ async def will_arrived(message:Message):
 		user_id=payload['other']['from_id'],
 		peer_id=payload['other']['from_id'],
 		random_id=0,
-		message = f'Водитель прибыл, выходите!',
+		message=f'Водитель прибыл, выходите!',
 		keyboard=keyboards.passanger_get_taxi_and_driver_will_arrived(payload['other']['key'], passanger_info['balance'] >= 100)
 	)
 
@@ -271,7 +271,7 @@ async def driver_delivery(message:Message):
 			driver_info = await db.driver.get(payload['other']['driver_id'])
 			if int(parameters['count']) <= int(driver_info[1]['balance']):
 				await db.driver.set_balance(message.from_id, -parameters['count'])
-				from_id, driver_id=payload['other']['from_id'], payload['other']['driver_id']
+				from_id, driver_id = payload['other']['from_id'], payload['other']['driver_id']
 				passanger = await db.passanger.get(from_id)
 				if driver_info[0]["phone"][:3] == "@id":
 					await vk.api.messages.send(
@@ -356,7 +356,7 @@ async def delivery_tax(message:Message):
 				user_id=driver_id,
 				from_id=driver_id,
 				random_id=0,
-				message = f'&#128640;&#128640;&#128640; Новая доставка №{number_of_order}! &#128640;&#128640;&#128640;\n\nАДРЕС: {text}\n\nЖми кнопку &#128071;, "принять заявку"!',
+				message=f'&#128640;&#128640;&#128640; Новая доставка №{number_of_order}!\n\nАДРЕС: {text}\n\nЖми кнопку &#128071;, "принять заявку"!',
 				keyboard=keyboards.inline.delivery_driver({'from_id': message.from_id, 'driver_id': driver_id, 'location': loc, 'text': text, 'key': key, 'time': number_of_order})
 			)
 		except VKAPIError[901]:
@@ -386,7 +386,7 @@ async def taxi_call(message:Message):
 				user_id=driver_id,
 				from_id=driver_id,
 				random_id=0,
-				message = f'&#128293;&#128293;&#128293; Новый заказ №{number_of_order}! &#128293;&#128293;&#128293;\n\nАДРЕС: {text}\n\nЖми кнопку &#128071;, "принять заявку"!',
+				message=f'&#128293;&#128293;&#128293; Новый заказ №{number_of_order}!\n\nАДРЕС: {text}\n\nЖми кнопку &#128071;, "принять заявку"!',
 				keyboard=keyboards.inline.driver_new_order({'from_id': message.from_id, 'driver_id': driver_id, 'location': loc, 'text': text, 'key': key, 'time': number_of_order}) # P.s. смотрите файл /plugins/keyboards.py
 			)
 		except VKAPIError[901]:
