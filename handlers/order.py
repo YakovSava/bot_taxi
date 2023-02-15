@@ -170,6 +170,9 @@ async def taxi_tax(message:Message):
 		elif state_num == 4:
 			resume = 'госномер автомобиля!'
 			keyboard=keyboards.empty
+		elif state_num is None:
+			resume = 'перерегестрируйтесь!'
+			keyboard = keyboards.empty
 		await message.answer(f'Твоя анкета водителя заполнена не до конца!\n\nЗаверши создание анкеты чтобы брать заявки.\nНапиши свой {resume}', keyboard=keyboard)
 	else:
 		await db.driver.set_activity(message.from_id)
@@ -263,6 +266,9 @@ async def driver_delivery(message:Message):
 		elif state_num == 4:
 			resume = 'госномер автомобиля!'
 			keyboard=keyboards.empty
+		elif state_num is None:
+			resume = 'перерегестрируйтесь!'
+			keyboard = keyboards.empty
 		await message.answer(f'Твоя анкета водителя заполнена не до конца!\n\nЗаверши создание анкеты чтобы брать заявки.\nНапиши свой {resume}', keyboard=keyboard)
 	else:
 		await db.driver.set_activity(message.from_id)
