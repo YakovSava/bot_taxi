@@ -171,6 +171,11 @@ class keyboards:
 		.row()
 		.add(Text('Не оплачивать бонусами', payload={'user': 0, 'success': 0, 'key': key}), color=KeyboardButtonColor.PRIMARY)
 	).get_json()
+	driver_arrive_ = lambda link: (Keyboard()
+		.add(Text('Заказ выполнен &#128526;', payload={'driver': 0, 'success': 0, 'other': link}), color=KeyboardButtonColor.POSITIVE)
+		.row()
+		.add(Text('Отказаться от заказа', payload={'driver': 0, 'cancel': 0, 'other': link}), color=KeyboardButtonColor.NEGATIVE)
+	).get_json()
 
 	def construct(keyboard_texts:list, keyboard_action:list, payload:list, **kwargs): # Это конструктор клавиатур для людей которые не ссильно разбираются в vkbottle, но которые будт поддерживать этот проект в будущем
 		keyboard_object = Keyboard(**kwargs)

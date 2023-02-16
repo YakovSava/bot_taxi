@@ -55,8 +55,9 @@ async def driver_cancel_order(message:Message):
 		user_id=payload['other']['from_id'],
 		peer_id=payload['other']['from_id'],
 		random_id=0,
-		message = 'К сожалению водитель отменил заказ &#128542;\nВы можете заказать такси снова.\n\
-Вы можете заказать такси снова, для этого нажмите кнопку "повторить вызов"',
+		message = 'К сожалению водитель отказался от заявки.\n\n\
+Вы можете повторить последний вызов, заявку которого получают все кроме отказавшегося водителя.\n\
+Для этого нажмите кнопку "Повторить вызов"',
 		keyboard=keyboards.repeat_order(dispatcher.all_forms[payload['other']['key']]['data'])
 	)
 	await dispatcher.stop_drive(payload['other']['key'])
@@ -126,7 +127,7 @@ async def will_arrived(message:Message):
 	payload = eval(f'{message.payload}')
 	passanger_info = await db.passanger.get(payload['other']['from_id'])
 	await db.driver.set_activity(message.from_id)
-	await message.answer('Сообщение отправлено пассажиру!')
+	await message.answer('Сообщение отправлено пассажиру!', keyboard=keyboards.driver_arrive_(payload['other']))
 	await vk.api.messages.send(
 		user_id=payload['other']['from_id'],
 		peer_id=payload['other']['from_id'],
@@ -145,8 +146,7 @@ async def passanger_exit(message:Message):
 		user_id=driver_id,
 		peer_id=driver_id,
 		random_id=0,
-		message='Выхожу!',
-		keyboard=keyboards.passanger_get_taxi(payload['key'], passanger_info['balance'] >= 100)
+		message='Выхожу!'
 	)
 
 # Принятие заявки
