@@ -71,10 +71,7 @@ async def driver_profile(message:Message):
 		time_record = await dispatcher.get_time_database(message.from_id)
 		await db.driver.set_activity(message.from_id)
 		await message.answer(f'Анкета водителя!\n\
-Ваше имя: {info[0]["name"]}\n\
 Ваш номер телефона: {info[0]["phone"]}\n\
-Ваш город: {info[0]["city"]}\n\
-\n\
 Машина: {info[0]["auto"]}\n\
 Цвет: {info[0]["color"]}\n\
 Госномер: {info[0]["state_number"]}\n\
@@ -121,7 +118,6 @@ async def user_profile(message:Message):
 	if name is not None:
 		time_record = await dispatcher.get_time_database(message.from_id)
 		await message.answer(f'Анкета пассажира!\n\n\
-Имя: {name["name"]}\n\
 Телефон: {name["phone"]}\n\
 \n\
 Кол-во поездок за 3 дня: {len(time_record["3"])}\n\
