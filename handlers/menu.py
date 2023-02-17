@@ -175,3 +175,7 @@ async def insert_promo_step2(message:Message):
 				await dispatcher.add_insert_promo_user(message.from_id)
 	else:
 		await message.answer('Такого промокода нет. Попробуйте снова!', keyboard=keyboards.promo_back(await db.driver.exists(message.from_id)))
+
+@vk.on.private_message(payload={'driver': 0, 'profile': 1})
+async def driver_profile2(message:Message):
+	await message.answer('Страница 2', keyboard=keyboards.driver_profile2)
