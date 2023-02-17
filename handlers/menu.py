@@ -36,22 +36,26 @@ async def back(message:Message):
 	elif (await db.driver.exists(message.from_id)):
 		await message.answer('Что бы продолжить нажмите на кнопку ниже', keyboard = keyboards.driver_registartion_success)
 	elif (await dispatcher.check_registred(message.from_id)):
-		state_num = int((await vk.state_dispenser.get(message.from_id)).state[-1])
-		if state_num == 0:
-			resume = 'номер телефона!'
-			keyboard = keyboards.inline.phone_pass_this_step
-		elif state_num == 1:
-			resume = 'город!'
-			keyboard = keyboards.inline.pass_this_step
-		elif state_num == 2:
-			resume = 'марку автомобиля!'
-			keyboard = keyboards.empty
-		elif state_num == 3:
-			resume = 'цвет автомобиля!'
-			keyboard = keyboards.empty
-		elif state_num == 4:
-			resume = 'госномер автомобиля!'
-			keyboard = keyboards.empty
+		try: state_num = int((await vk.state_dispenser.get(message.from_id)).state[-1])
+		except:
+			resume = "нажмите на кнопку"
+			keyboard = keyboards.starter
+		else:
+			if state_num == 0:
+				resume = 'номер телефона!'
+				keyboard = keyboards.inline.phone_pass_this_step
+			elif state_num == 1:
+				resume = 'город!'
+				keyboard = keyboards.inline.pass_this_step
+			elif state_num == 2:
+				resume = 'марку автомобиля!'
+				keyboard = keyboards.empty
+			elif state_num == 3:
+				resume = 'цвет автомобиля!'
+				keyboard = keyboards.empty
+			elif state_num == 4:
+				resume = 'госномер автомобиля!'
+				keyboard = keyboards.empty
 		await message.answer(f'Твоя анкета водителя заполнена не до конца!\n\nЗаверши создание анкеты чтобы брать заявки.\nНапиши свой {resume}', keyboard=keyboard)
 	else:
 		user = await vk.api.users.get(message.from_id)
@@ -70,14 +74,17 @@ async def driver_profile(message:Message):
 Ваше имя: {info[0]["name"]}\n\
 Ваш номер телефона: {info[0]["phone"]}\n\
 Ваш город: {info[0]["city"]}\n\
+\n\
 Машина: {info[0]["auto"]}\n\
 Цвет: {info[0]["color"]}\n\
 Госномер: {info[0]["state_number"]}\n\
+\n\
 Кол-во поездок за 3 дня: {len(time_record["3"])}\n\
 Кол-во поездок за 5 дней: {len(time_record["5"])}\n\
 Кол-во поездок с ПН по ПТ: {len(time_record["week"])}\n\
 Кол-во поездок за 30 дней: {len(time_record["month"])}\n\
 Кол-во поездок: {info[1]["quantity"]}\n\
+\n\
 Баланс: {info[1]["balance"]} руб.\n\
 Одна заявка стоит: {parameters["count"]}', keyboard = keyboards.driver_profile)
 
@@ -116,11 +123,13 @@ async def user_profile(message:Message):
 		await message.answer(f'Анкета пассажира!\n\n\
 Имя: {name["name"]}\n\
 Телефон: {name["phone"]}\n\
+\n\
 Кол-во поездок за 3 дня: {len(time_record["3"])}\n\
 Кол-во поездок за 5 дней: {len(time_record["5"])}\n\
 Кол-во поездок с ПН по ПТ: {len(time_record["week"])}\n\
 Кол-во поездок за 30 дней: {len(time_record["month"])}\n\
 Кол-во поездок: {name["quantity"]}\n\
+\n\
 Баланс бонусных рублей {name["balance"]}', keyboard = keyboards.user_profile)
 
 # Волшебная кнопка "назад"

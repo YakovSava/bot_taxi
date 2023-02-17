@@ -56,7 +56,7 @@ async def driver_cancel_order(message:Message):
 		peer_id=payload['other']['from_id'],
 		random_id=0,
 		message = 'К сожалению водитель отказался от заявки.\n\n\
-Вы можете повторить последний вызов, заявку которого получают все кроме отказавшегося водителя.\n\
+Вы можете повторить последний вызов. Заявку которого получают все кроме отказавшегося водителя.\n\
 Для этого нажмите кнопку "Повторить вызов"',
 		keyboard=keyboards.repeat_order(dispatcher.all_forms[payload['other']['key']]['data'])
 	)
@@ -98,7 +98,7 @@ async def passanger_get_taxi_def(message:Message):
 async def driver_success_order(message:Message):
 	payload = eval(f'{message.payload}')
 	await db.driver.set_activity(message.from_id)
-	await message.answer('&#9989; Заявка выполнена! &#9989;\nВы успешно довезли пассажира!', keyboard=keyboards.driver_registartion_success)
+	await message.answer('&#9989; Заявка выполнена! &#9989;\nВы успешно довезли пассажира!\nОжидайте новых заявок', keyboard=keyboards.driver_registartion_success)
 	await vk.api.messages.send(
 		user_id=payload['other']['from_id'],
 		peer_id=payload['other']['from_id'],
@@ -154,25 +154,26 @@ async def passanger_exit(message:Message):
 async def taxi_tax(message:Message):
 	payload = eval(f'{message.payload}')
 	if (await dispatcher.check_registred(message.from_id)):
-		state_num = int((await vk.state_dispenser.get(message.from_id)).state[-1])
-		if state_num == 0:
-			resume = 'номер телефона!'
-			keyboard=keyboards.inline.phone_pass_this_step
-		elif state_num == 1:
-			resume = 'город!'
-			keyboard=keyboards.inline.pass_this_step
-		elif state_num == 2:
-			resume = 'марку автомобиля!'
-			keyboard=keyboards.empty
-		elif state_num == 3:
-			resume = 'цвет автомобиля!'
-			keyboard=keyboards.empty
-		elif state_num == 4:
-			resume = 'госномер автомобиля!'
-			keyboard=keyboards.empty
-		elif state_num is None:
-			resume = 'перерегестрируйтесь!'
-			keyboard = keyboards.empty
+		try: state_num = int((await vk.state_dispenser.get(message.from_id)).state[-1])
+		except:
+			resume = "нажмите на кнопку"
+			keyboard = keyboards.starter
+		else:
+			if state_num == 0:
+				resume = 'номер телефона!'
+				keyboard = keyboards.inline.phone_pass_this_step
+			elif state_num == 1:
+				resume = 'город!'
+				keyboard = keyboards.inline.pass_this_step
+			elif state_num == 2:
+				resume = 'марку автомобиля!'
+				keyboard = keyboards.empty
+			elif state_num == 3:
+				resume = 'цвет автомобиля!'
+				keyboard = keyboards.empty
+			elif state_num == 4:
+				resume = 'госномер автомобиля!'
+				keyboard = keyboards.empty
 		await message.answer(f'Твоя анкета водителя заполнена не до конца!\n\nЗаверши создание анкеты чтобы брать заявки.\nНапиши свой {resume}', keyboard=keyboard)
 	else:
 		await db.driver.set_activity(message.from_id)
@@ -250,25 +251,26 @@ async def taxi_tax(message:Message):
 async def driver_delivery(message:Message):
 	payload = eval(f'{message.payload}')
 	if (await dispatcher.check_registred(message.from_id)):
-		state_num = int((await vk.state_dispenser.get(message.from_id)).state[-1])
-		if state_num == 0:
-			resume = 'номер телефона!'
-			keyboard=keyboards.inline.phone_pass_this_step
-		elif state_num == 1:
-			resume = 'город!'
-			keyboard=keyboards.inline.pass_this_step
-		elif state_num == 2:
-			resume = 'марку автомобиля!'
-			keyboard=keyboards.empty
-		elif state_num == 3:
-			resume = 'цвет автомобиля!'
-			keyboard=keyboards.empty
-		elif state_num == 4:
-			resume = 'госномер автомобиля!'
-			keyboard=keyboards.empty
-		elif state_num is None:
-			resume = 'перерегестрируйтесь!'
-			keyboard = keyboards.empty
+		try: state_num = int((await vk.state_dispenser.get(message.from_id)).state[-1])
+		except:
+			resume = "нажмите на кнопку"
+			keyboard = keyboards.starter
+		else:
+			if state_num == 0:
+				resume = 'номер телефона!'
+				keyboard = keyboards.inline.phone_pass_this_step
+			elif state_num == 1:
+				resume = 'город!'
+				keyboard = keyboards.inline.pass_this_step
+			elif state_num == 2:
+				resume = 'марку автомобиля!'
+				keyboard = keyboards.empty
+			elif state_num == 3:
+				resume = 'цвет автомобиля!'
+				keyboard = keyboards.empty
+			elif state_num == 4:
+				resume = 'госномер автомобиля!'
+				keyboard = keyboards.empty
 		await message.answer(f'Твоя анкета водителя заполнена не до конца!\n\nЗаверши создание анкеты чтобы брать заявки.\nНапиши свой {resume}', keyboard=keyboard)
 	else:
 		await db.driver.set_activity(message.from_id)
