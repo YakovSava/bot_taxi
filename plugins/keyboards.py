@@ -102,7 +102,7 @@ class keyboards:
 		.add(Text('Написать в техподдержку', payload={'help': 0}), color=KeyboardButtonColor.PRIMARY)
 	).get_json()
 	driver_profile2 = (Keyboard(one_time=False)
-		.add(Text('Назад', payload={'driver': 0, 'profile': 0}), color=KeyboardButtonColor.PRIMARY)
+		.add(Text('Назад', payload={'driver': 0, 'profie': 0}), color=KeyboardButtonColor.PRIMARY)
 		.row()
 		.add(Text('Удалить анкету', payload={'driver': 0, 'delete': 0}), color=KeyboardButtonColor.NEGATIVE)
 		.row()

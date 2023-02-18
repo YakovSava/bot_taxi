@@ -1,3 +1,5 @@
+import asyncio
+
 from vkbottle import CtxStorage
 from vkbottle.bot import Message
 from plugins.states import PassangerRegState, DriverRegState
@@ -86,6 +88,11 @@ async def insert_promo(message:Message):
 		'name': user_data[0].first_name,
 		'phone': phone
 	})
+	await asyncio.sleep(2)
+	await message.answer('Ты можешь получить бонусные рубли на баланс анкеты, и обменять их на бесплатные поездки по городу.\n\n\
+Для этого нужно переслать пригласительное сообщение друзьям и за каждую регистрацию с использованием твоего промокоад ты получишь по 10р. \
+и обменять их на подарки\n\n\
+Промокод можно узнать нажав на кнопку "Мой промокод"')
 
 # Регистрация водителя (шаг 1) 
 @vk.on.private_message(state = DriverRegState.location)
@@ -157,6 +164,11 @@ async def reg_driver_5(message:Message):
 		'balance': balance
 	})
 	await message.answer('Готово!\nТеперь когда появится новый заказ, тебе придёт уведомление, поэтому не пропусти!', keyboard = keyboards.driver_registartion_success)
+	await asyncio.sleep(2)
+	await message.answer('Ты можешь получить бонусные рубли на баланс анкеты, и обменять их на бесплатные поездки по городу.\n\n\
+Для этого нужно переслать пригласительное сообщение друзьям и за каждую регистрацию с использованием твоего промокоад ты получишь по 10р. \
+и обменять их на подарки\n\n\
+Промокод можно узнать нажав на кнопку "Реферальный код"')
 
 # Редактирование (пперерегистрация водителя)
 @vk.on.private_message(payload = {'driver': 0, 'edit': 0})
