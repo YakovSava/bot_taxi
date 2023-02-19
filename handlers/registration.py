@@ -97,7 +97,7 @@ async def insert_promo(message:Message):
 	await asyncio.sleep(1)
 	promo = await dispatcher.add_new_promo(message.from_id)
 	id_ = await vk.api.groups.get_by_id()
-	await message.answer(f'Смотри каким ботом такси я пользуюсь (https://vk.com/write-{id_[0].id})\n\
+	await message.answer(f'Смотри каким ботом такси я пользуюсь: https://vk.com/write-{id_[0].id}\n\
 Создай свою анкету используя мой промокод "{promo[1]}" и получи бесплатные поездку по городу!')
 
 # Регистрация водителя (шаг 1) 
@@ -179,7 +179,7 @@ async def reg_driver_5(message:Message):
 	await asyncio.sleep(1)
 	promo = await dispatcher.add_new_promo(message.from_id)
 	id_ = await vk.api.groups.get_by_id()
-	await message.answwer(f'Смотри каким ботом такси я пользуюсь (https://vk.com/write-{id_[0].id})\n\
+	await message.answwer(f'Смотри каким ботом такси я пользуюсь: https://vk.com/write-{id_[0].id}\n\
 Создай свою анкету используя мой промокод "{promo[1]}" и получи бесплатные поездку по городу!')
 
 # Редактирование (пперерегистрация водителя)
