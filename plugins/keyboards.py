@@ -88,7 +88,7 @@ class keyboards:
 		.row()
 		.add(Text('Написать в техподдержку', payload={'help': 0}), color=KeyboardButtonColor.PRIMARY)
 		.row()
-		.add(Text('Бонусная программа', payload={'promo': 0, 'add': 0}), color=KeyboardButtonColor.PRIMARY)
+		.add(Text('Бонусная программа', payload={'promo': 0}), color=KeyboardButtonColor.PRIMARY)
 	).get_json()
 	driver_profile = (Keyboard(one_time=False)
 		.add(Text('Мой профиль', payload={'driver': 0, 'profile': 1}), color=KeyboardButtonColor.PRIMARY)
