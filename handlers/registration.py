@@ -49,7 +49,7 @@ async def reg_passanger_3(message:Message):
 	await vk.state_dispenser.set(message.from_id, PassangerRegState.promo)
 	await message.answer('Введите пригласительный реферальный код.\nЕсли его нет - пропустите', keyboard=keyboards.inline.phone_pass_this_step)
 
-@vk.on.private_message(state=PassangerRegState.promo)
+@vk.on.private_message(state = PassangerRegState.promo)
 async def insert_promo(message:Message):
 	if message.text.lower() != 'пропустить шаг':
 		if (await dispatcher.exists_promo(message.text)):
@@ -148,12 +148,39 @@ async def reg_driver_4(message:Message):
 """
 @vk.on.private_message(state = DriverRegState.state_number)
 async def reg_driver_5(message:Message):
+	storage.set(f'{message.from_id}_state_number', message.text)
+	await vk.state_dispenser.set(message.from_id, DriverRegState.promo)
+	await message.answer('Введите пригласительный реферальный код.\nЕсли его нет - пропустите', keyboard=keyboards.inline.phone_pass_this_step)
+
+@vk.on.private_message(state=DriverRegState.promo)
+async def reg_driver_6(message:Message):
+	if message.text.lower() != 'пропустить шаг':
+		if (await dispatcher.exists_promo(message.text)):
+			if (await dispatcher.check_aipu(message.from_id)):
+				await message.answer('У вас не получиться зарегестрироваться второй раз, извините')
+			else:
+				promo = await dispatcher.get_from_promo(message.text)
+				if promo == message.from_id:
+					await message.answer('Нельзя регестрироваться, на свой же промокод')
+				else:
+					await message.answer(f'Реферальный код от @id{promo} введён. Добро пожаловать!')
+					await db.driver.set_balance(promo, 10)
+					await vk.api.messages.send(
+						user_id=promo,
+						peer_id=promo,
+						random_id=0,
+						message=f'По вашему реферальному коду успешно зарегестрировался пользователь @id{message.from_id}'
+					)
+					await dispatcher.add_insert_promo_user(message.from_id)
+		else:
+			return 'Такого промокода нет. Попробуйте снова или пропустите шаг!'
+	if (await vk.state_dispenser.get(message.from_id)) is not None:
+		await vk.state_dispenser.delete(message.from_id)
 	await dispatcher.remove_no_registred_drivers(message.from_id)
 	balance = storage.get(f'{message.from_id}_balance')
 	storage.delete(f'{message.from_id}_balance')
-	await vk.state_dispenser.delete(message.from_id)
-	phone, auto, color, location = storage.get(f'phone_{message.from_id}'), storage.get(f'auto_{message.from_id}'), storage.get(f'color_{message.from_id}'), storage.get(f'location_{message.from_id}')
-	storage.delete(f'phone_{message.from_id}'); storage.delete(f'auto_{message.from_id}'); storage.delete(f'color_{message.from_id}'); storage.delete(f'location_{message.from_id}')
+	phone, auto, color, location, state_number = storage.get(f'phone_{message.from_id}'), storage.get(f'auto_{message.from_id}'), storage.get(f'color_{message.from_id}'), storage.get(f'location_{message.from_id}'), storage.get(f'{message.from_id}_state_number')
+	storage.delete(f'phone_{message.from_id}'); storage.delete(f'auto_{message.from_id}'); storage.delete(f'color_{message.from_id}'); storage.delete(f'location_{message.from_id}'); storage.delete(f'{message.from_id}_state_number')
 	user_data = await vk.api.users.get(
 		user_ids = message.from_id,
 		fields = 'sex'
@@ -166,7 +193,7 @@ async def reg_driver_5(message:Message):
 		'phone': phone,
 		'auto': auto,
 		'color': color,
-		'state_number': message.text,
+		'state_number': state_number,
 		'balance': balance
 	})
 	await message.answer('Готово!\nТеперь когда появится новый заказ, тебе придёт уведомление, поэтому не пропусти!', keyboard = keyboards.driver_registartion_success)

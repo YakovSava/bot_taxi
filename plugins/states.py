@@ -23,6 +23,7 @@ class DriverRegState(BaseStateGroup):
 	auto = 2
 	color = 3
 	state_number = 4
+	promo = 5
 
 
 class VkPayPay(BaseStateGroup):

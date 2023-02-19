@@ -140,41 +140,49 @@ async def rate_on_city(message:Message):
 
 @vk.on.private_message(payload={'promo': 0})
 async def promos(message:Message):
-	await message.answer('Выберите действие:', keyboard=keyboards.promo(await db.driver.exists(message.from_id)))
-
-@vk.on.private_message(payload={'promo': 0, 'add': 0})
-async def get_promo(message:Message):
 	promo = await dispatcher.add_new_promo(message.from_id)
-	await message.answer(f'Ваш персональный код реферальной программы: {promo[1]}\n\
-За 1 приглашённого друга +10 рублей на баланс!\n')
+	id_ = await vk.api.groups.get_by_id()
+	await message.answer('Ты можешь получить бонусные рубли на баланс анкеты, и обменять их на бесплатные поездки по городу.\n\
+\n\
+Для этого нужно переслать пригласительное сообщение друзьям. За каждую регистрацию с использованием твоего промокода ты получишь по 10р. и сможешь обменять их на поездки по городу.\n\
+\n\
+Разошли пригласительное сообщение своим друзьям &#128071;&#128071;&#128071;')
+	await message.answwer(f'Смотри каким ботом такси я пользуюсь: https://vk.com/write-{id_[0].id}\n\
+Создай свою анкету используя мой промокод "{promo[1]}" и получи бесплатные поездку по городу!')
 
-@vk.on.private_message(payload={'promo': 0, 'insert': 0})
-async def insert_promo_step1(message:Message):
-	await vk.state_dispenser.set(message.from_id, PromoState.promo)
-	await message.answer('Напишите ваш реферальный код', keyboard=keyboards.promo_back(await db.driver.exists(message.from_id)))
+# @vk.on.private_message(payload={'promo': 0, 'add': 0})
+# async def get_promo(message:Message):
+# 	promo = await dispatcher.add_new_promo(message.from_id)
+# 	await message.answer(f'Ваш персональный код реферальной программы: {promo[1]}\n\
+# За 1 приглашённого друга +10 рублей на баланс!\n')
 
-@vk.on.private_message(state=PromoState.promo)
-async def insert_promo_step2(message:Message):
-	if (await dispatcher.exists_promo(message.text)):
-		if (await dispatcher.check_aipu(message.from_id)):
-			await message.answer('У вас не получиться зарегестрироваться второй раз, извините')
-		else:
-			promo = await dispatcher.get_from_promo(message.text)
-			if promo == message.from_id:
-				await message.answer('Нельзя регестрирвоаться, на свой же промокод')
-			else:
-				await vk.state_dispenser.delete(message.from_id)
-				await message.answer(f'Реферальный код от @id{promo} введён. Добро пожаловать!')
-				await db.driver.set_balance(promo, 10)
-				await vk.api.messages.send(
-					user_id=promo,
-					peer_id=promo,
-					random_id=0,
-					message=f'По вашему реферальному коду успешно зарегестрировался пользователь @id{message.from_id}'
-				)
-				await dispatcher.add_insert_promo_user(message.from_id)
-	else:
-		await message.answer('Такого промокода нет. Попробуйте снова!', keyboard=keyboards.promo_back(await db.driver.exists(message.from_id)))
+# @vk.on.private_message(payload={'promo': 0, 'insert': 0})
+# async def insert_promo_step1(message:Message):
+# 	await vk.state_dispenser.set(message.from_id, PromoState.promo)
+# 	await message.answer('Напишите ваш реферальный код', keyboard=keyboards.promo_back(await db.driver.exists(message.from_id)))
+
+# @vk.on.private_message(state=PromoState.promo)
+# async def insert_promo_step2(message:Message):
+# 	if (await dispatcher.exists_promo(message.text)):
+# 		if (await dispatcher.check_aipu(message.from_id)):
+# 			await message.answer('У вас не получиться зарегестрироваться второй раз, извините')
+# 		else:
+# 			promo = await dispatcher.get_from_promo(message.text)
+# 			if promo == message.from_id:
+# 				await message.answer('Нельзя регестрироваться, на свой же промокод')
+# 			else:
+# 				await vk.state_dispenser.delete(message.from_id)
+# 				await message.answer(f'Реферальный код от @id{promo} введён. Добро пожаловать!')
+# 				await db.driver.set_balance(promo, 10)
+# 				await vk.api.messages.send(
+# 					user_id=promo,
+# 					peer_id=promo,
+# 					random_id=0,
+# 					message=f'По вашему реферальному коду успешно зарегестрировался пользователь @id{message.from_id}'
+# 				)
+# 				await dispatcher.add_insert_promo_user(message.from_id)
+# 	else:
+# 		await message.answer('Такого промокода нет. Попробуйте снова!', keyboard=keyboards.promo_back(await db.driver.exists(message.from_id)))
 
 @vk.on.private_message(payload={'driver': 0, 'profile': 1})
 async def driver_profile2(message:Message):
