@@ -80,8 +80,6 @@ class keyboards:
 		.add(Text('Моя анкета &#128519;', payload={'user': 0, 'profile': 0}), color=KeyboardButtonColor.SECONDARY)
 	).get_json()
 	user_profile = (Keyboard(one_time=False)
-		.add(Text('Редактировать анкету', payload={'user': 0, 'edit': 0}), color=KeyboardButtonColor.POSITIVE)
-		.row()
 		.add(Text('Удалить анкету', payload={'user': 0, 'delete': 0}), color=KeyboardButtonColor.NEGATIVE)
 		.row()
 		.add(Text('Назад', payload={'user': 0, 'back': 0}), color=KeyboardButtonColor.PRIMARY)
