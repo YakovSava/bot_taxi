@@ -77,8 +77,12 @@ class Database:
 					yield info
 
 		async def set_balance(self, vk:str, set:int) -> None:
-			await self.cursor.execute(f'SELECT balance FROM passanger WHERE VK = "{vk}"')
-			last = int((await self.cursor.fetchone())['balance'])
+			await self.cursor.execute(f'SELECT * FROM passanger WHERE VK = "{vk}"')
+			rec = await self.cursor.fetchone()
+			if rec is not None:
+				last = int(rec['balance'])
+			else:
+				last = 0
 			await self.cursor.execute(f'UPDATE passanger SET balance = {last + set} WHERE VK = "{vk}"')
 			await self.db.commit()
 
@@ -142,8 +146,12 @@ class Database:
 			await self.db.commit()
 
 		async def set_balance(self, vk:str, set:int) -> None:
-			await self.cursor.execute(f'SELECT balance FROM driver2 WHERE VK = "{vk}"')
-			last = int((await self.cursor.fetchone())['balance'])
+			await self.cursor.execute(f'SELECT * FROM driver2 WHERE VK = "{vk}"')
+			rec = await self.cursor.fetchone()
+			if rec is not None:
+				last = int(rec['balance'])
+			else:
+				last = 0
 			await self.cursor.execute(f'UPDATE driver2 SET balance = {last + set} WHERE VK = "{vk}"')
 			await self.db.commit()
 

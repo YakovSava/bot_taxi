@@ -286,7 +286,7 @@ class Dispatch:
 		database = await self.get_database_of_times()
 		for id in list(database.items()):
 			for date in id[1]['5']:
-				if len(database[id]['5']) > 100 and (await self.database.driver.exists(int(id))):
+				if len(database[id[0]]['5']) > 100 and (await self.database.driver.exists(int(id))):
 					await self.api.messages.send(
 						user_id=int(id),
 						peer_id=int(id),
