@@ -185,3 +185,7 @@ async def promos(message:Message):
 @vk.on.private_message(payload={'driver': 0, 'profile': 1})
 async def driver_profile2(message:Message):
 	await message.answer('Страница 2', keyboard=keyboards.driver_profile2)
+
+@vk.on.private_message(payload={'give': 0, 'money': 0})
+async def pay_to_bot(message:Message):
+	await message.answer('Выберите способ оплаты:', keyboard=keyboards.payeer)
