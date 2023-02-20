@@ -122,7 +122,7 @@ class Dispatch:
 
 	async def _form_timer(self, key:str) -> None:
 		form = self.all_forms[key]; counter = 0
-		print(form['in_drive'], form['active']); print(counter, ((10*60) // 15)); print(counter != ((10*60) // 15))
+		# print(form['in_drive'], form['active']); print(counter, ((10*60) // 15)); print(counter != ((10*60) // 15))
 		while (counter != ((10*60) // 15)) and (not form['in_drive'] and form['active']):
 			await asyncio.sleep(15)
 			await self.api.messages.send(

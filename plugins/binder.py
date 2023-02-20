@@ -31,6 +31,12 @@ class Binder:
 		async with aiopen(self.parameters_file, 'w', encoding = 'utf-8') as file:
 			await file.write(f'{dumps(old_count)}')
 
+	async def set_buttons(self, buttons:list) -> None:
+		old_count = await self.get_parameters()
+		old_count['buttons'] = buttons
+		async with aiopen(self.parameters_file, 'w', encoding = 'utf-8') as file:
+			await file.write(f'{dumps(old_count)}')
+
 	async def get_photo(self, name:str) -> bytes:
 		async with aiopen(join(self.cache_path, name), 'rb') as photo_histogramm:
 			photo = await photo_histogramm.read()

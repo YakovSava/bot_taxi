@@ -98,7 +98,7 @@ async def admin_com(message:Message, commands:str):
 					message=message.text.split(' ', 2)[2]
 				)
 		elif command[0] == 'rate':
-			await dispatcher.set_rate_file(command.split(' ', 2)[-1])
+			await dispatcher.set_rate_file(commands.split(' ', 2)[-1])
 			await message.answer('Успешно изменено')
 		elif command[0] == 'time':
 			await message.answer(f'Серверное время: {strftime("%H:%M:%S", gmtime())}')
@@ -122,6 +122,8 @@ async def admin_com(message:Message, commands:str):
 Количество водителей: {len(passangers)}
 Количество людей получивших промокоды: {len(aipu)} из {len(drivers) + len(passangers)} возможных
 Последний заказ был: {strftime('%m.%d %H:%M:%S', gmtime(max(orders)))}''')
+		elif command[0] == 'buttons':
+			await binder.set_buttons(list(map(int, command[-1].split('/'))))
 		else:
 			await message.answer('Неизвестная команда!')
 

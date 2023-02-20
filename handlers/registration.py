@@ -98,7 +98,7 @@ async def insert_promo(message:Message):
 	promo = await dispatcher.add_new_promo(message.from_id)
 	id_ = await vk.api.groups.get_by_id()
 	await message.answer(f'Смотри каким ботом такси я пользуюсь: https://vk.com/write-{id_[0].id}\n\
-Создай свою анкету используя мой промокод "{promo[1]}" и получи бесплатные поездку по городу!')
+Создай свою анкету используя мой промокод "{promo[1]}" и получи бесплатные поездки по городу!')
 
 # Регистрация водителя (шаг 1) 
 @vk.on.private_message(state = DriverRegState.location)
@@ -207,7 +207,7 @@ async def reg_driver_6(message:Message):
 	promo = await dispatcher.add_new_promo(message.from_id)
 	id_ = await vk.api.groups.get_by_id()
 	await message.answwer(f'Смотри каким ботом такси я пользуюсь: https://vk.com/write-{id_[0].id}\n\
-Создай свою анкету используя мой промокод "{promo[1]}" и получи бесплатные поездку по городу!')
+Создай свою анкету используя мой промокод "{promo[1]}" и получи бесплатные поездки по городу!')
 
 # Редактирование (пперерегистрация водителя)
 @vk.on.private_message(payload = {'driver': 0, 'edit': 0})

@@ -1,6 +1,6 @@
 from vkbottle.bot import Message
 from plugins.keyboards import keyboards
-from plugins.states import DriverRegState, PromoState
+from plugins.states import DriverRegState
 from plugins.rules import OffAccountRule, DeleteAccount, QuantityRule
 from .initializer import db, dispatcher, binder
 from .registration import vk
@@ -142,13 +142,11 @@ async def rate_on_city(message:Message):
 async def promos(message:Message):
 	promo = await dispatcher.add_new_promo(message.from_id)
 	id_ = await vk.api.groups.get_by_id()
-	await message.answer('Ты можешь получить бонусные рубли на баланс анкеты, и обменять их на бесплатные поездки по городу.\n\
-\n\
-Для этого нужно переслать пригласительное сообщение друзьям. За каждую регистрацию с использованием твоего промокода ты получишь по 10р. и сможешь обменять их на поездки по городу.\n\
-\n\
+	await message.answer('Ты можешь получить бонусные рубли на баланс анкеты, и обменять их на бесплатные поездки по городу.\n\n\
+Для этого нужно переслать пригласительное сообщение друзьям. За каждую регистрацию с использованием твоего промокода ты получишь по 10р. и сможешь обменять их на поездки по городу.\n\n\
 Разошли пригласительное сообщение своим друзьям &#128071;&#128071;&#128071;')
-	await message.answwer(f'Смотри каким ботом такси я пользуюсь: https://vk.com/write-{id_[0].id}\n\
-Создай свою анкету используя мой промокод "{promo[1]}" и получи бесплатные поездку по городу!')
+	await message.answer(f'Смотри каким ботом такси я пользуюсь: https://vk.com/write-{id_[0].id}\n\
+Создай свою анкету используя мой промокод "{promo[1]}" и получи бесплатные поездки по городу!', keyboard=(keyboards.choose_service if (await db.passanger.exists(message.from_id)) else keyboards.driver_profile))
 
 # @vk.on.private_message(payload={'promo': 0, 'add': 0})
 # async def get_promo(message:Message):
