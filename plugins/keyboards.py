@@ -97,7 +97,7 @@ class keyboards:
 		.row()
 		.add(Text('Бонусная программа', payload={'promo': 0}), color=KeyboardButtonColor.POSITIVE)
 		.row()
-		.add(Text('Пополнить баланс', payload={'give': 0, 'money': 0}), ccolor=KeyboardButtonColor.POSITIVE)
+		.add(Text('Пополнить баланс', payload={'give': 0, 'money': 0}), color=KeyboardButtonColor.POSITIVE)
 	).get_json()
 	payeer = (Keyboard(one_time=False)
 		# .add(Text('Пополнить при помощи VK PAY', payload={'driver': 0, 'money': 'vk pay'}), color=KeyboardButtonColor.POSITIVE)

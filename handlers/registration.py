@@ -14,8 +14,8 @@ async def registartion_driver(message:Message):
 	await dispatcher.update_no_registred_driver(message.from_id)
 	storage.set(f'{message.from_id}_balance', 0)
 	storage.set(f'{message.from_id}_location', f'{parameters["city"]}')
-	await vk.state_dispenser.set(message.from_id, DriverRegState.phone)
-	await message.answer('Отправьте ваш телефон для связи с пассажиром!\n\nТелефон можно не указывать, однако тогда пассажир не сможет связаться с Вами, когда вы подъедете к месту вызова!', keyboard=keyboards.inline.phone_pass_this_step)
+	await vk.state_dispenser.set(message.from_id, DriverRegState.promo)
+	await message.answer('Введите пригласительный реферальный код.\nЕсли его нет - пропустите', keyboard=keyboards.inline.phone_pass_this_step)
 
 # Редактирование профиля пассажира
 # @vk.on.private_message(payload = {'user': 0, 'edit': 0})
@@ -113,6 +113,31 @@ async def insert_promo(message:Message):
 # 			return 'Город возможно написан неверно. Попробуйте снова'
 # 	storage.set(f'location_{message.from_id}', location)
 
+@vk.on.private_message(state=DriverRegState.promo)
+async def reg_driver_promo(message:Message):
+	if message.text.lower() != 'пропустить шаг':
+		if (await dispatcher.exists_promo(message.text)):
+			if (await dispatcher.check_aipu(message.from_id)):
+				await message.answer('У вас не получиться зарегестрироваться второй раз, извините')
+			else:
+				promo = await dispatcher.get_from_promo(message.text)
+				if promo == message.from_id:
+					await message.answer('Нельзя регестрироваться, на свой же промокод')
+				else:
+					await message.answer(f'Реферальный код от @id{promo} введён. Добро пожаловать!')
+					await db.driver.set_balance(promo, 10)
+					await vk.api.messages.send(
+						user_id=promo,
+						peer_id=promo,
+						random_id=0,
+						message=f'По вашему реферальному коду успешно зарегестрировался пользователь @id{message.from_id}'
+					)
+					await dispatcher.add_insert_promo_user(message.from_id)
+		else:
+			return 'Такого промокода нет. Попробуйте снова или пропустите шаг!'
+	await vk.state_dispenser.set(message.from_id, DriverRegState.phone)
+	await message.answer('Отправьте ваш телефон для связи с пассажиром!\n\nТелефон можно не указывать, однако тогда пассажир не сможет связаться с Вами, когда вы подъедете к месту вызова!', keyboard=keyboards.inline.phone_pass_this_step)
+
 # Регистрация водителя (шаг 2)
 @vk.on.private_message(state = DriverRegState.phone)
 async def reg_driver_2(message:Message):
@@ -137,39 +162,9 @@ async def reg_driver_4(message:Message):
 	await vk.state_dispenser.set(message.from_id, DriverRegState.state_number)
 	return 'И последнее - укажите госномер автомобиля'
 
-"""
-Регистрация водителя (шаг 5)
-
-Надеюсь не булет таких людей кто напишет неверно госномер, иначе будет плохо... Наверное
-"""
-@vk.on.private_message(state = DriverRegState.state_number)
-async def reg_driver_5(message:Message):
-	storage.set(f'{message.from_id}_state_number', message.text)
-	await vk.state_dispenser.set(message.from_id, DriverRegState.promo)
-	await message.answer('Введите пригласительный реферальный код.\nЕсли его нет - пропустите', keyboard=keyboards.inline.phone_pass_this_step)
-
-@vk.on.private_message(state=DriverRegState.promo)
+@vk.on.private_message(state=DriverRegState.state_number)
 async def reg_driver_6(message:Message):
-	if message.text.lower() != 'пропустить шаг':
-		if (await dispatcher.exists_promo(message.text)):
-			if (await dispatcher.check_aipu(message.from_id)):
-				await message.answer('У вас не получиться зарегестрироваться второй раз, извините')
-			else:
-				promo = await dispatcher.get_from_promo(message.text)
-				if promo == message.from_id:
-					await message.answer('Нельзя регестрироваться, на свой же промокод')
-				else:
-					await message.answer(f'Реферальный код от @id{promo} введён. Добро пожаловать!')
-					await db.driver.set_balance(promo, 10)
-					await vk.api.messages.send(
-						user_id=promo,
-						peer_id=promo,
-						random_id=0,
-						message=f'По вашему реферальному коду успешно зарегестрировался пользователь @id{message.from_id}'
-					)
-					await dispatcher.add_insert_promo_user(message.from_id)
-		else:
-			return 'Такого промокода нет. Попробуйте снова или пропустите шаг!'
+	storage.set(f'{message.from_id}_state_number', message.text)
 	if (await vk.state_dispenser.get(message.from_id)) is not None:
 		await vk.state_dispenser.delete(message.from_id)
 	await dispatcher.remove_no_registred_drivers(message.from_id)
