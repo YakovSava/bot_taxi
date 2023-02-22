@@ -56,7 +56,8 @@ async def driver_cancel_order(message:Message):
 		peer_id=payload['other']['from_id'],
 		random_id=0,
 		message = 'К сожалению водитель отказался от заявки.\n\n\
-Вы можете повторить последний вызов. Заявку которого получают все кроме отказавшегося водителя.\n\
+Вы можете повторить последний вызов.\n\
+Заявку которого получают все кроме отказавшегося водителя.\n\n\
 Для этого нажмите кнопку "Повторить вызов"',
 		keyboard=keyboards.repeat_order(dispatcher.all_forms[payload['other']['key']]['data'])
 	)

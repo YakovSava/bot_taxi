@@ -103,7 +103,7 @@ class keyboards:
 		# .add(Text('Пополнить при помощи VK PAY', payload={'driver': 0, 'money': 'vk pay'}), color=KeyboardButtonColor.POSITIVE)
 		# .row()
 		.add(Text('Пополнить при помощи QIWI', payload={'driver': 0, 'money': 'qiwi'}), color=KeyboardButtonColor.POSITIVE)
-		.row()
+		# .row()
 	).get_json()
 	user_cancel = (Keyboard(one_time=False)
 		.add(Text('Назад', payload={'user': 0, 'back': 0}), color=KeyboardButtonColor.NEGATIVE)
