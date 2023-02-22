@@ -5,7 +5,7 @@ from aiohttp import ClientSession
 from vkbottle import PhotoMessageUploader
 from vkbottle.bot import Message
 from plugins.states import Helper
-from .initializer import binder, csv, db, plot, dispatcher
+from .initializer import binder, csv, db, dispatcher
 from .order import vk
 
 @vk.on.private_message(text = 'admin <commands>')
@@ -19,23 +19,23 @@ async def admin_com(message:Message, commands:str):
 				await message.answer(f'Стоимость за одну заявку изменена на {command[1]}')
 			else:
 				await message.answer('Нужно ввести число!') 
-		elif command[0] == 'histogram':
-			await message.answer('Идёт получение данных (надолго!)')
-			drivers = [info async for info in db.passanger.get_all_inform()]
-			passangers = [info async for info in db.passanger.admin_get_all()]
-			csv_for_sort_histogramm, csv_for_histogram, csv_for_histogram_passangers = await asyncio.gather(
-				asyncio.create_task(csv.get_csv_for_sort_histogramm([[one['name'], one['VK'], two['quantity']] for one, two in drivers])),
-				asyncio.create_task(csv.get_csv_for_histogram([[one['city'], one['name']] for one, two in drivers])),
-				asyncio.create_task(csv.get_csv_for_histogram_passanger([[passanger['city'], passanger['name']] for passanger in passangers]))
-			)
-			all_photo = await asyncio.gather(
-				asyncio.create_task(plot.get_sort_histogramm(csv_for_sort_histogramm)),
-				asyncio.create_task(plot.get_histogram(csv_for_histogram)),
-				asyncio.create_task(plot.get_histogram_passanger(csv_for_histogram_passangers))
-			)
-			for photo in all_photo:
-				document = await PhotoMessageUploader(vk.api).upload(photo, peer_id = message.from_id)
-				await message.answer(attachment = document)
+		# elif command[0] == 'histogram':
+		# 	await message.answer('Идёт получение данных (надолго!)')
+		# 	drivers = [info async for info in db.passanger.get_all_inform()]
+		# 	passangers = [info async for info in db.passanger.admin_get_all()]
+		# 	csv_for_sort_histogramm, csv_for_histogram, csv_for_histogram_passangers = await asyncio.gather(
+		# 		asyncio.create_task(csv.get_csv_for_sort_histogramm([[one['name'], one['VK'], two['quantity']] for one, two in drivers])),
+		# 		asyncio.create_task(csv.get_csv_for_histogram([[one['city'], one['name']] for one, two in drivers])),
+		# 		asyncio.create_task(csv.get_csv_for_histogram_passanger([[passanger['city'], passanger['name']] for passanger in passangers]))
+		# 	)
+		# 	all_photo = await asyncio.gather(
+		# 		asyncio.create_task(plot.get_sort_histogramm(csv_for_sort_histogramm)),
+		# 		asyncio.create_task(plot.get_histogram(csv_for_histogram)),
+		# 		asyncio.create_task(plot.get_histogram_passanger(csv_for_histogram_passangers))
+		# 	)
+		# 	for photo in all_photo:
+		# 		document = await PhotoMessageUploader(vk.api).upload(photo, peer_id = message.from_id)
+		# 		await message.answer(attachment = document)
 		elif command[0] == 'get':
 			names = [
 				[info async for info in db.passanger.admin_get_all()],

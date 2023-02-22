@@ -13,7 +13,7 @@ async def registartion_driver(message:Message):
 	parameters = await binder.get_parameters()
 	await dispatcher.update_no_registred_driver(message.from_id)
 	storage.set(f'{message.from_id}_balance', 0)
-	storage.set(f'{message.from_id}_location', f'{parameters["city"]}')
+	storage.set(f'location_{message.from_id}', f'{parameters["city"]}')
 	await vk.state_dispenser.set(message.from_id, DriverRegState.promo)
 	await message.answer('Введите пригласительный реферальный код.\nЕсли его нет - пропустите', keyboard=keyboards.inline.phone_pass_this_step)
 
@@ -212,6 +212,7 @@ async def reg_driver_6(message:Message):
 # Если человек регестрируется как пассажир (шаг 1)
 @vk.on.private_message(payload = {'passanger': 1})
 async def reg_passanger_1(message:Message):
+	parameters = await binder.get_parameters()
 	storage.set(f'{message.from_id}_location', f'{parameters["city"]}')
 	await vk.state_dispenser.set(message.from_id, PassangerRegState.promo)
 	await message.answer('Введите пригласительный реферальный код.\nЕсли его нет - пропустите', keyboard=keyboards.inline.phone_pass_this_step)

@@ -227,12 +227,12 @@ async def taxi_tax(message:Message):
 					)
 				if passanger["phone"][:3] == "@id":
 					await message.answer(f'&#9989; Заявка принята! &#9989;\n\n\
-АДРЕС: {payload["other"]["text"]}', keyboard=keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}, parameters['buttons']))
+АДРЕС: {payload["other"]["text"]}', keyboard=keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}, parameters['buttons'].split('/')))
 					call_driver = await message.answer('Звонок пассажиру (если звонки пассажиру разрешены)', keyboard=keyboards.inline.send(from_id, False))
 				else:
 					await message.answer(f'&#9989; Заявка принята! &#9989;\n\n\
 Телефон пассажира: {passanger["phone"]}\n\
-АДРЕС: {payload["other"]["text"]}', keyboard=keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}, parameters['buttons']))
+АДРЕС: {payload["other"]["text"]}', keyboard=keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}, parameters['buttons'].split('/')))
 					call_driver = await message.answer('Звонок пассажиру (если звонки пассажиру разрешены)', keyboard=keyboards.inline.call(from_id,))
 				if payload['other']['location'] is not None:
 					await asyncio.sleep(1)
@@ -324,12 +324,12 @@ async def driver_delivery(message:Message):
 					)
 				if passanger["phone"][:3] == "@id":
 					await message.answer(f'&#9989; Заявка принята! &#9989;\n\n\
-АДРЕС: {payload["other"]["text"]}', keyboard=keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}, parameters['buttons']))
+АДРЕС: {payload["other"]["text"]}', keyboard=keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}, parameters['buttons'].split('/')))
 					call_driver = await message.answer('Звонок пассажиру (если звонки пассажиру разрешены)', keyboard=keyboards.inline.send(from_id, False))
 				else:
 					await message.answer(f'&#9989; Заявка принята! &#9989;\n\n\
 Телефон пассажира: {passanger["phone"]}\n\
-АДРЕС: {payload["other"]["text"]}', keyboard=keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}, parameters['buttons']))
+АДРЕС: {payload["other"]["text"]}', keyboard=keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}, parameters['buttons'].split('/')))
 					call_driver = await message.answer('Звонок пассажиру (если звонки пассажиру разрешены)', keyboard=keyboards.inline.call(from_id))
 				dispatcher.all_forms[payload['other']['key']]['data']['driver'] = driver_id
 				if payload['other']['location'] is not None:
