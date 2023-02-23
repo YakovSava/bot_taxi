@@ -83,7 +83,7 @@ class Database:
 				last = int(rec['balance'])
 			else:
 				last = 0
-			await self.cursor.execute(f'UPDATE passanger SET balance = {last + set} WHERE VK = "{vk}"')
+			await self.cursor.execute(f'UPDATE passanger SET balance = "{last + set}" WHERE VK = "{vk}"')
 			await self.db.commit()
 
 
@@ -152,7 +152,7 @@ class Database:
 				last = int(rec['balance'])
 			else:
 				last = 0
-			await self.cursor.execute(f'UPDATE driver2 SET balance = {last + set} WHERE VK = "{vk}"')
+			await self.cursor.execute(f'UPDATE driver2 SET balance = "{last + set}" WHERE VK = "{vk}"')
 			await self.db.commit()
 
 		async def set_qunatity(self, vk:str):
