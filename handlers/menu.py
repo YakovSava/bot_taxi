@@ -103,7 +103,8 @@ async def driver_profile_delete(message:Message):
 		driver_info = await db.driver.get(message.from_id)
 		if driver_info[1]['balance'] > 0:
 			await db.driver.set_activity(message.from_id)
-			await message.answer(f'У вас на балансе есть ещё {driver_info[1]["balance"]} руб., вы можете обратиться в тех.поддержку с этим вопросом (тех.поддержка вызывается командой "техподдержка")')
+			await message.answer(f'У вас на балансе анкеты осталось {driver_info[1]["balance"]} руб.\n\
+При удалении средства сгорят, вы уверены что хотите удалить анкету?', keyboard=keyboards.inline.sudo_delete)
 		else:
 			await db.driver.delete(message.from_id)
 			await message.answer('Ваш профиль был удалён!\nСоздай свою анкету, жми кнопку "Начать" &#128071;&#128071;&#128071;', keyboard = keyboards.starter)
@@ -189,3 +190,11 @@ async def driver_profile2(message:Message):
 @vk.on.private_message(payload={'give': 0, 'money': 0})
 async def pay_to_bot(message:Message):
 	await message.answer('Выберите способ оплаты:', keyboard=keyboards.payeer)
+
+@vk.on.private_message(payload={'sudo': 1, 'delete': 0})
+async def sudo_delete_account(message:Message):
+	if (await db.driver.exists(message.from_id)):
+		await db.driver.delete(message.from_id)
+		await message.answer('Ваш аккаунт был принудительно удалён', keyboard=keyboards.starter)
+	else:
+		await message.answer('Ваш аккаунт уже удалён. Вам более незачем его удалять!', keyboard=keyboards.starter)
