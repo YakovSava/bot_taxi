@@ -378,7 +378,7 @@ class Dispatch:
 		return 0
 
 	async def _gen_promo(self) -> str:
-		return f'{choice(ascii_uppercase)}{randint(1000, 9999)}'
+		return f'{choice(ascii_uppercase)}{randint(100, 999)}'
 
 	async def get_promo_db(self):
 		async with aiopen('cache/promo.pylist', 'r', encoding='utf-8') as file:
