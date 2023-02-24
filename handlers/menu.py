@@ -195,6 +195,6 @@ async def pay_to_bot(message:Message):
 async def sudo_delete_account(message:Message):
 	if (await db.driver.exists(message.from_id)):
 		await db.driver.delete(message.from_id)
-		await message.answer('Ваш аккаунт был принудительно удалён', keyboard=keyboards.starter)
+		await message.answer('Ваш профиль был удалён!\nСоздай свою анкету, жми кнопку "Начать" &#128071;&#128071;&#128071;', keyboard=keyboards.starter)
 	else:
 		await message.answer('Ваш аккаунт уже удалён. Вам более незачем его удалять!', keyboard=keyboards.starter)
