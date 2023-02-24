@@ -2,11 +2,10 @@ import asyncio
 import toml
 
 from os.path import exists
-from  multiprocessing import Process
 from time import time, strftime, gmtime
 from typing import Literal
 from random import randint, choice
-from string import ascii_letters
+from string import ascii_uppercase
 from vkbottle import API, VKAPIError
 from aiofiles import open as aiopen
 from plugins.database import Database # For annotation
@@ -379,7 +378,7 @@ class Dispatch:
 		return 0
 
 	async def _gen_promo(self) -> str:
-		return "".join([choice(ascii_letters) for _ in range(5)])
+		return f'{choice(ascii_uppercase)}{randint(1000, 9999)}'
 
 	async def get_promo_db(self):
 		async with aiopen('cache/promo.pylist', 'r', encoding='utf-8') as file:
