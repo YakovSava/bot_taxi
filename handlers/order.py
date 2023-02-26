@@ -216,7 +216,7 @@ async def taxi_tax(message:Message):
 					peer_id=from_id,
 					random_id=0,
 					message=f'Кнопка для связи с водителем',
-					keyboard=keyboards.inline.send(driver_id)
+					keyboard=keyboards.inline.send(driver_id, True)
 				)
 				if passanger["phone"][:3] == "@id":
 					await message.answer(f'&#9989; Заявка принята! &#9989;\n\n\
@@ -226,7 +226,7 @@ async def taxi_tax(message:Message):
 					await message.answer(f'&#9989; Заявка принята! &#9989;\n\n\
 Телефон пассажира: {passanger["phone"]}\n\
 АДРЕС: {payload["other"]["text"]}', keyboard=keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}, parameters['buttons'].split('/')))
-					call_driver = await message.answer('Звонок пассажиру (если звонки пассажиру разрешены)', keyboard=keyboards.inline.send(from_id,))
+					call_driver = await message.answer('Звонок пассажиру (если звонки пассажиру разрешены)', keyboard=keyboards.inline.send(from_id, False))
 				if payload['other']['location'] is not None:
 					await asyncio.sleep(1)
 					await message.answer('Вот координаты пассажира', lat = payload['other']['location'][0], long = payload['other']['location'][1])
@@ -315,14 +315,12 @@ async def driver_delivery(message:Message):
 					await message.answer(f'&#9989; Заявка принята! &#9989;\n\n\
 Телефон пассажира: {passanger["phone"]}\n\
 АДРЕС: {payload["other"]["text"]}', keyboard=keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}, parameters['buttons'].split('/')))
-					call_driver = await message.answer('Звонок пассажиру (если звонки пассажиру разрешены)', keyboard=keyboards.inline.send(from_id))
+					call_driver = await message.answer('Звонок пассажиру (если звонки пассажиру разрешены)', keyboard=keyboards.inline.send(from_id, False))
 				dispatcher.all_forms[payload['other']['key']]['data']['driver'] = driver_id
 				if payload['other']['location'] is not None:
 					await asyncio.sleep(1)
 					await message.answer('Вот координаты пассажира', lat = payload['other']['location'][0], long = payload['other']['location'][1])
 				dispatcher.all_forms[payload['other']['key']]['data']['driver'] = driver_id
-				await asyncio.sleep(1)
-				call_driver = await message.answer('Звонок пассажиру (если звонки пассажиру разрешены)', keyboard=keyboards.inline.send(from_id))
 				dispatcher.all_forms[payload['other']['key']]['data']['call'] = [call_passanger, call_driver.message_id]
 			else:
 				await message.answer(f'На вашем балансе недостаточно средств\nСтоимость одной заявки: {parameters["count"]} руб.\nНа вашем балансе: {driver_info[1]["balance"]} руб.', keyboard=keyboards.inline.payments)
