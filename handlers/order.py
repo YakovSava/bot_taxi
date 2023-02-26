@@ -197,14 +197,6 @@ async def taxi_tax(message:Message):
 В конце поездки нажми "Успешно доехал"',
 						keyboard=keyboards.passanger_get_taxi(payload['other']['key'], passanger['balance'] >= 100)
 					)
-					await asyncio.sleep(1)
-					call_passanger = await vk.api.messages.send(
-						user_id=from_id,
-						peer_id=from_id,
-						random_id=0,
-						message=f'Кнопка для связи с водителем',
-						keyboard=keyboards.inline.send(driver_id, True)
-					)
 				else:
 					await vk.api.messages.send(
 						user_id=from_id,
@@ -218,14 +210,14 @@ async def taxi_tax(message:Message):
 В конце поездки нажми "Успешно доехал"',
 						keyboard=keyboards.passanger_get_taxi(payload['other']['key'], passanger['balance'] >= 100)
 					)
-					await asyncio.sleep(1)
-					call_passanger = await vk.api.messages.send(
-						user_id=from_id,
-						peer_id=from_id,
-						random_id=0,
-						message=f'Кнопка для связи с водителем',
-						keyboard=keyboards.inline.call(driver_id)
-					)
+				await asyncio.sleep(1)
+				call_passanger = await vk.api.messages.send(
+					user_id=from_id,
+					peer_id=from_id,
+					random_id=0,
+					message=f'Кнопка для связи с водителем',
+					keyboard=keyboards.inline.call(driver_id)
+				)
 				if passanger["phone"][:3] == "@id":
 					await message.answer(f'&#9989; Заявка принята! &#9989;\n\n\
 АДРЕС: {payload["other"]["text"]}', keyboard=keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}, parameters['buttons'].split('/')))
@@ -294,14 +286,6 @@ async def driver_delivery(message:Message):
 В конце поездки нажми "Успешно доехал"',
 						keyboard=keyboards.passanger_get_taxi(payload['other']['key'], passanger['balance'] >= 100)
 					)
-					await asyncio.sleep(1)
-					call_passanger = await vk.api.messages.send(
-						user_id=from_id,
-						peer_id=from_id,
-						random_id=0,
-						message=f'Кнопка для связи с водителем',
-						keyboard=keyboards.inline.send(driver_id, True)
-					)
 				else:
 					await vk.api.messages.send(
 						user_id=from_id,
@@ -315,14 +299,14 @@ async def driver_delivery(message:Message):
 В конце поездки нажми "Успешно доехал"',
 						keyboard=keyboards.passanger_get_taxi(payload['other']['key'], passanger['balance'] >= 100)
 					)
-					await asyncio.sleep(1)
-					call_passanger = await vk.api.messages.send(
-						user_id=from_id,
-						peer_id=from_id,
-						random_id=0,
-						message=f'Кнопка для связи с водителем',
-						keyboard=keyboards.inline.call(driver_id, True)
-					)
+				await asyncio.sleep(1)
+				call_passanger = await vk.api.messages.send(
+					user_id=from_id,
+					peer_id=from_id,
+					random_id=0,
+					message=f'Кнопка для связи с водителем',
+					keyboard=keyboards.inline.call(driver_id, True)
+				)
 				if passanger["phone"][:3] == "@id":
 					await message.answer(f'&#9989; Заявка принята! &#9989;\n\n\
 АДРЕС: {payload["other"]["text"]}', keyboard=keyboards.driver_order_complete({'from_id': from_id, 'key': payload['other']['key']}, parameters['buttons'].split('/')))

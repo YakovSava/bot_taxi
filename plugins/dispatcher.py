@@ -5,7 +5,7 @@ from os.path import exists
 from time import time, strftime, gmtime
 from typing import Literal
 from random import randint, choice
-from string import ascii_uppercase
+from string import ascii_uppercase, ascii_letters
 from vkbottle import API, VKAPIError
 from aiofiles import open as aiopen
 from plugins.database import Database # For annotation
