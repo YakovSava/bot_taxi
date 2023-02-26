@@ -1,7 +1,8 @@
 import asyncio
 import toml
 
-from os.path import exists
+from os import getcwd
+from os.path import exists, join
 from time import time, strftime, gmtime
 from typing import Literal
 from random import randint, choice
@@ -75,10 +76,14 @@ class Dispatch:
 		return key
 
 	async def _read(self, filename:str) -> str:
-		return (await self.loop.run_in_executor(None, self.downoload.read, filename))[1:]
+		# return self.downoload.read(join(getcwd(), filename))[1:]
+		async with aiopen(filename, 'r', encoding='utf-8') as file:
+			return await file.read()
 
-	async def _write(self, filename:str, all_lines:str) -> int:
-		return await self.loop.run_in_executor(None, self.downoload.read, filename, all_lines)
+	async def _write(self, filename:str, all_lines:str) -> None:
+		# return self.downoload.write(join(getcwd(), filename), all_lines)
+		async with aiopen(filename, 'w', encoding='utf-8') as file:
+			await file.write(all_lines)
 
 	async def new_form(self, from_id:str) -> None:
 		key = await self._get_key()

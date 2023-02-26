@@ -84,6 +84,6 @@ if __name__ == '__main__':
 
 	app.add_routes(routes)
 
-	timer.new_sync_task(run_app, app, host=('45.8.230.39' if platform in ['linux', 'linux2'] else '127.0.0.1'), port='80', loop=loop)
+	timer.new_sync_task(run_app, app, host=('45.8.230.39' if platform in ['linux', 'linux2'] else '192.168.100.8'), port='80', loop=loop)
 
 	loop.run_until_complete(runner_list)

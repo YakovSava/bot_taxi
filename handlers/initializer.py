@@ -10,6 +10,7 @@ from plugins.database import Database
 from plugins.dispatcher import Dispatch
 from plugins.timer import Timer
 from plugins.csveer import Csveer
+from plugins.downoloader import DownoloadC
 from config import *
 
 # if platform in ['linux', 'linux2']:
@@ -51,5 +52,6 @@ timer = Timer()
 dispatcher = Dispatch(
 	timer=timer,
 	database=db,
-	api=vk.api
+	api=vk.api,
+	CGetter=DownoloadC()
 )
