@@ -10,6 +10,7 @@ from vkbottle import API, VKAPIError
 from aiofiles import open as aiopen
 from plugins.database import Database # For annotation
 from plugins.timer import Timer # For annotation
+from plugins.downoloader import DownoloadC # For annotation
 from plugins.keyboards import keyboards
 
 class Dispatch:
@@ -19,14 +20,16 @@ class Dispatch:
 	def __init__(self,
 		timer:Timer=None,
 		database:Database=None,
-		api:API=None
+		api:API=None,
+		CGetter:DownoloadC=None
 	):
-		if (timer is None) and (database is None) and (api is None):
+		if (timer is None) and (database is None) and (api is None) and (CGetter is None):
 			raise self.DispatchNotGetOneParameterError(f'The dispatcher did not receive one of the items (something from the following list is "None", however it should not be "None"): \n\
 {timer = }\n{database = }\n{api = }')
 		self.timer = timer
 		self.database = database
 		self.api = api
+		self.downoload = CGetter
 		self.all_forms = {}
 		if not exists('cache/forms.json'):
 			with open('cache/forms.json', 'w', encoding='utf-8') as file:
@@ -70,6 +73,12 @@ class Dispatch:
 		for _ in range(randint(10, 100)):
 			key += choice(ascii_letters)
 		return key
+
+	async def _read(self, filename:str) -> str:
+		return (await self.loop.run_in_executor(None, self.downoload.read, filename))[1:]
+
+	async def _write(self, filename:str, all_lines:str) -> int:
+		return await self.loop.run_in_executor(None, self.downoload.read, filename, all_lines)
 
 	async def new_form(self, from_id:str) -> None:
 		key = await self._get_key()
@@ -171,42 +180,36 @@ class Dispatch:
 			await asyncio.sleep(24*60*60)
 
 	async def get_service_file(self) -> list:
-		async with aiopen('cache/off.pylist', 'r', encoding='utf-8') as list_file:
-			lines = await list_file.read()
+		lines = await self._read('cache/off.pylist')
 		return eval(f'{lines}')
 
 	async def off_account(self, new_id:int) -> None:
 		old_list = await self.get_service_file()
 		if new_id not in old_list:
-			async with aiopen('cache/off.pylist', 'w', encoding='utf-8') as list_file:
-				old_list.append(new_id)
-				await list_file.write(f'{old_list}')
+			old_list.append(new_id)
+			await self._write('cache/off.pylist', f'{old_list}')
 				
 	async def on_account(self, off_id:int) -> None:
 		old_list = await self.get_service_file()
 		while off_id in old_list:
 			old_list.remove(off_id)
-		async with aiopen('cache/off.pylist', 'w', encoding='utf-8') as list_file:
-			await list_file.write(f'{old_list}')
+		await self._write('cache/off.pylist', f'{old_list}')
 
 	async def get_no_registred_drivers(self) -> list:
-		async with aiopen('cache/no_registred.pylist', 'r', encoding='utf-8') as file:
-			list_lines = await file.read()
+		list_lines = await self._read('cache/no_registred.pylist')
 		return eval(list_lines)
 
 	async def remove_no_registred_drivers(self, registred_id:int) -> None:
 		old_list = await self.get_no_registred_drivers()
 		while registred_id in old_list:
 			old_list.remove(registred_id)
-		async with aiopen('cache/no_registred.pylist', 'w', encoding='utf-8') as file:
-			await file.write(f'{old_list}')
+		await self._write('cache/no_registred.pylist', f'{old_list}')
 
 	async def update_no_registred_driver(self, new_id:int) -> None:
 		list_lines = await self.get_no_registred_drivers()
 		if new_id not in list_lines:
-			async with aiopen('cache/no_registred.pylist', 'w', encoding='utf-8') as file:
-				list_lines.append(new_id)
-				await file.write(f'{list_lines}')
+			list_lines.append(new_id)
+			await self._write('cache/no_registred.pylist', f'{list_lines}')
 
 	async def check_registred(self, from_id:int) -> bool:
 		list_lines = await self.get_no_registred_drivers()
@@ -241,8 +244,7 @@ class Dispatch:
 }
 	Trips for all time are stored in the main database
 		'''
-		async with aiopen('cache/time_database.toml', 'w', encoding='utf-8') as file:
-			await file.write(f'{toml.dumps(old_database)}')
+		await self._write('cache/time_database.toml', f'{toml.dumps(old_database)}')
 
 	async def date_checker(self):
 		while True:
@@ -262,13 +264,11 @@ class Dispatch:
 				'week': [],
 				'month': []
 			}
-			async with aiopen('cache/time_database.toml', 'w', encoding='utf-8') as file:
-				await file.write(f'{toml.dumps(db)}')
+			await self._write('cache/time_database.toml', f'{toml.dumps(db)}')
 		return db[f'{from_id}']
 
 	async def get_database_of_times(self) -> dict:
-		async with aiopen('cache/time_database.toml', 'r', encoding='utf-8') as file:
-			lines = await file.read()
+		lines = await self._read('cache/time_database.toml')
 		return toml.loads(f'{lines}')
 
 	async def _check3(self):
@@ -277,8 +277,7 @@ class Dispatch:
 			for date in id[1]['3']:
 				if time() - date >= 3*24*60*60:
 					database[id[0]]['3'].remove(date)
-		async with aiopen('cache/time_database.toml', 'w', encoding='utf-8') as file:
-			await file.write(f'{toml.dumps(database)}')
+		await self._write('cache/time_database.toml', f'{toml.dumps(database)}')
 		await asyncio.sleep(24*60*60)
 
 	async def _check5(self):
@@ -295,8 +294,7 @@ class Dispatch:
 					)
 				if time() - date >= 5*24*60*60:
 					database[id[0]]['5'].remove(date)
-		async with aiopen('cache/time_database.toml', 'w', encoding='utf-8') as file:
-			await file.write(f'{toml.dumps(database)}')
+		await self._write('cache/time_database.toml', f'{toml.dumps(database)}')
 		await asyncio.sleep((24*60*60) + 10)
 
 	async def _check_week(self):
@@ -305,8 +303,7 @@ class Dispatch:
 			for date in id[1]['week']:
 				if (time() - date >= 7*24*60*60) and (strftime('%A', gmtime()).lower() == 'sunday'):
 					database[id[0]]['week'].remove(date)
-		async with aiopen('cache/time_database.toml', 'w', encoding='utf-8') as file:
-			await file.write(f'{toml.dumps(database)}')
+		await self._write('cache/time_database.toml', f'{toml.dumps(database)}')
 		await asyncio.sleep((24*60*60) + 20)
 
 	async def _check_month(self):
@@ -315,8 +312,7 @@ class Dispatch:
 			for date in id[1]['month']:
 				if time() - date >= 30*24*60*60:
 					database[id[0]]['month'].remove(date)
-		async with aiopen('cache/time_database.toml', 'w', encoding='utf-8') as file:
-			await file.write(f'{toml.dumps(database)}')
+		await self._write('cache/time_database.toml', f'{toml.dumps(database)}')
 		await asyncio.sleep((24*60*60) + 30)
 
 	async def debug_spec_checker(self):
@@ -350,16 +346,13 @@ class Dispatch:
 			for date in id[1]['month']:
 				if time() - date >= 30*24*60*60:
 					database[id[0]]['month'].remove(date)
-		async with aiopen('cache/time_database.toml', 'w', encoding='utf-8') as file:
-			await file.write(f'{toml.dumps(database)}')
+		await self._write('cache/time_database.toml', f'{toml.dumps(database)}')
 
 	async def get_rate(self) -> str:
-		async with aiopen('cache/rates.txt', 'r', encoding='utf-8') as rate:
-			return await rate.read()
+		return await self._read('cache/rates.txt')
 
 	async def set_rate_file(self, text:str='') -> None:
-		async with aiopen('cache/rates.txt', 'w', encoding='utf-8') as rate:
-			await rate.write(f'{text}')
+		await self._write('cache/rates.txt', text)
 
 	def _find(self, promos:list, from_id:int) -> int:
 		for promo in promos:
@@ -381,15 +374,13 @@ class Dispatch:
 		return f'{choice(ascii_uppercase)}{randint(100, 999)}'
 
 	async def get_promo_db(self):
-		async with aiopen('cache/promo.pylist', 'r', encoding='utf-8') as file:
-			lines = await file.read()
+		lines = await self._read('cache/promo.pylist')
 		return eval(f'{lines}')
 
 	async def _save_promo(self, new:str, from_id:int) -> None:
 		promos = await self.get_promo_db()
-		async with aiopen('cache/promo.pylist', 'w', encoding='utf-8') as file:
-			promos.append([from_id, new])
-			await file.write(f'{promos}')
+		promos.append([from_id, new])
+		await self._write('cache/promo.pylist', f'{promos}')
 
 	async def add_new_promo(self, from_id:int) -> int:
 		promos = await self.get_promo_db()
@@ -408,15 +399,13 @@ class Dispatch:
 		return from_id in (await self.already_insert_promo_users())
 
 	async def already_insert_promo_users(self) -> list:
-		async with aiopen('cache/aipu.pylist', 'r', encoding='utf-8') as file:
-			lines = await file.read()
+		lines = await self._read('cache/aipu.pylist')
 		return eval(f'{lines}')
 
 	async def add_insert_promo_user(self, new_id:int) -> None:
 		aipu = await self.already_insert_promo_users()
-		async with aiopen('cache/aipu.pylist', 'w', encoding='utf-8') as file:
-			aipu.append(new_id)
-			await file.write(f'{aipu}')
+		aipu.append(new_id)
+		await self._write('cache/aipu.pylist', f'{aipu}')
 
 	async def time(self):
 		hours, minutes = list(
