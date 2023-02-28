@@ -143,11 +143,20 @@ async def rate_on_city(message:Message):
 async def promos(message:Message):
 	promo = await dispatcher.add_new_promo(message.from_id)
 	id_ = await vk.api.groups.get_by_id()
-	await message.answer('Ты можешь получить бонусные рубли на баланс анкеты, и обменять их на бесплатные поездки по городу.\n\n\
-Для этого нужно переслать пригласительное сообщение друзьям. За каждую регистрацию с использованием твоего промокода ты получишь по 10р. и сможешь обменять их на поездки по городу.\n\n\
+	parameters = await binder.get_parameters()
+	if (await db.passanger.exists(message.from_id)):
+		await message.answer(f'Ты можешь получить бонусные рубли на баланс анкеты, и обменять их на бесплатные поездки по городу.\n\n\
+Для этого нужно переслать пригласительное сообщение друзьям. За каждую регистрацию с использованием твоего промокода ты получишь по {parameters["count"]}р. и сможешь обменять их на поездки по городу.\n\n\
 Разошли пригласительное сообщение своим друзьям &#128071;&#128071;&#128071;')
-	await message.answer(f'Смотри каким ботом такси я пользуюсь: https://vk.com/write-{id_[0].id}\n\
-Создай свою анкету используя мой промокод "{promo[1]}" и получи бесплатные поездки по городу!', keyboard=(keyboards.choose_service if (await db.passanger.exists(message.from_id)) else keyboards.driver_profile))
+		await message.answer(f'Смотри каким ботом такси я пользуюсь: https://vk.com/write-{id_[0].id}\n\
+Создай свою анкету используя мой промокод "{promo[1]}" и получи бесплатные поездки по городу!', keyboard=keyboards.choose_service)
+	else:
+		await message.answer(f'&#9989;Получи бонусные рубли на баланс анкеты, и потрать их на приём заявок! (Обычная стоимость заявки {parameters["count"]}руб.)\n\n\
+&#9989;Чтобы получить бонусы, тебе нужно пригласить, как можно больше людей зарегистрировать по твоему промо-коду: {promo[1]}. За каждую регистрацию ты получишь по {parameters["count"]} руб.\n\n\
+&#9989;Разошли пригласительное сообщение друзьям, или опубликуй его у себя на стене в Вк &#128071;&#128071;&#128071;')
+		await message.answer(f'Привет!\n\
+Я работаю в {id_[0].name} https://vk.com/write-{id_[0].id}.\n\
+Используй мой промо-код {promo[1]} при регистрации своей анкеты, и получи бесплатные поездки по городу!', keyboard=keyboards.driver_profile)
 
 # @vk.on.private_message(payload={'promo': 0, 'add': 0})
 # async def get_promo(message:Message):
