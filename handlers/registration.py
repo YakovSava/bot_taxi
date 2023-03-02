@@ -205,7 +205,7 @@ async def reg_driver_6(message:Message):
 &#9989;Разошли пригласительное сообщение друзьям, или опубликуй его у себя на стене в Вк &#128071;&#128071;&#128071;')
 	await message.answer(f'Привет!\n\
 Я работаю в {id_[0].name} https://vk.com/write-{id_[0].id}.\n\
-Используй мой промо-код {promo[1]} при регистрации своей анкеты, и получи бесплатные поездки по городу!', keyboard=keyboards.driver_profile)
+Используй мой промо-код {promo[1]} при регистрации своей анкеты, и получи бесплатные поездки по городу!', keyboard=keyboards.driver_registartion_success)
 
 # # Редактирование (пперерегистрация водителя)
 # @vk.on.private_message(payload = {'driver': 0, 'edit': 0})
