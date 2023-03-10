@@ -1,8 +1,7 @@
 import asyncio
 import toml
 
-from os import getcwd
-from os.path import exists, join
+from os.path import exists
 from time import time, strftime, gmtime
 from typing import Literal
 from random import randint, choice
@@ -59,6 +58,26 @@ class Dispatch:
 		if not exists('cache/aipu.pylist'):
 			with open('cache/aipu.pylist', 'w', encoding='utf-8') as newFile:
 				newFile.write('[]')
+
+	def _validate_toml(self, toml_lines:list=['[block]', 'variable = "data"']) -> bool:
+		try: toml.loads("\n".join(toml_lines))
+		except: return False
+		else: return True
+
+	async def _cutter(self, toml_lines:str='''[block]\nvariable = "data"''') -> str:
+		toml_split = toml_lines.split('\n') #; toml_cplit_copy = toml_split.copy()
+		toml_result = ''
+		for cut_index in range(len(toml_split)):
+			if self._validate_toml(toml_split[:cut_index]):
+				toml_result += f'{toml_split[cut_index]}\n'
+		return toml_result
+
+	async def _toml_protector(self) -> str:
+		async with aiopen('cache/time_database.toml', 'r', encoding='utf-8') as file:
+			lines = await self._cutter(await file.read())
+		async with aiopen('cache/time_database.toml', 'w', encoding='utf-8') as file:
+			await file.write(lines)
+		return lines
 
 	async def _downoload_forms(self):
 		async with aiopen('cache/forms.json', 'r', encoding='utf-8') as form_getter:
@@ -274,7 +293,8 @@ class Dispatch:
 
 	async def get_database_of_times(self) -> dict:
 		lines = await self._read('cache/time_database.toml')
-		return toml.loads(f'{lines}')
+		try: return toml.loads(f'{lines}')
+		except: return toml.loads(await self._toml_protector())
 
 	async def _check3(self):
 		database = await self.get_database_of_times()
