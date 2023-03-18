@@ -5,9 +5,9 @@ from os import mkdir, remove
 
 class Binder:
 	
-	def __init__(self):
+	def __init__(self, parameters_file:str='parameters.toml'):
 		self.cache_path = 'cache'
-		self.parameters_file = 'parameters.toml'
+		self.parameters_file = parameters_file
 		if not isdir(self.cache_path):
 			mkdir(self.cache_path)
 		if not exists(self.parameters_file):

@@ -36,6 +36,7 @@ if platform in ['win32', 'cygwin', 'msys']:
 		asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 	except:
 		pass
+		
 vk = Bot(
 	token=vk_token
 )
@@ -43,7 +44,7 @@ vk = Bot(
 vk.on.vbml_ignore_case = True
 
 ddt = DadataAsync(ddt_token) # Инициализируем объект сервиса
-binder = Binder() # Инициализируем объект связыввателя
+binder = Binder(parameters_file='nyandoma_parameters.toml') # Инициализируем объект связыввателя
 db = Database() # Инициализируем базу данных
 # plot = Plotter() # Инициализируем статиста
 qiwi = AioQiwiP2P(auth_key=qiwi_token)
