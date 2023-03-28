@@ -110,18 +110,33 @@ async def admin_com(message:Message, commands:str):
 			await message.answer('Принуительная проверка завершена')
 		elif command[0] == 'stat':
 			passangers, drivers = [rec async for rec in db.passanger.admin_get_all()], await db.driver.admin_get_all()
+			off_driver_ids = await dispatcher.get_service_file()
+			drivers_info = [[driver_id, driver_city] async for driver_id, driver_city in db.driver.get_all() if (driver_id not in off_driver_ids)]
+			driver_no_registred_ids = await dispatcher.get_no_registred_drivers()
 			aipu = await dispatcher.already_insert_promo_users()
+			def map_wrapper(x:list) -> int:
+				try: return max(x[1]['3'])
+				except: return 0
 			orders = list(map(
-				lambda x: max(list(x.items())[1]['3']),
-				(await dispatcher.get_database_of_times())
+				map_wrapper,
+				list((await dispatcher.get_database_of_times()).items())
 			))
+			stat = ""
+			for _id, _city in drivers_info:
+				stat += f"{_id} из {_city}\n"
 			await message.answer(f'''Статистика
 Таблица водителей: http://45.8.230.39/drivers
 Таблица пассажиров: http://45.8.230.39/passangers
 Количество водителей: {len(drivers)}
 Количество водителей: {len(passangers)}
 Количество людей получивших промокоды: {len(aipu)} из {len(drivers) + len(passangers)} возможных
-Последний заказ был: {strftime('%m.%d %H:%M:%S', gmtime(max(orders)))}''')
+Последний заказ был: {strftime('%m.%d %H:%M:%S', gmtime(max(orders)))}
+Отключённых аккаунтов: {len(off_driver_ids)}
+Недозарегестрированных водителей: {len(driver_no_registred_ids)}
+Недозарегестрированные водители: {" ".join(map(str, driver_no_registred_ids))}
+Отключённые аккаунты: {" ".join(map(str, off_driver_ids))}
+Все доступные водители:
+{stat}''')
 		elif command[0] == 'buttons':
 			await binder.set_buttons(list(map(int, command[-1].split('/'))))
 		else:
