@@ -53,6 +53,6 @@ timer = Timer()
 dispatcher = Dispatch(
 	timer=timer,
 	database=db,
-	api=vk.api,
-	CGetter=DownoloadC()
+	api=vk.api
+	# CGetter=DownoloadC()
 )

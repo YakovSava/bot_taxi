@@ -338,6 +338,11 @@ async def delivery_tax(message:Message):
 	key = await dispatcher.new_form(message.from_id)
 	text = storage.get(f'{message.from_id}_deliver_get'); storage.delete(f'{message.from_id}_deliver_get')
 	off_driver_ids = await dispatcher.get_service_file()
+	driver_ids = []
+	async for driver_id, driver_city in db.driver.get_all():
+		print(info['city'].lower() == driver_city.lower())
+		print((driver_id not in off_driver_ids))
+		driver_ids.append(driver_id)
 	driver_ids = [driver_id async for driver_id, driver_city in db.driver.get_all() if ((info['city'].lower() == driver_city.lower()) and (driver_id not in off_driver_ids))]
 	driver_no_registred_ids = await dispatcher.get_no_registred_drivers()
 	driver_ids.extend(driver_no_registred_ids)
