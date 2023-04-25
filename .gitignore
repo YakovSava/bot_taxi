@@ -1,5 +1,3 @@
 __pycache__
-plugins/__pycache__
-handlers/__pycache__
-parameters.toml
 config.py
+global_parameters.toml

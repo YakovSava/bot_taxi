@@ -1,9 +1,10 @@
 from aiohttp.web import Application, RouteTableDef, Response, run_app
 from aiofiles import open as aiopen
-from handlers import db
+from plugins.database import Database
 
 app = Application()
 routes = RouteTableDef()
+db = Database()
 
 @routes.get('/styles/style.css')
 async def server_get_style(request):
