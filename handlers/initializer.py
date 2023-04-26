@@ -1,7 +1,7 @@
 import asyncio
 
 from sys import platform
-from toml import dumps
+from rtoml import dumps
 from vkbottle.bot import Bot
 from pyqiwip2p import AioQiwiP2P
 from dadata import DadataAsync
@@ -11,7 +11,6 @@ from plugins.dispatcher import Dispatch
 from plugins.timer import Timer
 from plugins.csveer import Csveer
 from plugins.downoloader import DownoloadC
-from config import *
 
 if platform in ['win32', 'cygwin', 'msys']:
 	try:

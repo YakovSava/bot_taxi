@@ -1,13 +1,15 @@
 print('Импорт и инициализация...')
 import asyncio # Импортируем асинхронность
-import shutils
+import shutil as shutils
 
 from sys import platform
 from importlib import import_module
-from toml import dumps
+from rtoml import loads
 from vkbottle.bot import Message
 from plugins.keyboards import keyboards
 from plugins.timer import Timer
+from plugins.manager import Manager
+from plugins.binder import Binder
 from server import run_app, routes, app
 
 print('Препроцессирование...')
@@ -32,11 +34,11 @@ timer = Timer()
 
 
 with open('global_parameters.toml', 'r', encoding='utf-8') as gp:
-	global_parameters = dumps(gp.read())
+	global_parameters = loads(gp.read())
 
 all_datas = []
 paths = []
-for city, token in global_parameters['citys']:
+for city, button, amount, link, token in global_parameters['citys']:
 	shutils.copy('handlers', f'{city}_handlers')
 
 	with open('local_parameters.toml', 'w', encoding='utf-8') as file:
@@ -82,6 +84,8 @@ token = '{token}'
 
 	paths.append(f'{city}_handlers')
 
+manager = Manager(binders=list(map(lambda cls: cls['binder'], all_datas)))
+
 if __name__ == '__main__':
 	print('Запуск...')
 	loop = asyncio.new_event_loop()
@@ -98,6 +102,9 @@ if __name__ == '__main__':
 	runner_list = []
 	for raw in tmp_runner_list:
 		runner_list.append(*raw)
+	runner_list.append(
+		loop.create_task(manager.sync_database())
+	)
 
 	app.add_routes(routes)
 	timer.new_sync_task(run_app, app, host=('45.8.230.39' if platform in ['linux', 'linux2'] else '127.0.0.1'), port='80', loop=loop)

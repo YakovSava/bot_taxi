@@ -1,5 +1,5 @@
 import asyncio
-import toml
+import rtoml as tomli
 
 from os.path import exists
 from time import time, strftime, gmtime
@@ -60,7 +60,7 @@ class Dispatch:
 				newFile.write('[]')
 
 	def _validate_toml(self, toml_lines:list=['[block]', 'variable = "data"']) -> bool:
-		try: toml.loads("\n".join(toml_lines))
+		try: tomli.loads("\n".join(toml_lines))
 		except: return False
 		else: return True
 
@@ -268,7 +268,7 @@ class Dispatch:
 }
 	Trips for all time are stored in the main database
 		'''
-		await self._write('cache/time_database.toml', f'{toml.dumps(old_database)}')
+		await self._write('cache/time_database.toml', f'{tomli.dumps(old_database)}')
 
 	async def date_checker(self):
 		while True:
@@ -288,13 +288,13 @@ class Dispatch:
 				'week': [],
 				'month': []
 			}
-			await self._write('cache/time_database.toml', f'{toml.dumps(db)}')
+			await self._write('cache/time_database.toml', f'{tomli.dumps(db)}')
 		return db[f'{from_id}']
 
 	async def get_database_of_times(self) -> dict:
 		lines = await self._read('cache/time_database.toml')
-		try: return toml.loads(f'{lines}')
-		except: return toml.loads(await self._toml_protector())
+		try: return tomli.loads(f'{lines}')
+		except: return tomli.loads(await self._toml_protector())
 
 	async def _check3(self):
 		database = await self.get_database_of_times()
@@ -302,7 +302,7 @@ class Dispatch:
 			for date in id[1]['3']:
 				if time() - date >= 3*24*60*60:
 					database[id[0]]['3'].remove(date)
-		await self._write('cache/time_database.toml', f'{toml.dumps(database)}')
+		await self._write('cache/time_database.toml', f'{tomli.dumps(database)}')
 		await asyncio.sleep(24*60*60)
 
 	async def _check5(self):
@@ -319,7 +319,7 @@ class Dispatch:
 					)
 				if time() - date >= 5*24*60*60:
 					database[id[0]]['5'].remove(date)
-		await self._write('cache/time_database.toml', f'{toml.dumps(database)}')
+		await self._write('cache/time_database.toml', f'{tomli.dumps(database)}')
 		await asyncio.sleep((24*60*60) + 10)
 
 	async def _check_week(self):
@@ -328,7 +328,7 @@ class Dispatch:
 			for date in id[1]['week']:
 				if (time() - date >= 7*24*60*60) and (strftime('%A', gmtime()).lower() == 'sunday'):
 					database[id[0]]['week'].remove(date)
-		await self._write('cache/time_database.toml', f'{toml.dumps(database)}')
+		await self._write('cache/time_database.toml', f'{tomli.dumps(database)}')
 		await asyncio.sleep((24*60*60) + 20)
 
 	async def _check_month(self):
@@ -337,7 +337,7 @@ class Dispatch:
 			for date in id[1]['month']:
 				if time() - date >= 30*24*60*60:
 					database[id[0]]['month'].remove(date)
-		await self._write('cache/time_database.toml', f'{toml.dumps(database)}')
+		await self._write('cache/time_database.toml', f'{tomli.dumps(database)}')
 		await asyncio.sleep((24*60*60) + 30)
 
 	async def debug_spec_checker(self):
@@ -371,7 +371,7 @@ class Dispatch:
 			for date in id[1]['month']:
 				if time() - date >= 30*24*60*60:
 					database[id[0]]['month'].remove(date)
-		await self._write('cache/time_database.toml', f'{toml.dumps(database)}')
+		await self._write('cache/time_database.toml', f'{tomli.dumps(database)}')
 
 	async def get_rate(self) -> str:
 		return await self._read('cache/rates.txt')

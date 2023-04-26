@@ -1,4 +1,4 @@
-from toml import loads, dumps
+from rtoml import loads, dumps
 from aiofiles import open as aiopen
 from os.path import exists, isdir, join
 from os import mkdir, remove

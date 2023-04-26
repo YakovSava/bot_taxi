@@ -1,7 +1,6 @@
 import asyncio
 
-from os.path import exists
-from toml import loads
+from rtoml import loads
 from shutil import copy
 from aiofiles import open as aiopen
 from aiosqlite import Row, connect
@@ -16,12 +15,6 @@ class Manager:
         if binders is None:
             raise Exception
         self.parameters = binders
-        self._loop = loop
-
-    async def _check_table(self) -> None:
-        if exists('table.toml'):
-            async with aiopen('table.toml', 'w', encoding='utf-8') as file:
-                await file.write('')
 
     async def _backup(self) -> None:
         copy('cache/drivers.db', '.')
@@ -76,12 +69,28 @@ class Manager:
         return [unifed_driver, unifed_passangers]
 
     async def _form_csv(self, data:list[list[dict]]) -> str:
-        text = 'город;количество водителей;количество пассажиров;кнопки;' \
-               ''
+        global_parameters = await self._get_global_parameters()
+        text = 'город;количество водителей;количество пассажиров;кнопки;общий баланс водителей;общий баланс пассажиров;стоимость поездки;ссылка на расценку\n'
+        lambda_filter = lambda u: len(filter(lambda x: x.lower() == city.lower(), u))
+        lambda_balance = lambda u: sum(map(lambda x: x['balance'], u))
+        for city, button, amount, link, token in global_parameters['citys']:
+            text += f'{city};{lambda_filter(data[0])};{lambda_filter(data[1])};{button};{lambda_balance(data[0])};{lambda_balance(data[1])};{amount};{link}\n'
+        return text
 
     async def _get_global_parameters(self) -> dict:
         async with aiopen('global_parameters.toml', 'r', encoding='utf-8') as file:
             return loads(await file.read())
 
+    async def _check_once(self) -> None:
+        async with aiopen('table.csv', 'w', encoding='utf-8') as csv:
+            await csv.write(
+                await self._form_csv(
+                    await self._get_stat()
+                )
+            )
+        await self._backup()
+
     async def sync_database(self) -> None:
-        pass
+        while True:
+            await self._check_once()
+            await asyncio.sleep(24*60*60)
