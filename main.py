@@ -1,13 +1,14 @@
 print('Импорт и инициализация...')
 import asyncio # Импортируем асинхронность
+import shutils
 
 from sys import platform
 from importlib import import_module
 from toml import dumps
-from shutils import copy, rmtree
 from vkbottle.bot import Message
 from plugins.keyboards import keyboards
-from server import run_app, Response, routes, app
+from plugins.timer import Timer
+from server import run_app, routes, app
 
 print('Препроцессирование...')
 
@@ -27,14 +28,16 @@ else:
 	logging.getLogger("vkbottle").setLevel(logging.INFO)
 
 null = None # Not debug!
+timer = Timer()
 
 
 with open('global_parameters.toml', 'r', encoding='utf-8') as gp:
 	global_parameters = dumps(gp.read())
 
 all_datas = []
+paths = []
 for city, token in global_parameters['citys']:
-	copy('handlers', f'{city}_handlers')
+	shutils.copy('handlers', f'{city}_handlers')
 
 	with open('local_parameters.toml', 'w', encoding='utf-8') as file:
 		file.write(f'''qiwi = '{global_parameters['qiwi']}'
@@ -44,10 +47,10 @@ token = '{token}'
 ''')
 
 	datas = {
-		'vk': import_module(f'{city}_handlers', fromlist=['vk']),
-		'db': import_module(f'{city}_handlers', fromlist=['db']),
-		'binder': import_module(f'{city}_handlers', fromlist=['binder']),
-		'dispatcher': import_module(f'{city}_handlers', fromlist=['dispatcher']),
+		'vk': import_module(f'{city}_handlers', fromlist=('vk',)),
+		'db': import_module(f'{city}_handlers', fromlist=('db',)),
+		'binder': import_module(f'{city}_handlers', fromlist=('binder',)),
+		'dispatcher': import_module(f'{city}_handlers', fromlist=('dispatcher',)),
 	}
 
 	@datas['vk'].on.private_message()
@@ -77,7 +80,7 @@ token = '{token}'
 
 	all_datas.append(datas)
 
-	rmtree(f'{city}_handlers')
+	paths.append(f'{city}_handlers')
 
 if __name__ == '__main__':
 	print('Запуск...')
@@ -99,4 +102,7 @@ if __name__ == '__main__':
 	app.add_routes(routes)
 	timer.new_sync_task(run_app, app, host=('45.8.230.39' if platform in ['linux', 'linux2'] else '127.0.0.1'), port='80', loop=loop)
 
-	loop.run_until_complete(asyncio.wait(runner_list))
+	try: loop.run_until_complete(asyncio.wait(runner_list))
+	except:
+		for path in paths:
+			shutils.rmtree(path)

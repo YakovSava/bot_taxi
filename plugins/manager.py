@@ -1,6 +1,7 @@
 import asyncio
 
 from os.path import exists
+from toml import loads
 from shutil import copy
 from aiofiles import open as aiopen
 from aiosqlite import Row, connect
@@ -73,6 +74,14 @@ class Manager:
         } for passanger in passangers]
 
         return [unifed_driver, unifed_passangers]
+
+    async def _form_csv(self, data:list[list[dict]]) -> str:
+        text = 'город;количество водителей;количество пассажиров;кнопки;' \
+               ''
+
+    async def _get_global_parameters(self) -> dict:
+        async with aiopen('global_parameters.toml', 'r', encoding='utf-8') as file:
+            return loads(await file.read())
 
     async def sync_database(self) -> None:
         pass
