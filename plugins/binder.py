@@ -13,8 +13,11 @@ class Binder:
             mkdir(self.cache_path)
         if not exists(self.parameters_file):
             with open(self.parameters_file, 'w', encoding='utf-8') as file:
-                file.write(dumps({"admin": [
-                           505671804], "count": 0, "group_id": 1, "city": "Няндома", "buttons": "5/10/15"}))
+                file.write('{}')
+                self.raw_parameters = {}
+        else:
+            with open(self.parameters_file, 'r', encoding='utf-8') as file:
+                self.raw_parameters = loads(file.read())
 
     async def preset(self, city_name: str) -> None:
         toml_file = await self.get_parameters()
