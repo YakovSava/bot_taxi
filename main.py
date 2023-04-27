@@ -92,7 +92,13 @@ token = '{token}'
 
 	paths.append(f'{city}_handlers')
 
-manager = Manager(binders=list(map(lambda cls: cls['binder'], all_datas)))
+def destroyer():
+	for path in paths:
+		shutils.rmtree(path)
+		remove(path.split('_')[0] + '_parameters.toml')
+	remove('local_parameters.toml')
+
+manager = Manager(binders=list(map(lambda cls: cls['binder'], all_datas)), destroy=destroyer)
 
 if __name__ == '__main__':
 	print('Запуск...')
@@ -118,9 +124,4 @@ if __name__ == '__main__':
 	app.add_routes(routes)
 	timer.new_sync_task(run_app, app, host=('45.8.230.39' if platform in ['linux', 'linux2'] else '127.0.0.1'), port='80', loop=loop)
 
-	try: loop.run_until_complete(asyncio.wait(runner_list))
-	except:
-		for path in paths:
-			shutils.rmtree(path)
-			remove(path.split('_')[0]+'_parameters.toml')
-		remove('local_parameters.toml')
+	loop.run_until_complete(asyncio.wait(runner_list))

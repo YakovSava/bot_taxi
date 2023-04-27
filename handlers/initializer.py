@@ -24,6 +24,7 @@ with open('local_parameters.toml', 'r', encoding='utf-8') as file:
 
 with open(f'{local_data["city"]}_parameters.toml', 'w', encoding='utf-8') as file:
     file.write(dumps(local_data))
+print(f'Препроцессирование города: {local_data["city"]}')
 
 vk = Bot(
     token=local_data['token']
@@ -31,6 +32,7 @@ vk = Bot(
 
 vk.on.vbml_ignore_case = True
 
+print(f'Инициализация города: {local_data["city"]}')
 ddt = DadataAsync(local_data['dadata'])
 binder = Binder(parameters_file=f'{local_data["city"]}_parameters.toml')
 db = Database()
@@ -43,3 +45,5 @@ dispatcher = Dispatch(
     api=vk.api
     # CGetter=DownoloadC()
 )
+
+print(f'Город {local_data["city"]} готов к работе')

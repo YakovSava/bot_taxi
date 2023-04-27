@@ -10,10 +10,12 @@ class Manager:
 
     def __init__(self,
             loop:asyncio.AbstractEventLoop=asyncio.get_event_loop(),
-            binders:list[Binder]=None
+            binders:list[Binder]=None,
+            destroy:callable=None
         ):
-        if binders is None:
+        if (binders is None) or (destroy is None):
             raise Exception
+        self.deleter = destroy
         self.parameters = binders
 
     async def _backup(self) -> None:
@@ -94,3 +96,6 @@ class Manager:
         while True:
             await self._check_once()
             await asyncio.sleep(24*60*60)
+
+    def __del__(self) -> None:
+        self.deleter()
