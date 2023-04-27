@@ -59,25 +59,21 @@ class Dispatch:
 			with open('cache/aipu.pylist', 'w', encoding='utf-8') as newFile:
 				newFile.write('[]')
 
-	def _validate_toml(self, toml_lines:list=['[block]', 'variable = "data"']) -> bool:
-		try: tomli.loads("\n".join(toml_lines))
-		except: return False
-		else: return True
-
-	async def _cutter(self, toml_lines:str='''[block]\nvariable = "data"''') -> str:
-		toml_split = toml_lines.split('\n') #; toml_cplit_copy = toml_split.copy()
-		toml_result = ''
-		for cut_index in range(len(toml_split)):
-			if self._validate_toml(toml_split[:cut_index]):
-				toml_result += f'{toml_split[cut_index]}\n'
-		return toml_result
+	def _validate_toml(self, toml_lines:str='[block]\nvariable = "data"') -> bool:
+		try: tomli.loads(toml_lines)
+		except: return True
+		else: return False
 
 	async def _toml_protector(self) -> str:
 		async with aiopen('cache/time_database.toml', 'r', encoding='utf-8') as file:
-			lines = await self._cutter(await file.read())
+			crucks = await file.read()
+		tmp = crucks.split('\n')
+		while self._validate_toml(crucks):
+			crucks = '\n'.join(tmp[:-1])
+			tmp = tmp[:-1]
 		async with aiopen('cache/time_database.toml', 'w', encoding='utf-8') as file:
-			await file.write(lines)
-		return lines
+			await file.write(crucks)
+		return crucks
 
 	async def _downoload_forms(self):
 		async with aiopen('cache/forms.json', 'r', encoding='utf-8') as form_getter:
