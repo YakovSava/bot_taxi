@@ -1,7 +1,7 @@
 import asyncio
 
 from sys import platform
-from rtoml import dumps
+from rtoml import loads, dumps
 from vkbottle.bot import Bot
 from pyqiwip2p import AioQiwiP2P
 from dadata import DadataAsync
@@ -10,20 +10,23 @@ from plugins.database import Database
 from plugins.dispatcher import Dispatch
 from plugins.timer import Timer
 from plugins.csveer import Csveer
-from plugins.downoloader import DownoloadC
+
+# from plugins.downoloader import DownoloadC
 
 if platform in ['win32', 'cygwin', 'msys']:
-	try:
-		asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-	except:
-		pass
+    try:
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    except:
+        pass
 
 with open('local_parameters.toml', 'r', encoding='utf-8') as file:
-	local_data = dumps(file.read())
+    local_data = loads(file.read())
 
-		
+with open(f'{local_data["city"]}_parameters.toml', 'w', encoding='utf-8') as file:
+    file.write(dumps(local_data))
+
 vk = Bot(
-	token=local_data['token']
+    token=local_data['token']
 )
 
 vk.on.vbml_ignore_case = True
@@ -35,8 +38,8 @@ qiwi = AioQiwiP2P(auth_key=local_data['qiwi'])
 csv = Csveer()
 timer = Timer()
 dispatcher = Dispatch(
-	timer=timer,
-	database=db,
-	api=vk.api
-	# CGetter=DownoloadC()
+    timer=timer,
+    database=db,
+    api=vk.api
+    # CGetter=DownoloadC()
 )

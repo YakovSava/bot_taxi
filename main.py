@@ -1,8 +1,12 @@
+import shutil
+
 print('Импорт и инициализация...')
 import asyncio # Импортируем асинхронность
 import shutil as shutils
 
 from sys import platform
+from os import remove
+from os.path import isdir
 from importlib import import_module
 from rtoml import loads
 from vkbottle.bot import Message
@@ -39,20 +43,24 @@ with open('global_parameters.toml', 'r', encoding='utf-8') as gp:
 all_datas = []
 paths = []
 for city, button, amount, link, token in global_parameters['citys']:
-	shutils.copy('handlers', f'{city}_handlers')
+	if isdir(f'{city}_handlers'):
+		shutil.rmtree(f'{city}_handlers')
+	shutils.copytree('handlers', f'{city}_handlers')
 
-	with open('local_parameters.toml', 'w', encoding='utf-8') as file:
+	with open(f'local_parameters.toml', 'w', encoding='utf-8') as file:
 		file.write(f'''qiwi = '{global_parameters['qiwi']}'
 dadata = '{global_parameters['dadata']}'
 city = '{city}'
 token = '{token}'
 ''')
 
+	_temp = import_module(f'{city}_handlers', ('vk','db','binder','dispatcher'))
+
 	datas = {
-		'vk': import_module(f'{city}_handlers', fromlist=('vk',)),
-		'db': import_module(f'{city}_handlers', fromlist=('db',)),
-		'binder': import_module(f'{city}_handlers', fromlist=('binder',)),
-		'dispatcher': import_module(f'{city}_handlers', fromlist=('dispatcher',)),
+		'vk': _temp.vk,
+		'db': _temp.db,
+		'binder': _temp.binder,
+		'dispatcher': _temp.dispatcher,
 	}
 
 	@datas['vk'].on.private_message()
@@ -101,7 +109,8 @@ if __name__ == '__main__':
 
 	runner_list = []
 	for raw in tmp_runner_list:
-		runner_list.append(*raw)
+		for i in raw:
+			runner_list.append(i)
 	runner_list.append(
 		loop.create_task(manager.sync_database())
 	)
@@ -113,3 +122,5 @@ if __name__ == '__main__':
 	except:
 		for path in paths:
 			shutils.rmtree(path)
+			remove(path.split('_')[0]+'_parameters.toml')
+		remove('local_parameters.toml')

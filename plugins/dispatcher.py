@@ -10,7 +10,7 @@ from vkbottle import API, VKAPIError
 from aiofiles import open as aiopen
 from plugins.database import Database # For annotation
 from plugins.timer import Timer # For annotation
-from plugins.downoloader import DownoloadC # For annotation
+# from plugins.downoloader import DownoloadC # For annotation
 from plugins.keyboards import keyboards
 
 class Dispatch:
@@ -21,7 +21,7 @@ class Dispatch:
 		timer:Timer=None,
 		database:Database=None,
 		api:API=None,
-		CGetter:DownoloadC=None
+		# CGetter:DownoloadC=None
 	):
 		if (timer is None) and (database is None) and (api is None) and (CGetter is None):
 			raise self.DispatchNotGetOneParameterError(f'The dispatcher did not receive one of the items (something from the following list is "None", however it should not be "None"): \n\
@@ -29,7 +29,7 @@ class Dispatch:
 		self.timer = timer
 		self.database = database
 		self.api = api
-		self.downoload = CGetter
+		# self.downoload = CGetter
 		self.all_forms = {}
 		if not exists('cache/forms.json'):
 			with open('cache/forms.json', 'w', encoding='utf-8') as file:
