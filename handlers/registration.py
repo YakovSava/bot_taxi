@@ -84,7 +84,9 @@ async def insert_promo(message:Message):
 				if promo == message.from_id:
 					await message.answer('Нельзя регестрирвоаться, на свой же промокод')
 				else:
-					await message.answer(f'Реферальный код от @id{promo} введён. Добро пожаловать!')
+					await message.answer(f'На твою анкету зачислено +10 руб.\n\
+Делись своим промокодом с друзьями,\n\
+зарабатывай больше бонусов, и трать их на поездки по городу.')
 					if (await db.passanger.exists(promo)):
 						await db.passanger.set_balance(promo, 10)
 					else:
@@ -127,7 +129,9 @@ async def reg_driver_promo(message:Message):
 				if promo == message.from_id:
 					await message.answer('Нельзя регестрироваться, на свой же промокод')
 				else:
-					await message.answer(f'Реферальный код от @id{promo} введён. Добро пожаловать!')
+					await message.answer(f'На твою анкету зачислено +10 руб.\n\
+Делись своим промокодом с друзьями,\n\
+зарабатывай больше бонусов, и трать их на поездки по городу.')
 					if (await db.passanger.exists(promo)):
 						await db.passanger.set_balance(promo, 10)
 					else:
