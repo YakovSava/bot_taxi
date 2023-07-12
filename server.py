@@ -1,3 +1,4 @@
+from time import strftime, gmtime
 from aiohttp.web import Application, RouteTableDef, Response, run_app, Request
 from aiofiles import open as aiopen
 from plugins.database import Database
@@ -56,7 +57,11 @@ async def get_drivers(request:Request):
 	counter = 0
 	for driver in all_drivers:
 		for index in ['VK', 'status', 'gender', 'city', 'name', 'phone', 'auto', 'color', 'state_number', 'first_activity', 'last_activity', 'quantity', 'balance']:
-			html_text = html_text.replace(f'{{{index}}}', f'<td class="{"tg-pvec" if counter % 2 == 0 else "tg-ku2z"}">{driver[index]}</td>', 1)
+			if index in ['first_activity', 'last_activity']:
+				try:html_text = html_text.replace(f'{{{index}}}', f'<td class="{"tg-pvec" if counter % 2 == 0 else "tg-ku2z"}">{strftime("%c", gmtime(float(driver[index])))}</td>', 1)
+				except: html_text = html_text.replace(f'{{{index}}}', f'<td class="{"tg-pvec" if counter % 2 == 0 else "tg-ku2z"}">{driver[index]}</td>', 1)
+			else:
+				html_text = html_text.replace(f'{{{index}}}', f'<td class="{"tg-pvec" if counter % 2 == 0 else "tg-ku2z"}">{driver[index]}</td>', 1)
 		counter += 1
 	return Response(
 		text=html_text,
@@ -89,7 +94,39 @@ async def get_passangers(request:Request):
 
 @routes.get('/orders')
 async def get_orders(request:Request):
-	pass
+	async with aiopen('cache/forms.json', 'r', encoding='utf-8') as file:
+		_json:dict = eval(await file.read())
+	async with aiopen('table/orders.html', 'r', encoding='utf-8') as file:
+		html = await file.read()
+	html.replace('{table}', '''<tr>
+					{key}
+					{from_id}
+					{driver_id}
+					{active}
+					{in_drive}
+					{time}
+					{location}
+				</tr>''' * len(_json.items()))
+	counter = 0
+	for key, data in _json.items():
+		html = html.replace('{key}',
+			f'<td class="{"tg-pvec" if counter % 2 == 0 else "tg-ku2z"}">{key}</td>',
+			1
+		)
+		for index in ['from_id', 'driver_id', 'active', 'in_drive']:
+			html = html.replace(f'{{{index}}}',
+				f'<td class="{"tg-pvec" if counter % 2 == 0 else "tg-ku2z"}">{data[index]}</td>',
+				1
+			)
+
+		html = html.replace('{location}',
+			f'<td class="{"tg-pvec" if counter % 2 == 0 else "tg-ku2z"}">{", ".join(map(str, data["data"]["location"]))}</td>',
+			1
+		)
+	return Response(
+		text=html,
+		content_type='text/html'
+	)
 
 if __name__ == '__main__':
 	app.add_routes(routes)
