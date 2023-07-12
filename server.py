@@ -98,15 +98,14 @@ async def get_orders(request:Request):
 		_json:dict = eval(await file.read())
 	async with aiopen('table/orders.html', 'r', encoding='utf-8') as file:
 		html = await file.read()
-	html.replace('{table}', '''<tr>
+	html = html.replace('{table}', '''<tr>
 					{key}
 					{from_id}
 					{driver_id}
 					{active}
 					{in_drive}
-					{time}
 					{location}
-				</tr>''' * len(_json.items()))
+				</tr>''')
 	counter = 0
 	for key, data in _json.items():
 		html = html.replace('{key}',
