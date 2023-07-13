@@ -7,14 +7,24 @@
 # include <ctime>
 using namespace std;
 
+char* char_to_charptr(char ch) {
+	char chArr[2];
+    chArr[0] = ch;
+    chArr[1] = '\0';
+    
+    char* chPtr = chArr;
+
+    return chPtr;
+}
+
 string get_ascii_list() {
 	string ascii_letters = "";
 	for (int i = 65; i < 90; i++) {
-		string ascii_char = static_cast<char>(i);
+		string ascii_char = char_to_charptr(static_cast<char>(i));
 		ascii_letters += ascii_char;
 	}
 	for (int i = 97; i < 122; i++) {
-		string ascii_char = static_cast<char>(i);
+		string ascii_char = char_to_charptr(static_cast<char>(i));
 		ascii_letters += ascii_char;
 	}
 	for (int i = 0; i < 10; i++) {
@@ -27,7 +37,7 @@ string get_ascii_list() {
 string get_ascii_uppercase() {
 	string ascii_letters = "";
 	for (int i = 65; i < 90; i++) {
-		string ascii_char = static_cast<char>(i);
+		string ascii_char = char_to_charptr(static_cast<char>(i));
 		ascii_letters += ascii_char;
 	}
 
@@ -108,7 +118,7 @@ static PyObject* get_key(PyObject* self, PyObject* args) {
 	string ascii_list = get_ascii_list();
 
 	for (int i = 0; i < randint(10, 100); i++) {
-		random_key += ascii_list[randint(0, ascii_list.length())];
+		random_key += ascii_list[randint(0, ascii_list.length())-1];
 	}
 
 	return PyUnicode_FromString(random_key.c_str());
@@ -116,7 +126,26 @@ static PyObject* get_key(PyObject* self, PyObject* args) {
 
 static PyObject* gen_promo(PyObject* self, PyObject* args) {
 	string uppercase = get_ascii_uppercase();
-	string promocode = uppercase[randint(0, uppercase.length())] + to_string(randint(100, 999));
+	string promocode = uppercase[randint(0, uppercase.length())-1] + to_string(randint(100, 999));
 
 	return PyUnicode_FromString(promocode.c_str());
+}
+
+static PyMethodDef methods[] = {
+    {"init", init, METH_VARARGS, "Init dispatcher module"},
+    {"get_key", get_key, METH_VARARGS, "Get special key"},
+    {"gen_promo", gen_promo, METH_VARARGS, "Get special promocode"},
+    {NULL, NULL, 0, NULL} 
+};
+
+static struct PyModuleDef module = {
+    PyModuleDef_HEAD_INIT,
+    "dispatcher",
+    "Dispatcher",
+    -1,
+    methods
+};
+
+PyMODINIT_FUNC PyInit_dispatcher(void) {
+    return PyModule_Create(&module);
 }
