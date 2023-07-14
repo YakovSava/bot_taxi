@@ -12,6 +12,8 @@ from plugins.database import Database # For annotation
 from plugins.timer import Timer # For annotation
 # from plugins.downoloader import DownoloadC # For annotation
 from plugins.keyboards import keyboards
+from cplug.binder import read, write
+from cplug.dispatcher import get_key, gen_promo, init as cdis_init
 
 class Dispatch:
 
@@ -26,35 +28,36 @@ class Dispatch:
 		if (timer is None) and (database is None) and (api is None):
 			raise self.DispatchNotGetOneParameterError(f'The dispatcher did not receive one of the items (something from the following list is "None", however it should not be "None"): \n\
 {timer = }\n{database = }\n{api = }')
+		cdis_init()
 		self.timer = timer
 		self.database = database
 		self.api = api
 		# self.downoload = CGetter
 		self.all_forms = {}
-		if not exists('cache/forms.json'):
-			with open('cache/forms.json', 'w', encoding='utf-8') as file:
-				file.write('{}')
+		# if not exists('cache/forms.json'):
+		# 	with open('cache/forms.json', 'w', encoding='utf-8') as file:
+		# 		file.write('{}')
 		self.loop = asyncio.new_event_loop()
 		self.loop.run_until_complete(self._downoload_forms())
 
-		if not exists('cache/off.pylist'):
-			with open('cache/off.pylist', 'w', encoding='utf-8') as newFile:
-				newFile.write('[]')
-		if not exists('cache/no_registred.pylist'):
-			with open('cache/no_registred.pylist', 'w', encoding='utf-8') as newFile:
-				newFile.write('[]')
-		if not exists('cache/time_database.toml'):
-			with open('cache/time_database.toml', 'w', encoding='utf-8') as newFile:
-				newFile.write('[test]\n3=[]\n5=[]\nweek=[]\nmonth=[]\n')
-		if not exists('cache/rates.txt'):
-			with open('cache/rates.txt', 'w', encoding='utf-8') as newFile:
-				newFile.write('')
-		if not exists('cache/promo.pylist'):
-			with open('cache/promo.pylist', 'w', encoding='utf-8') as newFile:
-				newFile.write('[]')
-		if not exists('cache/aipu.pylist'):
-			with open('cache/aipu.pylist', 'w', encoding='utf-8') as newFile:
-				newFile.write('[]')
+		# if not exists('cache/off.pylist'):
+		# 	with open('cache/off.pylist', 'w', encoding='utf-8') as newFile:
+		# 		newFile.write('[]')
+		# if not exists('cache/no_registred.pylist'):
+		# 	with open('cache/no_registred.pylist', 'w', encoding='utf-8') as newFile:
+		# 		newFile.write('[]')
+		# if not exists('cache/time_database.toml'):
+		# 	with open('cache/time_database.toml', 'w', encoding='utf-8') as newFile:
+		# 		newFile.write('[test]\n3=[]\n5=[]\nweek=[]\nmonth=[]\n')
+		# if not exists('cache/rates.txt'):
+		# 	with open('cache/rates.txt', 'w', encoding='utf-8') as newFile:
+		# 		newFile.write('')
+		# if not exists('cache/promo.pylist'):
+		# 	with open('cache/promo.pylist', 'w', encoding='utf-8') as newFile:
+		# 		newFile.write('[]')
+		# if not exists('cache/aipu.pylist'):
+		# 	with open('cache/aipu.pylist', 'w', encoding='utf-8') as newFile:
+		# 		newFile.write('[]')
 
 	def _validate_toml(self, toml_lines:str='[block]\nvariable = "data"') -> bool:
 		try: tomli.loads(toml_lines)
@@ -82,20 +85,13 @@ class Dispatch:
 			await backup_file.write(f'{self.all_forms}')
 
 	async def _get_key(self) -> str:
-		key = ''
-		for _ in range(randint(10, 50)):
-			key += choice(ascii_letters)
-		return key
+		return get_key()
 
 	async def _read(self, filename:str) -> str:
-		# return self.downoload.read(join(getcwd(), filename))[1:]
-		async with aiopen(filename, 'r', encoding='utf-8') as file:
-			return await file.read()
+		return read(filename)
 
 	async def _write(self, filename:str, all_lines:str) -> None:
-		# return self.downoload.write(join(getcwd(), filename), all_lines)
-		async with aiopen(filename, 'w', encoding='utf-8') as file:
-			await file.write(all_lines)
+		return write(filename, all_lines)
 
 	async def new_form(self, from_id:str) -> None:
 		key = await self._get_key()
@@ -381,7 +377,7 @@ class Dispatch:
 		return 0
 
 	async def _gen_promo(self) -> str:
-		return f'{choice(ascii_uppercase)}{randint(100, 999)}'
+		return gen_promo()
 
 	async def get_promo_db(self):
 		lines = await self._read('cache/promo.pylist')
