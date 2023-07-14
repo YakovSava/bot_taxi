@@ -1,11 +1,9 @@
 import shutil
-
-print('Импорт и инициализация...')
 import asyncio # Импортируем асинхронность
 import shutil as shutils
 
 from sys import platform
-from os import remove
+from os import remove, system
 from os.path import isdir
 from importlib import import_module
 from rtoml import loads
@@ -13,8 +11,11 @@ from vkbottle.bot import Message
 from plugins.keyboards import keyboards
 from plugins.timer import Timer
 from plugins.manager import Manager
-from plugins.binder import Binder
 from server import run_app, routes, app
+
+print('Компиляция')
+
+system('python3 cplug/compile.py build_ext --inplace')
 
 print('Препроцессирование...')
 
