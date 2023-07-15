@@ -7,37 +7,31 @@
 # include <ctime>
 using namespace std;
 
-char* char_to_charptr(char ch) {
-	char chArr[2];
-    chArr[0] = ch;
-    chArr[1] = '\0';
-    
-    char* chPtr = chArr;
-
-    return chPtr;
+string char_to_string(char ch) {
+    string str(1, ch);
+    return str;
 }
 
 string get_ascii_list() {
-	string ascii_letters = "";
-	for (int i = 65; i < 90; i++) {
-		string ascii_char = char_to_charptr(static_cast<char>(i));
-		ascii_letters += ascii_char;
-	}
-	for (int i = 97; i < 122; i++) {
-		string ascii_char = char_to_charptr(static_cast<char>(i));
-		ascii_letters += ascii_char;
-	}
-	for (int i = 0; i < 10; i++) {
-		ascii_letters += to_string(i);
-	}
+    string ascii_letters;
+    for (int i = 65; i < 90; i++) {
+        ascii_letters += char_to_string(static_cast<char>(i));
+    }
+    for (int i = 97; i < 122; i++) {
+        ascii_letters += char_to_string(static_cast<char>(i));
+    }
+    for (int i = 0; i < 10; i++) {
+        ascii_letters += to_string(i);
+    }
 
-	return ascii_letters;
+    cout << ascii_letters << endl;
+    return ascii_letters;
 }
 
 string get_ascii_uppercase() {
 	string ascii_letters = "";
 	for (int i = 65; i < 90; i++) {
-		string ascii_char = char_to_charptr(static_cast<char>(i));
+		string ascii_char = char_to_string(static_cast<char>(i));
 		ascii_letters += ascii_char;
 	}
 
