@@ -1,0 +1,3 @@
+[submodule "cplug/cpptoml"]
+	path = cplug/cpptoml
+	url = https://github.com/skystrife/cpptoml
