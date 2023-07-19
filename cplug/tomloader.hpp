@@ -5,7 +5,7 @@
 using namespace std;
 
 
-bool toml_iscorrect(char* filename) {
+bool toml_iscorrect(const char* filename) {
 	try {
         auto config = cpptoml::parse_file(filename);
     } catch (const cpptoml::parse_exception& ex) {
@@ -14,7 +14,7 @@ bool toml_iscorrect(char* filename) {
     return true;
 }
 
-vector<string> read_file_into_vector(char* filename) {
+vector<string> read_file_into_vector(const char* filename) {
     vector<string> lines;
     ifstream file(filename);
     if (!file.is_open()) {
@@ -30,7 +30,7 @@ vector<string> read_file_into_vector(char* filename) {
     return lines;
 }
 
-void write_vector_to_file(char* filename, vector<string> lines) {
+int write_vector_to_file(const char* filename, vector<string> lines) {
     FILE* fm = fopen(filename, "wt");
 
     if (fm == NULL) {
@@ -39,7 +39,7 @@ void write_vector_to_file(char* filename, vector<string> lines) {
     } else {
 
     	for (const auto& line : lines) {
-	        fprintf(fm, "%s", lines);
+	        fprintf(fm, "%s", line.c_str());
     	}
         fclose(fm);
 
@@ -47,7 +47,7 @@ void write_vector_to_file(char* filename, vector<string> lines) {
     }
 }
 
-void toml_protector(char* filename) {
+void toml_protector(const char* filename) {
     while (!toml_iscorrect(filename)) {
         vector<string> lines = read_file_into_vector(filename);
         lines.pop_back();
