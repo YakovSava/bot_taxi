@@ -439,7 +439,7 @@ async def passanger_pay_bonus(message:Message):
 		await message.answer('Подтверждение действия...', keyboard=keyboards.passanger_get_taxi(eval(f'{message.payload}')['key'], False))
 
 @vk.on.private_message(PassangerPayBonus())
-async def pasanger_pays_bomuses(message:Message):
+async def passanger_pays_bonuses(message:Message):
 	payload = eval(f'{message.payload}')
 	form = dispatcher.all_forms[payload['key']]
 	await db.driver.set_balance(form['driver_id'], 100)

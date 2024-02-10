@@ -1,9 +1,11 @@
 import shutil
+
+print('Импорт и инициализация...')
 import asyncio # Импортируем асинхронность
 import shutil as shutils
 
 from sys import platform
-from os import remove, system
+from os import remove
 from os.path import isdir
 from importlib import import_module
 from rtoml import loads
@@ -11,11 +13,8 @@ from vkbottle.bot import Message
 from plugins.keyboards import keyboards
 from plugins.timer import Timer
 from plugins.manager import Manager
+from plugins.binder import Binder
 from server import run_app, routes, app
-
-print('Компиляция')
-
-system('python3 cplug/compile.py build_ext --inplace')
 
 print('Препроцессирование...')
 
@@ -53,6 +52,8 @@ for city, button, amount, link, token in global_parameters['citys']:
 dadata = '{global_parameters['dadata']}'
 city = '{city}'
 token = '{token}'
+count = {amount}
+buttons = '{button}'
 ''')
 
 	_temp = import_module(f'{city}_handlers', ('vk','db','binder','dispatcher'))
@@ -123,6 +124,6 @@ if __name__ == '__main__':
 	)
 
 	app.add_routes(routes)
-	timer.new_sync_task(run_app, app, host=('45.8.230.39' if platform in ['linux', 'linux2'] else '127.0.0.1'), port='80', loop=loop)
+	timer.new_sync_task(run_app, app, host=('45.137.152.231' if platform in ['linux', 'linux2'] else '127.0.0.1'), port=8000, loop=loop)
 
 	loop.run_until_complete(asyncio.wait(runner_list))

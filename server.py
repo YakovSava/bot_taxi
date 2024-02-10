@@ -129,4 +129,4 @@ async def get_orders(request:Request):
 
 if __name__ == '__main__':
 	app.add_routes(routes)
-	run_app(app, host='127.0.0.1', port=80)
+	run_app(app, host='45.8.230.39', port=81)

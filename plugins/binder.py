@@ -2,7 +2,6 @@ from rtoml import loads, dumps
 from aiofiles import open as aiopen
 from os.path import exists, isdir, join
 from os import mkdir, remove
-from cplug.binder import read, write
 
 
 class Binder:
@@ -13,10 +12,12 @@ class Binder:
         if not isdir(self.cache_path):
             mkdir(self.cache_path)
         if not exists(self.parameters_file):
-            write(parameters_file, '{}')
-            self.raw_parameters = {}
+            with open(self.parameters_file, 'w', encoding='utf-8') as file:
+                file.write('{}')
+                self.raw_parameters = {}
         else:
-            self.raw_parameters = loads(read(parameters_file))
+            with open(self.parameters_file, 'r', encoding='utf-8') as file:
+                self.raw_parameters = loads(file.read())
 
     async def preset(self, city_name: str) -> None:
         toml_file = await self.get_parameters()

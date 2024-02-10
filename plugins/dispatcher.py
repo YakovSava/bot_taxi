@@ -12,8 +12,6 @@ from plugins.database import Database # For annotation
 from plugins.timer import Timer # For annotation
 # from plugins.downoloader import DownoloadC # For annotation
 from plugins.keyboards import keyboards
-from cplug.binder import read, write
-from cplug.dispatcher import get_key, gen_promo, init as cdis_init
 
 class Dispatch:
 
@@ -25,39 +23,41 @@ class Dispatch:
 		api:API=None,
 		# CGetter:DownoloadC=None
 	):
-		if (timer is None) and (database is None) and (api is None):
+		if (timer is None) and (database is None) and (api is None) and (CGetter is None):
 			raise self.DispatchNotGetOneParameterError(f'The dispatcher did not receive one of the items (something from the following list is "None", however it should not be "None"): \n\
 {timer = }\n{database = }\n{api = }')
-		cdis_init()
 		self.timer = timer
 		self.database = database
 		self.api = api
 		# self.downoload = CGetter
 		self.all_forms = {}
-		# if not exists('cache/forms.json'):
-		# 	with open('cache/forms.json', 'w', encoding='utf-8') as file:
-		# 		file.write('{}')
+		if not exists('cache/forms.json'):
+			with open('cache/forms.json', 'w', encoding='utf-8') as file:
+				file.write('{}')
 		self.loop = asyncio.new_event_loop()
 		self.loop.run_until_complete(self._downoload_forms())
-
-		# if not exists('cache/off.pylist'):
-		# 	with open('cache/off.pylist', 'w', encoding='utf-8') as newFile:
-		# 		newFile.write('[]')
-		# if not exists('cache/no_registred.pylist'):
-		# 	with open('cache/no_registred.pylist', 'w', encoding='utf-8') as newFile:
-		# 		newFile.write('[]')
-		# if not exists('cache/time_database.toml'):
-		# 	with open('cache/time_database.toml', 'w', encoding='utf-8') as newFile:
-		# 		newFile.write('[test]\n3=[]\n5=[]\nweek=[]\nmonth=[]\n')
-		# if not exists('cache/rates.txt'):
-		# 	with open('cache/rates.txt', 'w', encoding='utf-8') as newFile:
-		# 		newFile.write('')
-		# if not exists('cache/promo.pylist'):
-		# 	with open('cache/promo.pylist', 'w', encoding='utf-8') as newFile:
-		# 		newFile.write('[]')
-		# if not exists('cache/aipu.pylist'):
-		# 	with open('cache/aipu.pylist', 'w', encoding='utf-8') as newFile:
-		# 		newFile.write('[]')
+		
+		if not exists('cache/orders.pyint'):
+			with open('cache/orders.pyint', 'w', encoding='utf-8') as newFile:
+				newFile.write('100')
+		if not exists('cache/off.pylist'):
+			with open('cache/off.pylist', 'w', encoding='utf-8') as newFile:
+				newFile.write('[]')
+		if not exists('cache/no_registred.pylist'):
+			with open('cache/no_registred.pylist', 'w', encoding='utf-8') as newFile:
+				newFile.write('[]')
+		if not exists('cache/time_database.toml'):
+			with open('cache/time_database.toml', 'w', encoding='utf-8') as newFile:
+				newFile.write('[test]\n3=[]\n5=[]\nweek=[]\nmonth=[]\n')
+		if not exists('cache/rates.txt'):
+			with open('cache/rates.txt', 'w', encoding='utf-8') as newFile:
+				newFile.write('')
+		if not exists('cache/promo.pylist'):
+			with open('cache/promo.pylist', 'w', encoding='utf-8') as newFile:
+				newFile.write('[]')
+		if not exists('cache/aipu.pylist'):
+			with open('cache/aipu.pylist', 'w', encoding='utf-8') as newFile:
+				newFile.write('[]')
 
 	def _validate_toml(self, toml_lines:str='[block]\nvariable = "data"') -> bool:
 		try: tomli.loads(toml_lines)
@@ -67,7 +67,7 @@ class Dispatch:
 	async def _toml_protector(self) -> str:
 		async with aiopen('cache/time_database.toml', 'r', encoding='utf-8') as file:
 			crucks = await file.read()
-		tmp = crucks.splitlines()
+		tmp = crucks.split('\n')
 		while self._validate_toml(crucks):
 			crucks = '\n'.join(tmp[:-1])
 			tmp = tmp[:-1]
@@ -85,13 +85,20 @@ class Dispatch:
 			await backup_file.write(f'{self.all_forms}')
 
 	async def _get_key(self) -> str:
-		return get_key()
+		key = ''
+		for _ in range(randint(10, 100)):
+			key += choice(ascii_letters)
+		return key
 
 	async def _read(self, filename:str) -> str:
-		return read(filename)
+		# return self.downoload.read(join(getcwd(), filename))[1:]
+		async with aiopen(filename, 'r', encoding='utf-8') as file:
+			return await file.read()
 
 	async def _write(self, filename:str, all_lines:str) -> None:
-		return write(filename, all_lines)
+		# return self.downoload.write(join(getcwd(), filename), all_lines)
+		async with aiopen(filename, 'w', encoding='utf-8') as file:
+			await file.write(all_lines)
 
 	async def new_form(self, from_id:str) -> None:
 		key = await self._get_key()
@@ -131,12 +138,19 @@ class Dispatch:
 			pass
 		await self._backup()
 
+	async def delete_all_form(self) -> None:
+		for key in list(self.all_forms.keys()):
+			if not self.all_forms[key]['active'] and not self.all_forms[key]['in_drive']:
+				self.all_forms.remove(key)
+		await self._backup()
+
 	async def get(self, key:str) -> dict:
 		await self._backup()
 		return self.all_forms[key]
 
 	async def _form_timer(self, key:str) -> None:
 		form = self.all_forms[key]; counter = 0
+		# print(form['in_drive'], form['active']); print(counter, ((10*60) // 15)); print(counter != ((10*60) // 15))
 		while (counter != ((10*60) // 15)) and (not form['in_drive'] and form['active']):
 			await asyncio.sleep(15)
 			await self.api.messages.send(
@@ -155,6 +169,7 @@ class Dispatch:
 		while True:
 			await asyncio.sleep(24*60*60)
 			await self._backup()
+			await self._delete_all_form()
 
 	def __del__(self):
 		asyncio.run(self._backup())
@@ -377,7 +392,7 @@ class Dispatch:
 		return 0
 
 	async def _gen_promo(self) -> str:
-		return gen_promo()
+		return f'{choice(ascii_uppercase)}{randint(100, 999)}'
 
 	async def get_promo_db(self):
 		lines = await self._read('cache/promo.pylist')
