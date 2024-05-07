@@ -23,7 +23,7 @@ class Dispatch:
 		api:API=None,
 		# CGetter:DownoloadC=None
 	):
-		if (timer is None) and (database is None) and (api is None) and (CGetter is None):
+		if (timer is None) and (database is None) and (api is None):
 			raise self.DispatchNotGetOneParameterError(f'The dispatcher did not receive one of the items (something from the following list is "None", however it should not be "None"): \n\
 {timer = }\n{database = }\n{api = }')
 		self.timer = timer
@@ -403,7 +403,7 @@ class Dispatch:
 		promos.append([from_id, new])
 		await self._write('cache/promo.pylist', f'{promos}')
 
-	async def add_new_promo(self, from_id:int) -> int:
+	async def add_new_promo(self, from_id:int) -> list:
 		promos = await self.get_promo_db()
 		index = self._find(promos, from_id)
 		if index != -1:
@@ -412,6 +412,14 @@ class Dispatch:
 			new_promo = await self._gen_promo()
 			await self._save_promo(new_promo, from_id)
 			return [from_id, new_promo]
+
+	async def force_delete_promo(self, id:int):
+		promos = await self.get_promo_db()
+		for promo_record in promos:
+			if id in int(promo_record[0]):
+				promos.pop(promos.index(promo_record))
+				break
+		await self._write("cache/promo.pylist", f'{promos}')
 
 	async def exists_promo(self, promo:str) -> bool:
 		return bool(await self.get_from_promo(promo))

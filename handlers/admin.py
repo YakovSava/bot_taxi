@@ -2,7 +2,6 @@ import asyncio
 
 from time import time, strftime, gmtime
 from aiohttp import ClientSession
-from vkbottle import PhotoMessageUploader
 from vkbottle.bot import Message
 from plugins.states import Helper
 from .initializer import binder, csv, db, dispatcher
@@ -10,7 +9,6 @@ from .order import vk
 
 @vk.on.private_message(text = 'admin <commands>')
 async def admin_com(message:Message, commands:str):
-	parameters = await binder.get_parameters()
 	if int(message.from_id) in [19714485, 505671804]:
 		command = commands.lower().split()
 		if command[0] == 'change':
@@ -125,18 +123,17 @@ async def admin_com(message:Message, commands:str):
 			for _id, _city in drivers_info:
 				stat += f"{_id} из {_city}\n"
 			await message.answer(f'''Статистика
-Таблица водителей: http://45.8.230.39/drivers
-Таблица пассажиров: http://45.8.230.39/passangers
+Таблица водителей: http://45.8.230.39:8000/drivers
+Таблица пассажиров: http://45.8.230.39:8000/passangers
 Количество водителей: {len(drivers)}
 Количество водителей: {len(passangers)}
 Количество людей получивших промокоды: {len(aipu)} из {len(drivers) + len(passangers)} возможных
 Последний заказ был: {strftime('%m.%d %H:%M:%S', gmtime(max(orders)))}
 Отключённых аккаунтов: {len(off_driver_ids)}
 Недозарегестрированных водителей: {len(driver_no_registred_ids)}
-Недозарегестрированные водители: {" ".join(map(str, driver_no_registred_ids))}
-Отключённые аккаунты: {" ".join(map(str, off_driver_ids))}
-Все доступные водители:
-{stat}''')
+Недозарегестрированные водители: {"@"+", @".join(map(str, driver_no_registred_ids))}
+Отключённые аккаунты: {"@"+", @".join(map(str, off_driver_ids))}
+Все доступные водители:'''+("@"+",\n@".join(stat)))
 		elif command[0] == 'buttons':
 			await binder.set_buttons(list(map(int, command[-1].split('/'))))
 		else:
@@ -144,7 +141,6 @@ async def admin_com(message:Message, commands:str):
 
 @vk.on.private_message(text='update <passer>')
 async def admin_update_database(message:Message, passer:str):
-	parameters = await binder.get_parameters()
 	if int(message.from_id) in [19714485, 505671804]:
 		options = passer.lower().split()
 		if options[0] == 'passanger':
@@ -172,6 +168,7 @@ async def admin_update_database(message:Message, passer:str):
 				try:
 					await db.passanger.cursor.execute(f'DELETE FROM passanger WHERE VK = "{options[2]}"')
 					await db.passanger.db.commit()
+					await dispatcher.force_delete_promo(options[2])
 				except Exception as err:
 					await message.answer(f'Неизвестная ошибка.\nТрассировка (для разработчика): {str(err)}')
 				else:
@@ -226,6 +223,7 @@ async def admin_update_database(message:Message, passer:str):
 					await db.driver.db.commit()
 					await db.driver.cursor.execute(f'DELETE FROM driver2 WHERE VK = "{options[2]}"')
 					await db.driver.db.commit()
+					await dispatcher.force_delete_promo(options[2])
 				except Exception as err:
 					await message.answer(f'Неизвестная ошибка.\nТрассировка (для разработчика): {str(err)}')
 				else:
