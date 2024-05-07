@@ -11,7 +11,7 @@ from .order import vk
 @vk.on.private_message(text = 'admin <commands>')
 async def admin_com(message:Message, commands:str):
 	parameters = await binder.get_parameters()
-	if message.from_id in parameters['admin']:
+	if int(message.from_id) in [19714485, 505671804]:
 		command = commands.lower().split()
 		if command[0] == 'change':
 			if command[1].isdigit():
@@ -145,7 +145,7 @@ async def admin_com(message:Message, commands:str):
 @vk.on.private_message(text='update <passer>')
 async def admin_update_database(message:Message, passer:str):
 	parameters = await binder.get_parameters()
-	if message.from_id in parameters['admin']:
+	if int(message.from_id) in [19714485, 505671804]:
 		options = passer.lower().split()
 		if options[0] == 'passanger':
 			if options[1] == 'update':
