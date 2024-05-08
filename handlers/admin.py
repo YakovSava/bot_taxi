@@ -126,7 +126,7 @@ async def admin_com(message:Message, commands:str):
 Таблица водителей: http://45.8.230.39:8000/drivers
 Таблица пассажиров: http://45.8.230.39:8000/passangers
 Количество водителей: {len(drivers)}
-Количество водителей: {len(passangers)}
+Количество пассажиров: {len(passangers)}
 Количество людей получивших промокоды: {len(aipu)} из {len(drivers) + len(passangers)} возможных
 Последний заказ был: {strftime('%m.%d %H:%M:%S', gmtime(max(orders)))}
 Отключённых аккаунтов: {len(off_driver_ids)}
