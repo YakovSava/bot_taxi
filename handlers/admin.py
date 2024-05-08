@@ -121,7 +121,7 @@ async def admin_com(message:Message, commands:str):
 			))
 			stat = ""
 			for _id, _city in drivers_info:
-				stat += f"{_id} из {_city}\n"
+				stat += f"@{_id} из {_city}\n"
 			await message.answer(f'''Статистика
 Таблица водителей: http://45.8.230.39:8000/drivers
 Таблица пассажиров: http://45.8.230.39:8000/passangers
@@ -133,7 +133,7 @@ async def admin_com(message:Message, commands:str):
 Недозарегестрированных водителей: {len(driver_no_registred_ids)}
 Недозарегестрированные водители: {"@"+", @".join(map(str, driver_no_registred_ids))}
 Отключённые аккаунты: {"@"+", @".join(map(str, off_driver_ids))}
-Все доступные водители:'''+("@"+",\n@".join(stat)))
+Все доступные водители: {stat}''')
 		elif command[0] == 'buttons':
 			await binder.set_buttons(list(map(int, command[-1].split('/'))))
 		else:

@@ -416,7 +416,7 @@ class Dispatch:
 	async def force_delete_promo(self, id:int):
 		promos = await self.get_promo_db()
 		for promo_record in promos:
-			if id in int(promo_record[0]):
+			if id == int(promo_record[0]):
 				promos.pop(promos.index(promo_record))
 				break
 		await self._write("cache/promo.pylist", f'{promos}')
