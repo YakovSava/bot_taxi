@@ -13,6 +13,39 @@ from plugins.timer import Timer # For annotation
 # from plugins.downoloader import DownoloadC # For annotation
 from plugins.keyboards import keyboards
 
+
+def _get_aipu():
+	with open("aipu.pylist", "r", encoding="utf-8") as file:
+		return eval(file.read())
+
+def _save_aipu(promo:list):
+	with open("aipu.pylist", "w", encoding="utf-8") as file:
+		file.write(f"{promo}")
+		
+def _del_aipu(id:int):
+	_save_aipu(
+		list(filter(
+			lambda x: x != id,
+			_get_aipu()
+		))
+	)
+
+def _get_promo():
+	with open("cache/promo.pylist", "r", encoding="utf-8") as file:
+		return eval(file.read())
+
+def _save_promo(promo:list):
+	with open("cache/promo.pylist", "w", encoding="utf-8") as file:
+		file.write(f"{promo}")
+		
+def _del_promo(id:int):
+	_save_promo(
+		list(filter(
+			lambda x: x[0] != id,
+			_get_promo()
+		))
+	)
+
 class Dispatch:
 
 	class DispatchNotGetOneParameterError(SystemError): pass
@@ -414,12 +447,8 @@ class Dispatch:
 			return [from_id, new_promo]
 
 	async def force_delete_promo(self, id:int):
-		promos = await self.get_promo_db()
-		for promo_record in promos:
-			if id == int(promo_record[0]):
-				promos.pop(promos.index(promo_record))
-				break
-		await self._write("cache/promo.pylist", f'{promos}')
+		_del_promo(int(id))
+		_del_aipu(int(id))
 
 	async def exists_promo(self, promo:str) -> bool:
 		return bool(await self.get_from_promo(promo))

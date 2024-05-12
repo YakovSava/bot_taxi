@@ -143,7 +143,7 @@ async def admin_com(message:Message, commands:str):
 async def admin_update_database(message:Message, passer:str):
 	if int(message.from_id) in [19714485, 505671804]:
 		options = passer.lower().split()
-		if options[0] == 'passanger':
+		if options[0] in ['passanger', 'passenger']:
 			if options[1] == 'update':
 				if options[4][0] in ['+', '-', '/', '*']:
 					try:
