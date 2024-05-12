@@ -15,11 +15,11 @@ from plugins.keyboards import keyboards
 
 
 def _get_aipu():
-	with open("aipu.pylist", "r", encoding="utf-8") as file:
+	with open("cache/aipu.pylist", "r", encoding="utf-8") as file:
 		return eval(file.read())
 
 def _save_aipu(promo:list):
-	with open("aipu.pylist", "w", encoding="utf-8") as file:
+	with open("cache/aipu.pylist", "w", encoding="utf-8") as file:
 		file.write(f"{promo}")
 		
 def _del_aipu(id:int):
