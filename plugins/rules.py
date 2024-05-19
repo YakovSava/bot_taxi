@@ -63,6 +63,18 @@ class QiwiPayRule(ABCRule[Message]):
 		else:
 			return True
 
+class YoomoneyPayRule(ABCRule[Message]):
+	async def check(self, message:Message) -> bool:
+		if message.payload is None:
+			return False
+		payload = eval(f'{message.payload}')
+		try:
+			payload['driver'], payload['yoomoney']
+		except:
+			return False
+		else:
+			return True
+
 class WillArriveMinutes(ABCRule[Message]):
 	async def check(self, message:Message) -> bool:
 		if message.payload is None:

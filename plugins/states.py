@@ -33,6 +33,8 @@ class VkPayPay(BaseStateGroup):
 class QiwiPay(BaseStateGroup):
 	pay = 0
 
+class YoomoneyPay(BaseStateGroup):
+	pay = 0
 
 class Helper(BaseStateGroup):
 	question = 0

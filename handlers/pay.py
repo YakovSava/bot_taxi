@@ -3,7 +3,10 @@ from .initializer import db, qiwi, binder
 from plugins.keyboards import keyboards
 from plugins.states import *
 from plugins.rules import *
+from plugins.yoomoney_pay import Yoomoney
 from .admin import vk
+
+ym = Yoomoney()
 
 @vk.on.private_message(payload = {'driver': 0, 'money': 'vk pay'})
 async def vkpay_pay(message:Message):
@@ -62,6 +65,33 @@ async def qiwi_get_pay_before_pay(message:Message):
 	bill = await qiwi.check(payload['other']['bill_id'])
 	print(bill.status)
 	if bill.status != 'PAID':
+		await message.answer('Вы не оплатили!')
+	else:
+		await message.answer(f'Вы успешно оплатили счёт в размере {payload["other"]["amount"]} руб.!', keyboard = keyboards.driver_registartion_success)
+		await db.driver.set_balance(message.from_id, payload["other"]["amount"])
+
+@vk.on.private_message(payload = {'driver': 0, 'money': 'yoomoney'})
+async def yoomoney_pay(message:Message):
+	await db.driver.set_activity(message.from_id)
+	await vk.state_dispenser.set(message.from_id, QiwiPay.pay)
+	return 'Введите сумму которую хотите внести на баланс'
+
+@vk.on.private_message(state = YoomoneyPay.pay)
+async def yoomoney_get_pay(message:Message):
+	await db.driver.set_activity(message.from_id)
+	if message.text.isdigit():
+		url, label = ym.build_quickpay()
+		await message.answer(f'Вот ваша персональная ссылка на оплату: {url}\nСсылка живёт 15 минут!\n\nЧто бы проверить оплату нажмите на кнопку прикреплённую к сообщению', keyboard = keyboards.inline.qiwi_check_pay({'bill_id': label, 'amount': int(message.text)}))
+		await vk.state_dispenser.delete(message.from_id)
+	else:
+		return 'Введите число!'
+
+@vk.on.private_message(YoomoneyPayRule())
+async def yoomoney_get_pay_before_pay(message:Message):
+	await db.driver.set_activity(message.from_id)
+	payload = eval(f'dict({message.payload})')
+	status = ym.check_pay(payload['other']['bill_id'])
+	if not status:
 		await message.answer('Вы не оплатили!')
 	else:
 		await message.answer(f'Вы успешно оплатили счёт в размере {payload["other"]["amount"]} руб.!', keyboard = keyboards.driver_registartion_success)

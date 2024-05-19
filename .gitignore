@@ -3,3 +3,5 @@ config.py
 global_parameters.toml
 .idea
 cache
+yoomoney_parameteres.json
+local_parameters.toml

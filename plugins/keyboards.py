@@ -20,7 +20,10 @@ class keyboards:
 		payments = (Keyboard(one_time = False, inline = True)
 			# .add(Text('Пополнить при помощи VK PAY', payload={'driver': 0, 'money': 'vk pay'}), color=KeyboardButtonColor.POSITIVE)
 			# .row()
-			.add(Text('Пополнить при помощи QIWI', payload={'driver': 0, 'money': 'qiwi'}), color=KeyboardButtonColor.POSITIVE)
+			# .add(Text('Пополнить при помощи QIWI', payload={'driver': 0, 'money': 'qiwi'}), color=KeyboardButtonColor.POSITIVE)
+			# .row()
+			.add(Text('Пополнить при помощи Yoomoney (любая карта)', payload={'driver': 0, 'money': 'yoomoney'}),
+				color=KeyboardButtonColor.POSITIVE)
 			.row()
 			.add(Text('Принимать заявки', payload={'driver': 0, 'post_reg': 0}), color=KeyboardButtonColor.POSITIVE)
 		).get_json()
