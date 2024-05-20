@@ -4,6 +4,7 @@ from time import time, strftime, gmtime
 from aiohttp import ClientSession
 from vkbottle.bot import Message
 from plugins.states import Helper
+from plugins.keyboards import keyboards
 from .initializer import binder, csv, db, dispatcher
 from .order import vk
 
@@ -54,7 +55,7 @@ async def admin_com(message:Message, commands:str):
 								data = await vk.api.docs.save(file=response['file'], title='CSV')
 								await message.answer('Файл:', attachment=data.doc.url.split('?')[0])
 							except KeyError:
-								await message.answer(f'Что-то пошлоне так {response["error"]}')
+								await message.answer(f'Что-то пошло не так {response["error"]}')
 						else:
 							page = await resp.read()
 							await message.answer(f'Прозошла неизвестная ошибка!\nСтатус: {resp.status}\nОшибка: {page.decode()}')
@@ -105,7 +106,12 @@ async def admin_com(message:Message, commands:str):
 			await message.answer(f'Поездка водителя {command[1]} прошла {command[2]} дней назад')
 		elif command[0] == 'force':
 			await dispatcher.debug_spec_checker()
-			await message.answer('Принуительная проверка завершена')
+			await message.answer('Принудительная проверка завершена')
+		elif command[0] == 'yoomoney':
+			try:
+				await message.answer('Принудительно! Кнопка для подтверждения оплаты Yoomoney!', keyboard=keyboards.inline.yoomoney_check_pay({'bill_id': command[1], 'amount': 0}))
+			except:
+				await message.answer('Неизвестная ошибка!')
 		elif command[0] == 'stat':
 			passangers, drivers = [rec async for rec in db.passanger.admin_get_all()], await db.driver.admin_get_all()
 			off_driver_ids = await dispatcher.get_service_file()

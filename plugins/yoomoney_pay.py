@@ -26,14 +26,15 @@ class Yoomoney:
         }
 
     def _get_label(self):
-        return "".join("".join(choice(ascii_lowercase) for _ in range(randint(0, 5)))+str(randint(10, 99)) for _ in range(randint(5, 15)))
+        return "".join("".join(choice(ascii_lowercase) for _ in range(randint(0, 5)))+str(randint(10, 99)) for _ in range(randint(5, 7)))
 
-    def build_quickpay(self):
+    def build_quickpay(self, sum:int):
         label = self._get_label()
         return [Quickpay(
             **self._not_important_data,
             receiver=self._account,
-            label=label
+            label=label,
+            sum=sum
         ).base_url, label]
 
     def check_pay(self, label:str):

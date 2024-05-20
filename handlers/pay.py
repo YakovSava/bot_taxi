@@ -73,15 +73,18 @@ async def qiwi_get_pay_before_pay(message:Message):
 @vk.on.private_message(payload = {'driver': 0, 'money': 'yoomoney'})
 async def yoomoney_pay(message:Message):
 	await db.driver.set_activity(message.from_id)
-	await vk.state_dispenser.set(message.from_id, QiwiPay.pay)
+	await vk.state_dispenser.set(message.from_id, YoomoneyPay.pay)
 	return 'Введите сумму которую хотите внести на баланс'
 
 @vk.on.private_message(state = YoomoneyPay.pay)
 async def yoomoney_get_pay(message:Message):
 	await db.driver.set_activity(message.from_id)
 	if message.text.isdigit():
-		url, label = ym.build_quickpay()
-		await message.answer(f'Вот ваша персональная ссылка на оплату: {url}\nСсылка живёт 15 минут!\n\nЧто бы проверить оплату нажмите на кнопку прикреплённую к сообщению', keyboard = keyboards.inline.qiwi_check_pay({'bill_id': label, 'amount': int(message.text)}))
+		if int(message.text) < 2:
+			return "Минимальная сумма пополнения: 3"
+	if message.text.isdigit():
+		url, label = ym.build_quickpay(int(message.text))
+		await message.answer(f'Вот ваша персональная ссылка на оплату: {url}\nСсылка живёт 15 минут!\n\nЧто бы проверить оплату нажмите на кнопку прикреплённую к сообщению', keyboard = keyboards.inline.yoomoney_check_pay({'bill_id': label, 'amount': int(message.text)}))
 		await vk.state_dispenser.delete(message.from_id)
 	else:
 		return 'Введите число!'
