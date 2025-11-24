@@ -3,6 +3,7 @@ import shutil
 print('Импорт и инициализация...')
 import asyncio # Импортируем асинхронность
 import shutil as shutils
+import uvicorn
 
 from sys import platform
 from os import remove
@@ -14,7 +15,7 @@ from plugins.keyboards import keyboards
 from plugins.timer import Timer
 from plugins.manager import Manager
 from plugins.binder import Binder
-from server import run_app, routes, app
+from server import app
 
 print('Препроцессирование...')
 
@@ -123,7 +124,13 @@ if __name__ == '__main__':
 		loop.create_task(manager.sync_database())
 	)
 
-	app.add_routes(routes)
-	timer.new_sync_task(run_app, app, host=('45.8.230.39' if platform in ['linux', 'linux2'] else '127.0.0.1'), port='8000', loop=loop)
+	uvicorn_config = uvicorn.Config(
+		app,
+		host='0.0.0.0',
+		port=8000,
+		loop='asyncio'
+	)
+	server = uvicorn.Server(uvicorn_config)
+	runner_list.append(loop.create_task(server.serve()))
 
 	loop.run_until_complete(asyncio.wait(runner_list))
